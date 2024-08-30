@@ -1,16 +1,11 @@
 package io.mosip.authentication.service.controller;
 
-import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.AUTHENTICATION_ERROR_EVENTING_ENABLED;
-
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
@@ -24,10 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.mosip.authentication.common.service.builder.AuthTransactionBuilder;
 import io.mosip.authentication.common.service.helper.AuditHelper;
 import io.mosip.authentication.common.service.helper.AuthTransactionHelper;
-import io.mosip.authentication.common.service.kafka.impl.AuthenticationErrorEventingPublisher;
 import io.mosip.authentication.common.service.util.AuthTypeUtil;
 import io.mosip.authentication.common.service.util.IdaRequestResponsConsumerUtil;
 import io.mosip.authentication.common.service.validator.AuthRequestValidator;
+import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
 import io.mosip.authentication.core.constant.AuditEvents;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.constant.IdAuthenticationErrorConstants;
@@ -95,11 +90,8 @@ public class AuthController {
 	@Autowired
 	private PartnerService partnerService;
 	
-	@Autowired(required = false)
-	private AuthenticationErrorEventingPublisher authenticationErrorEventingPublisher;
-	
-	@Value("${"+ AUTHENTICATION_ERROR_EVENTING_ENABLED +":false}")
-	private boolean isEventingEnabled;
+	@Autowired
+	private OndemandTemplateEventPublisher ondemandTemplateEventPublisher;
 
 
 	/**
@@ -109,15 +101,6 @@ public class AuthController {
 	@InitBinder("authRequestDTO")
 	private void initAuthRequestBinder(WebDataBinder binder) {
 		binder.setValidator(authRequestValidator);
-	}
-	
-	@PostConstruct
-	public void init() {
-		if (isEventingEnabled) {
-			if (Objects.isNull(authenticationErrorEventingPublisher)) {
-				throw new BeanCreationException(AuthenticationErrorEventingPublisher.class.getName(), "Failed to create a bean");
-			}
-		}
 	}
 
 	/**
@@ -179,12 +162,9 @@ public class AuthController {
 			} catch (IdAuthenticationBusinessException e) {
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
 						"authenticateApplication", e.getErrorCode() + " : " + e.getErrorText());
-				
-				if (isEventingEnabled) {
-					if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
-						authenticationErrorEventingPublisher.notify(authrequestdto, request.getHeader("signature"),
-								partner, e, authrequestdto.getMetadata());
-					}
+				if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
+					ondemandTemplateEventPublisher.notify(authrequestdto, request.getHeader("signature"), partner, e,
+							authrequestdto.getMetadata());
 				}
 				auditHelper.auditExceptionForAuthRequestedModules(AuditEvents.AUTH_REQUEST_RESPONSE, authrequestdto, e);
 				IdaRequestResponsConsumerUtil.setIdVersionToObjectWithMetadata(requestWithMetadata, e);

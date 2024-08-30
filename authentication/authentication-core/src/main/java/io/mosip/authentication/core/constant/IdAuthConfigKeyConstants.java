@@ -134,7 +134,8 @@ public final class IdAuthConfigKeyConstants {
 	public static final String AUTH_TRANSACTION_STATUS_TOPIC = "ida-topic-auth-transaction-status";
 	public static final String AUTH_ANONYMOUS_PROFILE_TOPIC = "ida-topic-auth-anonymous-profile";
 	public static final String AUTH_FRAUD_ANALYSIS_TOPIC = "ida-topic-fraud-analysis";
-	public static final String AUTHENTICATION_ERROR_EVENTING_TOPIC = "ida-topic-authentication-error-eventing";
+	public static final String ON_DEMAND_TEMPLATE_EXTRACTION_TOPIC = "ida-topic-on-demand-template-extraction";
+
 
 	public static final String IDA_MAX_CREDENTIAL_PULL_WINDOW_DAYS = "ida-max-credential-pull-window-days";
 	public static final String IDA_MAX_WEBSUB_MSG_PULL_WINDOW_DAYS = "ida-max-websub-messages-pull-window-days";
@@ -173,6 +174,4 @@ public final class IdAuthConfigKeyConstants {
 	public static final String KYC_EXCHANGE_DEFAULT_LANGUAGE = "mosip.ida.kyc.exchange.default.lang";
 
 	public static final String IDP_AMR_ACR_IDA_MAPPING_SOURCE = "idp.amr-acr.ida.mapping.property.source";
-	
-	public static final String AUTHENTICATION_ERROR_EVENTING_ENABLED = "mosip.ida.authentication.error.eventing.enabled";
 }

@@ -1,19 +1,13 @@
 package io.mosip.authentication.service.kyc.controller;
 
-import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.AUTHENTICATION_ERROR_EVENTING_ENABLED;
-
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 
 import io.mosip.authentication.core.indauth.dto.*;
-
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.validation.Errors;
 import org.springframework.validation.annotation.Validated;
@@ -27,10 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.mosip.authentication.common.service.builder.AuthTransactionBuilder;
 import io.mosip.authentication.common.service.helper.AuditHelper;
 import io.mosip.authentication.common.service.helper.AuthTransactionHelper;
-import io.mosip.authentication.common.service.kafka.impl.AuthenticationErrorEventingPublisher;
 import io.mosip.authentication.common.service.util.AuthTypeUtil;
 import io.mosip.authentication.common.service.util.IdaRequestResponsConsumerUtil;
 import io.mosip.authentication.common.service.validator.AuthRequestValidator;
+import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
 import io.mosip.authentication.core.constant.AuditEvents;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.constant.IdAuthenticationErrorConstants;
@@ -106,11 +100,8 @@ public class KycAuthController {
 	@Autowired
 	private KycExchangeRequestValidator kycExchangeValidator;
 	
-	@Autowired(required = false)
-	private AuthenticationErrorEventingPublisher authenticationErrorEventingPublisher;
-	
-	@Value("${"+ AUTHENTICATION_ERROR_EVENTING_ENABLED +":false}")
-	private boolean isEventingEnabled;
+	@Autowired
+	private OndemandTemplateEventPublisher ondemandTemplateEventPublisher;
 
 	/**
 	 *
@@ -137,15 +128,6 @@ public class KycAuthController {
 	@InitBinder("kycExchangeRequestDTO")
 	private void initKycExchangeBinder(WebDataBinder binder) {
 		binder.setValidator(kycExchangeValidator);
-	}
-	
-	@PostConstruct
-	public void init() {
-		if (isEventingEnabled) {
-			if (Objects.isNull(authenticationErrorEventingPublisher)) {
-				throw new BeanCreationException(AuthenticationErrorEventingPublisher.class.getName(), "Failed to create a bean");
-			}
-		}
 	}
 
 	
@@ -216,11 +198,9 @@ public class KycAuthController {
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "processEKyc",
 						e.getErrorTexts().isEmpty() ? "" : e.getErrorText());
 				
-				if (isEventingEnabled) {
-					if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
-						authenticationErrorEventingPublisher.notify(ekycAuthRequestDTO, request.getHeader("signature"),
-								partner, e, ekycAuthRequestDTO.getMetadata());
-					}
+				if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
+					ondemandTemplateEventPublisher.notify(ekycAuthRequestDTO, request.getHeader("signature"), partner,
+							e, ekycAuthRequestDTO.getMetadata());
 				}
 				auditHelper.auditExceptionForAuthRequestedModules(AuditEvents.EKYC_REQUEST_RESPONSE, ekycAuthRequestDTO, e);
 				IdaRequestResponsConsumerUtil.setIdVersionToObjectWithMetadata(requestWrapperWithMetadata, e);
@@ -299,12 +279,10 @@ public class KycAuthController {
 			} catch (IdAuthenticationBusinessException e) {
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "processKycAuth",
 						e.getErrorTexts().isEmpty() ? "" : e.getErrorText());
-
-				if (isEventingEnabled) {
-					if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
-						authenticationErrorEventingPublisher.notify(authRequestDTO, request.getHeader("signature"),
-								partner, e, authRequestDTO.getMetadata());
-					}
+				
+				if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
+					ondemandTemplateEventPublisher.notify(authRequestDTO, request.getHeader("signature"), partner, e,
+							authRequestDTO.getMetadata());
 				}
 				auditHelper.auditExceptionForAuthRequestedModules(AuditEvents.KYC_REQUEST_RESPONSE, authRequestDTO, e);
 				IdaRequestResponsConsumerUtil.setIdVersionToObjectWithMetadata(requestWrapperWithMetadata, e);

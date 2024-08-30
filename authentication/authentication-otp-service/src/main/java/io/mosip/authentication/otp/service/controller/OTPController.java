@@ -1,11 +1,8 @@
 package io.mosip.authentication.otp.service.controller;
 
-import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.AUTHENTICATION_ERROR_EVENTING_ENABLED;
-
 import java.util.Objects;
 import java.util.Optional;
 
-import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
@@ -17,10 +14,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.tags.Tag;
-
-import org.springframework.beans.factory.BeanCreationException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
@@ -33,10 +27,10 @@ import org.springframework.web.bind.annotation.RestController;
 import io.mosip.authentication.common.service.builder.AuthTransactionBuilder;
 import io.mosip.authentication.common.service.helper.AuditHelper;
 import io.mosip.authentication.common.service.helper.AuthTransactionHelper;
-import io.mosip.authentication.common.service.kafka.impl.AuthenticationErrorEventingPublisher;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
 import io.mosip.authentication.common.service.util.IdaRequestResponsConsumerUtil;
 import io.mosip.authentication.common.service.validator.OTPRequestValidator;
+import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
 import io.mosip.authentication.core.constant.AuditEvents;
 import io.mosip.authentication.core.constant.AuditModules;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
@@ -98,24 +92,12 @@ public class OTPController {
 	@Autowired
 	private IdAuthSecurityManager securityManager;
 	
-	@Autowired(required = false)
-	private AuthenticationErrorEventingPublisher authenticationErrorEventingPublisher;
-	
-	@Value("${"+ AUTHENTICATION_ERROR_EVENTING_ENABLED +":false}")
-	private boolean isEventingEnabled;
+	@Autowired
+	private OndemandTemplateEventPublisher ondemandTemplateEventPublisher;
 
 	@InitBinder
 	private void initBinder(WebDataBinder binder) {
 		binder.setValidator(otpRequestValidator);
-	}
-	
-	@PostConstruct
-	public void init() {
-		if (isEventingEnabled) {
-			if (Objects.isNull(authenticationErrorEventingPublisher)) {
-				throw new BeanCreationException(AuthenticationErrorEventingPublisher.class.getName(), "Failed to create a bean");
-			}
-		}
 	}
 
 	/**
@@ -154,10 +136,10 @@ public class OTPController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(otpRequestDto, !isPartnerReq, partner);
 			
 			try {
+				String idvidHash = securityManager.hash(otpRequestDto.getIndividualId());
 				String idType = Objects.nonNull(otpRequestDto.getIndividualIdType()) ? otpRequestDto.getIndividualIdType()
 						: idTypeUtil.getIdType(otpRequestDto.getIndividualId()).getType();
 				otpRequestDto.setIndividualIdType(idType);
-				String idvidHash = securityManager.hash(otpRequestDto.getIndividualId());
 				otpRequestValidator.validateIdvId(otpRequestDto.getIndividualId(), idType, errors, IdAuthCommonConstants.IDV_ID);
 				DataValidationUtil.validate(errors);
 				OtpResponseDTO otpResponseDTO = otpService.generateOtp(otpRequestDto, partnerId, requestWithMetadata);
@@ -178,12 +160,9 @@ public class OTPController {
 				throw authTransactionHelper.createDataValidationException(authTxnBuilder, e, requestWithMetadata);
 			} catch (IdAuthenticationBusinessException e) {
 				logger.error(IdAuthCommonConstants.SESSION_ID, e.getClass().toString(), e.getErrorCode(), e.getErrorText());
-
-				if (isEventingEnabled) {
-					if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
-						authenticationErrorEventingPublisher.notify(otpRequestDto, request.getHeader("signature"),
-								partner, e, otpRequestDto.getMetadata());
-					}
+				if (IdAuthenticationErrorConstants.ID_NOT_AVAILABLE.getErrorCode().equals(e.getErrorCode())) {
+					ondemandTemplateEventPublisher.notify(otpRequestDto, request.getHeader("signature"), partner, e,
+							otpRequestDto.getMetadata());
 				}
 				auditHelper.audit(AuditModules.OTP_REQUEST,  AuditEvents.OTP_TRIGGER_REQUEST_RESPONSE , otpRequestDto.getTransactionID(),
 						IdType.getIDTypeOrDefault(otpRequestDto.getIndividualIdType()), e);

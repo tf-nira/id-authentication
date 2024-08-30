@@ -1,7 +1,6 @@
-package io.mosip.authentication.common.service.kafka.impl;
+package io.mosip.authentication.common.service.websub.impl;
 
-import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.AUTHENTICATION_ERROR_EVENTING_TOPIC;
-import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.AUTHENTICATION_ERROR_EVENTING_ENABLED;
+import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.ON_DEMAND_TEMPLATE_EXTRACTION_TOPIC;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,13 +9,13 @@ import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 
 import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.helper.WebSubHelper;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
+import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.indauth.dto.BaseRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
@@ -28,13 +27,12 @@ import io.mosip.kernel.core.websub.model.Event;
 import io.mosip.kernel.core.websub.model.EventModel;
 
 /**
- * The Class AuthenticationErrorEventingPublisher.
+ * The Class OnDemandTemplateEventPublisher.
  * 
  * @author Neha
  */
 @Component
-@ConditionalOnProperty(value = AUTHENTICATION_ERROR_EVENTING_ENABLED, havingValue = "true", matchIfMissing = false)
-public class AuthenticationErrorEventingPublisher {
+public class OndemandTemplateEventPublisher extends BaseWebSubEventsInitializer {
 
 	private static final String REQUEST_SIGNATURE = "requestSignature";
 
@@ -57,18 +55,19 @@ public class AuthenticationErrorEventingPublisher {
 
 	/** The Constant logger. */
 
-	private static final Logger logger = IdaLogger.getLogger(AuthenticationErrorEventingPublisher.class);
+	private static final Logger logger = IdaLogger.getLogger(OndemandTemplateEventPublisher.class);
 
 
-	/** The Authenticatrion error eventing topic. */
-	@Value("${" + AUTHENTICATION_ERROR_EVENTING_TOPIC + "}")
-	private String authenticationErrorEventingTopic;
+	/** The on demand template extraction topic. */
+	@Value("${" + ON_DEMAND_TEMPLATE_EXTRACTION_TOPIC + "}")
+	private String onDemadTemplateExtractionTopic;
 	
-	@Value("${mosip.ida.authentication.error.eventing.encrypt.partner.id}")
+	@Value("${mosip.ida.ondemand.template.extraction.partner.id}")
 	 private String partnerId;
-	
+
+	/** The web sub event publish helper. */
 	@Autowired
-	private KafkaTemplate<String, Object> kafkaTemplate;
+	private WebSubHelper webSubHelper;
 
 	@Autowired
 	private IdAuthSecurityManager securityManager;
@@ -76,25 +75,58 @@ public class AuthenticationErrorEventingPublisher {
 	@Autowired
 	private PartnerDataRepository partnerDataRepo;
 
-	
+	/**
+	 * Do subscribe.
+	 */
+	@Override
+	protected void doSubscribe() {
+		// Nothing to do here since we are just publishing event for this topic
+	}
+
+	/**
+	 * Try register topic partner service events.
+	 */
+	private void tryRegisterTopicOnDemandEvent() {
+		try {
+			logger.debug(IdAuthCommonConstants.SESSION_ID, "tryRegisterOnDemandEvent", "",
+					"Trying to register topic: " + onDemadTemplateExtractionTopic);
+			webSubHelper.registerTopic(onDemadTemplateExtractionTopic);
+			logger.info(IdAuthCommonConstants.SESSION_ID, "tryRegisterOnDemandEvent", "",
+					"Registered topic: " + onDemadTemplateExtractionTopic);
+		} catch (Exception e) {
+			logger.info(IdAuthCommonConstants.SESSION_ID, "tryRegisterOnDemandEvent", e.getClass().toString(),
+					"Error registering topic: " + onDemadTemplateExtractionTopic + "\n" + e.getMessage());
+		}
+	}
+
+	@Override
+	protected void doRegister() {
+		logger.info(IdAuthCommonConstants.SESSION_ID, "doRegister", this.getClass().getSimpleName(),
+				"On demand template event topic..");
+		tryRegisterTopicOnDemandEvent();
+	}
+
+	public void publishEvent(EventModel eventModel) {
+		webSubHelper.publishEvent(onDemadTemplateExtractionTopic, eventModel);
+	}
 
 	public void notify(BaseRequestDTO baserequestdto, String headerSignature, Optional<PartnerDTO> partner,
 			IdAuthenticationBusinessException e, Map<String, Object> metadata) {
 		try {
 			sendEvents(baserequestdto, headerSignature, partner, e, metadata);
 		} catch (Exception exception) {
-			logger.error(IdRepoSecurityManager.getUser(), "Authentication error eventing", "notify",
+			logger.error(IdRepoSecurityManager.getUser(), "On demand template  extraction", "notify",
 					exception.getMessage());
 		}
 	}
 
 	private void sendEvents(BaseRequestDTO baserequestdto, String headerSignature, Optional<PartnerDTO> partner,
 			IdAuthenticationBusinessException e, Map<String, Object> metadata) {
-		logger.info("Inside sendEvents authentication error eventing");
-		logger.info("Inside partner data to get certificate for authentication error eventing encryption");
+		logger.info("Inside sendEvents ondemand extraction");
+		logger.info("Inside partner data to get certificate for ondemand extraction encryption");
 		Optional<PartnerData> partnerDataCert = partnerDataRepo.findByPartnerId(partnerId);
 		if (partnerDataCert.isEmpty()) {
-			logger.info("Partner is not configured for encrypting individual id.");
+			logger.info("Partner is not configured for on demand extraction.");
 		} else {
 			Map<String, Object> eventData = new HashMap<>();
 			eventData.put(ERROR_CODE, e.getErrorCode());
@@ -102,11 +134,11 @@ public class AuthenticationErrorEventingPublisher {
 			eventData.put(REQUESTDATETIME, DateUtils.formatToISOString(DateUtils.getUTCCurrentDateTime()));
 			eventData.put(INDIVIDUAL_ID,
 					encryptIndividualId(baserequestdto.getIndividualId(), partnerDataCert.get().getCertificateData()));
-			eventData.put(AUTH_PARTNER_ID, partner.map(PartnerDTO::getPartnerId).orElse(null));
+			eventData.put(AUTH_PARTNER_ID, partner.get().getPartnerId());
 			eventData.put(INDIVIDUAL_ID_TYPE, baserequestdto.getIndividualIdType());
-			eventData.put(ENTITY_NAME, partner.map(PartnerDTO::getPartnerName).orElse(null));
+			eventData.put(ENTITY_NAME, partner.get().getPartnerName());
 			eventData.put(REQUEST_SIGNATURE, headerSignature);
-			EventModel eventModel = createEventModel(authenticationErrorEventingTopic, eventData);
+			EventModel eventModel = createEventModel(onDemadTemplateExtractionTopic, eventData);
 			publishEvent(eventModel);
 		}
 	}
@@ -125,14 +157,10 @@ public class AuthenticationErrorEventingPublisher {
 		model.setTopic(topic);
 		return model;
 	}
-	
-	public void publishEvent(EventModel eventModel) {
-		kafkaTemplate.send(authenticationErrorEventingTopic, eventModel);
-	}
 
-	private String encryptIndividualId(String id, String partnerCertificate) {
+	private byte[] encryptIndividualId(String id, String partnerCertificate) {
 		try {
-			logger.info("Inside the method of encrypting IndividualId using partner certificate ");
+			logger.info("Inside the method of encryptIndividualId using partner certificate ");
 			return securityManager.asymmetricEncryption(id.getBytes(), partnerCertificate);
 		} catch (IdAuthenticationBusinessException e) {
 			// TODO Auto-generated catch block

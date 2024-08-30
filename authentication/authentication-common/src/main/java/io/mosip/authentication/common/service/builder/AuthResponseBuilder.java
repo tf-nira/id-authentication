@@ -119,9 +119,7 @@ public class AuthResponseBuilder {
 		boolean status = !authStatusInfos.isEmpty() && authStatusInfos.stream().allMatch(AuthStatusInfo::isStatus);
 		ResponseDTO res = new ResponseDTO();
 		res.setAuthStatus(status);
-		if (status) {
-			res.setAuthToken(tokenID);
-		}
+		res.setAuthToken(tokenID);
 		responseDTO.setResponse(res);
 		responseDTO.setResponseTime(DateUtils.getUTCCurrentDateTimeString(IdAuthCommonConstants.UTC_DATETIME_PATTERN));
 		AuthError[] authErrors = authStatusInfos.stream().flatMap(statusInfo -> Optional.ofNullable(statusInfo.getErr())
