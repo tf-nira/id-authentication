@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -45,6 +46,8 @@ import io.mosip.authentication.core.util.MaskUtil;
 import io.mosip.kernel.core.util.DateUtils;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /***
  * 
@@ -63,6 +66,8 @@ public class NotificationServiceImpl implements NotificationService {
 	private static final String TIME = "time";
 	/** The Constant DATE. */
 	private static final String DATE = "date";
+
+	private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
 	/** The demo auth service. */
 	@Autowired
@@ -139,6 +144,7 @@ public class NotificationServiceImpl implements NotificationService {
 			throws IdAuthenticationBusinessException {
 		Map<String, Object> otpTemplateValues = getOtpTemplateValues(idvid, idvidType, valueMap, otpGenerationTime);
 		otpTemplateValues.put("otp", otp);
+		logger.info("OTP Template Values: {}", otpTemplateValues);
 		this.sendNotification(otpTemplateValues, valueMap.get(IdAuthCommonConstants.EMAIL),
 				valueMap.get(IdAuthCommonConstants.PHONE_NUMBER), SenderType.OTP, notificationProperty,
 				templateLanguages);
