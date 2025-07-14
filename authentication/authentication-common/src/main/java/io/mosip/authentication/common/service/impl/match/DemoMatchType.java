@@ -42,7 +42,7 @@ public enum DemoMatchType implements MatchType {
 	// @formatter:off
 
 	/** Primary Name Match Type. */
-	NAME(IdaIdMapping.NAME,
+	NAME(IdaIdMapping.GIVEN_NAME,
 			setOf(NameMatchingStrategy.EXACT, NameMatchingStrategy.PARTIAL, NameMatchingStrategy.PHONETICS),
 			IdentityDTO::getName),
 
