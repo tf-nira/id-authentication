@@ -32,7 +32,7 @@ public enum IdaIdMapping implements IdMapping {
 // @formatter:off
 	/** The name. */
 //PI
-	NAME("name", MappingConfig::getName),
+	NAME("givenName", MappingConfig::getName),
 	
 	/** The dob. */
 	DOB("dob", MappingConfig::getDob),

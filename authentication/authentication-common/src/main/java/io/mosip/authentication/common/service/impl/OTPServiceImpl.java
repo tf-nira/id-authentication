@@ -221,6 +221,8 @@ public class OTPServiceImpl implements OTPService {
 			
 			List<String> templateLanguages = getTemplateLanguages(idInfo);			
 			for (String lang : templateLanguages) {
+				String nameValue =  getName(lang, idInfo);
+				mosipLogger.info("nainital Name Value for Language '{}' : {}",lang, nameValue);
 				valueMap.put(NAME + "_" + lang, getName(lang, idInfo));
 			}
 
