@@ -204,11 +204,20 @@ public class IdInfoHelper {
 	 */
 	public String getEntityInfoAsString(MatchType matchType, String langCode,
 			Map<String, List<IdentityInfoDTO>> idEntity) throws IdAuthenticationBusinessException {
+		mosipLogger.info("getEntityInfoAsString called with matchType: {}, langCode: {}", 
+		        matchType, langCode);
+		    mosipLogger.info("idEntity keys: {}", idEntity != null ? idEntity.keySet() : "null");
+		    
 		Map<String, String> entityInfo = getEntityInfoAsStringWithKey(matchType, langCode,
 						idEntity, null);
+		 mosipLogger.info("entityInfo result: {}", entityInfo);
+		
 		if(entityInfo == null || entityInfo.isEmpty()) {
+			  mosipLogger.info("entityInfo is null or empty for matchType: {}, langCode: {}", 
+			            matchType, langCode);
 			return null;
 		}
+		mosipLogger.info("Final result: {}", entityInfo.values().iterator().next());
 		return entityInfo.values().iterator().next();
 	}
 	

@@ -316,6 +316,21 @@ public class OTPServiceImpl implements OTPService {
 
 	private String getName(String language, Map<String, List<IdentityInfoDTO>> idInfo)
 			throws IdAuthenticationBusinessException {
+		mosipLogger.info("getName called with language: {}", language);
+	    mosipLogger.info("idInfo keys: {}", idInfo != null ? idInfo.keySet() : "null");
+	    
+	    if (idInfo != null) {
+	        idInfo.forEach((key, value) -> {
+	            mosipLogger.info("Key: {}, Value size: {}", key, value != null ? value.size() : "null");
+	            if (value != null && !value.isEmpty()) {
+	                value.forEach(identityInfo -> {
+	                    mosipLogger.info("Identity Info - Language: {}, Value: {}", 
+	                        identityInfo.getLanguage(), identityInfo.getValue());
+	                });
+	            }
+	        });
+	    }
+	    mosipLogger.info("getName result: {}", idInfoHelper.getEntityInfoAsString(DemoMatchType.NAME, language, idInfo));
 		return idInfoHelper.getEntityInfoAsString(DemoMatchType.NAME, language, idInfo);
 
 	}	
