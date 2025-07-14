@@ -42,10 +42,13 @@ public enum DemoMatchType implements MatchType {
 	// @formatter:off
 
 	/** Primary Name Match Type. */
-	NAME(IdaIdMapping.GIVEN_NAME,
+	NAME(IdaIdMapping.NAME,
 			setOf(NameMatchingStrategy.EXACT, NameMatchingStrategy.PARTIAL, NameMatchingStrategy.PHONETICS),
 			IdentityDTO::getName),
-
+	
+	GIVEN_NAME(IdaIdMapping.GIVEN_NAME,
+			setOf(NameMatchingStrategy.EXACT, NameMatchingStrategy.PARTIAL, NameMatchingStrategy.PHONETICS),
+			IdentityDTO::getName),
 	/** Secondary Date of Birth Match Type. */
 	DOB(IdaIdMapping.DOB, setOf(DOBMatchingStrategy.EXACT), identityDTO -> getIdInfoList(identityDTO.getDob()), false),
 
