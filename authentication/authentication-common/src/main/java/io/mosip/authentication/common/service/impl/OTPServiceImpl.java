@@ -316,7 +316,7 @@ public class OTPServiceImpl implements OTPService {
 
 	private String getName(String language, Map<String, List<IdentityInfoDTO>> idInfo)
 			throws IdAuthenticationBusinessException {
-		return idInfoHelper.getEntityInfoAsString(DemoMatchType.GIVEN_NAME, language, idInfo);
+		return idInfoHelper.getEntityInfoAsString(DemoMatchType.NAME, language, idInfo);
 
 	}	
 
