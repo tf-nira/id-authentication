@@ -591,7 +591,7 @@ public class IdInfoHelperTest {
 		authRequestDTO.setRequest(requestDTO);
 		Set<String> buildDemoAttributeFilters = idInfoHelper.buildDemoAttributeFilters(authRequestDTO);
 		assertEquals(1, buildDemoAttributeFilters.size() );
-		assertEquals("fullName", buildDemoAttributeFilters.iterator().next() );
+		assertEquals("givenName", buildDemoAttributeFilters.iterator().next() );
 
 	}
 	
@@ -613,7 +613,7 @@ public class IdInfoHelperTest {
 	@Test
 	public void getPropertyNamesForMatchTypeTest() {
 		List<String> list = new ArrayList<String>();
-		list.add("fullName");
+		list.add("givenName");
 		assertEquals(list, idInfoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "name"));
 	}
 
@@ -977,7 +977,7 @@ public class IdInfoHelperTest {
 		IDAMappingConfig config = Mockito.mock(IDAMappingConfig.class);
 		ReflectionTestUtils.setField(idInfoHelper, "idMappingConfig", config);
 		EnvUtil environment = Mockito.mock(EnvUtil.class);
-		Mockito.when(environment.getProperty(IdAuthConfigKeyConstants.IDA_ID_ATTRIBUTE_SEPARATOR_PREFIX + "name",
+		Mockito.when(environment.getProperty(IdAuthConfigKeyConstants.IDA_ID_ATTRIBUTE_SEPARATOR_PREFIX + "givenName",
 				IdAuthCommonConstants.DEFAULT_ID_ATTRIBUTE_SEPARATOR_VALUE))
 				.thenReturn("-");
 		ReflectionTestUtils.setField(idInfoHelper, "env", environment);
