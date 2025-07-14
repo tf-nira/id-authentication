@@ -46,6 +46,10 @@ public enum DemoMatchType implements MatchType {
 			setOf(NameMatchingStrategy.EXACT, NameMatchingStrategy.PARTIAL, NameMatchingStrategy.PHONETICS),
 			IdentityDTO::getName),
 
+	GIVEN_NAME(IdaIdMapping.GIVEN_NAME,
+			setOf(NameMatchingStrategy.EXACT, NameMatchingStrategy.PARTIAL, NameMatchingStrategy.PHONETICS),
+			IdentityDTO::getName),
+	
 	/** Secondary Date of Birth Match Type. */
 	DOB(IdaIdMapping.DOB, setOf(DOBMatchingStrategy.EXACT), identityDTO -> getIdInfoList(identityDTO.getDob()), false),
 

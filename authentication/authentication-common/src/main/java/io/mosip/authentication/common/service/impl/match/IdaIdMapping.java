@@ -34,6 +34,8 @@ public enum IdaIdMapping implements IdMapping {
 //PI
 	NAME("name", MappingConfig::getName),
 	
+	GIVEN_NAME("givenName", MappingConfig::getName),
+	
 	/** The dob. */
 	DOB("dob", MappingConfig::getDob),
 	
