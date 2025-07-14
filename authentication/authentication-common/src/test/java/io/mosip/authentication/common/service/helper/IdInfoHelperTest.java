@@ -613,8 +613,8 @@ public class IdInfoHelperTest {
 	@Test
 	public void getPropertyNamesForMatchTypeTest() {
 		List<String> list = new ArrayList<String>();
-		list.add("givenName");
-		assertEquals(list, idInfoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "givenName"));
+		list.add("fullName");
+		assertEquals(list, idInfoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "fullName"));
 	}
 
 	@Test
