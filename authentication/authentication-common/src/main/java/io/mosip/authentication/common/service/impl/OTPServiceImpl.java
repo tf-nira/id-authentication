@@ -224,7 +224,8 @@ public class OTPServiceImpl implements OTPService {
 				String nameValue = getName(lang, idInfo);
 				mosipLogger.info("nainital Name Value for language '{}' : {}", lang, nameValue);
 				mosipLogger.info("nainital1 Name Value for language '{}' : {}", lang, getName(lang, idInfo));
-				valueMap.put(NAME + "_" + lang, getName(lang, idInfo));
+				//valueMap.put(NAME + "_" + lang, getName(lang, idInfo));
+				valueMap.put(NAME + "_" + lang, "TestName");
 			}
 
 			String email = getEmail(idInfo);
