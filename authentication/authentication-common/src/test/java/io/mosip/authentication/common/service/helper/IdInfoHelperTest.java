@@ -591,7 +591,7 @@ public class IdInfoHelperTest {
 		authRequestDTO.setRequest(requestDTO);
 		Set<String> buildDemoAttributeFilters = idInfoHelper.buildDemoAttributeFilters(authRequestDTO);
 		assertEquals(1, buildDemoAttributeFilters.size() );
-		assertEquals("givenName", buildDemoAttributeFilters.iterator().next() );
+		assertEquals("name", buildDemoAttributeFilters.iterator().next() );
 
 	}
 	
@@ -614,7 +614,7 @@ public class IdInfoHelperTest {
 	public void getPropertyNamesForMatchTypeTest() {
 		List<String> list = new ArrayList<String>();
 		list.add("givenName");
-		assertEquals(list, idInfoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "name"));
+		assertEquals(list, idInfoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "givenName"));
 	}
 
 	@Test
