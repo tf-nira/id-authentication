@@ -107,6 +107,7 @@ public class OndemandTemplateEventPublisher extends BaseWebSubEventsInitializer 
 	}
 
 	public void publishEvent(EventModel eventModel) {
+		logger.info("PUBLISHING TO THE TOPIC" +onDemadTemplateExtractionTopic);
 		webSubHelper.publishEvent(onDemadTemplateExtractionTopic, eventModel);
 	}
 
