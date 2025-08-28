@@ -157,10 +157,10 @@ public class KycAuthController {
 			@ApiIgnore Errors errors, @PathVariable("MISP-LK") String mispLK,@PathVariable("eKYC-Partner-ID") String partnerId,
 			@PathVariable("API-Key") String partnerApiKey, HttpServletRequest request)
 			throws IdAuthenticationBusinessException, IdAuthenticationAppException, IdAuthenticationDaoException {
-		System.out.println("#######REQUEST#########");
-		if (request!= null){
-			System.out.println(request);
+		if (request != null) {
+    		mosipLogger.info("########### Request: {}", String.valueOf(request));
 		}
+
 		if(request instanceof ObjectWithMetadata) {
 			ObjectWithMetadata requestWrapperWithMetadata = (ObjectWithMetadata) request;
 
