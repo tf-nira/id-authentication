@@ -108,7 +108,7 @@ public class IdaAuthenticatorImpl implements Authenticator {
     @Override
     public KycAuthResult doKycAuth(String relyingPartyId, String clientId, KycAuthDto kycAuthDto)
             throws KycAuthException {
-        log.info("Started to build kyc-auth request with transactionId : {} && clientId : {}",
+        log.info("Started tooo build kyc-auth request with transactionId : {} && clientId : {}",
                 kycAuthDto.getTransactionId(), clientId);
 		log.info("testcheckstarted");
         try {
@@ -131,9 +131,6 @@ public class IdaAuthenticatorImpl implements Authenticator {
                     .header(SIGNATURE_HEADER_NAME, helperService.getRequestSignature(requestBody))
                     .header(AUTHORIZATION_HEADER_NAME, AUTHORIZATION_HEADER_NAME)
                     .body(requestBody);
-			log.info("KYC Auth Request URI     : {}", requestEntity.getUrl());
-            log.info("KYC Auth Request Headers : {}", requestEntity.getHeaders());
-            log.info("KYC Auth Request Body    : {}", requestEntity.getBody());
             ResponseEntity<IdaResponseWrapper<IdaKycAuthResponse>> responseEntity = restTemplate.exchange(requestEntity,
                     new ParameterizedTypeReference<IdaResponseWrapper<IdaKycAuthResponse>>() {});
 
@@ -143,8 +140,11 @@ public class IdaAuthenticatorImpl implements Authenticator {
                     return new KycAuthResult(responseEntity.getBody().getResponse().getKycToken(),
                             responseEntity.getBody().getResponse().getAuthToken());
                 }
-                log.info("Error response received from IDA KycStatus : {} && Errors: {}",
+                log.info("Errooor response received from IDA KycStatus : {} && Errors: {}",
                         responseWrapper.getResponse().isKycStatus(), responseWrapper.getErrors());
+				log.info("KYC Auth Request URI     : {}", requestEntity.getUrl());
+            	log.info("KYC Auth Request Headers : {}", requestEntity.getHeaders());
+            	log.info("KYC Auth Request Body    : {}", requestEntity.getBody());
                 throw new KycAuthException(CollectionUtils.isEmpty(responseWrapper.getErrors()) ?
                          ErrorConstants.AUTH_FAILED : responseWrapper.getErrors().get(0).getErrorCode());
             }
@@ -260,5 +260,6 @@ public class IdaAuthenticatorImpl implements Authenticator {
     	throw new KycSigningCertificateException();
     }
 }
+
 
 
