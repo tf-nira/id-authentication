@@ -110,6 +110,7 @@ public class IdaAuthenticatorImpl implements Authenticator {
             throws KycAuthException {
         log.info("Started to build kyc-auth request with transactionId : {} && clientId : {}",
                 kycAuthDto.getTransactionId(), clientId);
+		log.info("testcheckstarted");
         try {
             IdaKycAuthRequest idaKycAuthRequest = new IdaKycAuthRequest();
             idaKycAuthRequest.setId(kycAuthId);
@@ -142,7 +143,7 @@ public class IdaAuthenticatorImpl implements Authenticator {
                     return new KycAuthResult(responseEntity.getBody().getResponse().getKycToken(),
                             responseEntity.getBody().getResponse().getAuthToken());
                 }
-                log.error("Error response received from IDA KycStatus : {} && Errors: {}",
+                log.info("Error response received from IDA KycStatus : {} && Errors: {}",
                         responseWrapper.getResponse().isKycStatus(), responseWrapper.getErrors());
                 throw new KycAuthException(CollectionUtils.isEmpty(responseWrapper.getErrors()) ?
                          ErrorConstants.AUTH_FAILED : responseWrapper.getErrors().get(0).getErrorCode());
@@ -259,4 +260,5 @@ public class IdaAuthenticatorImpl implements Authenticator {
     	throw new KycSigningCertificateException();
     }
 }
+
 
