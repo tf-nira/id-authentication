@@ -130,6 +130,9 @@ public class IdaAuthenticatorImpl implements Authenticator {
                     .header(SIGNATURE_HEADER_NAME, helperService.getRequestSignature(requestBody))
                     .header(AUTHORIZATION_HEADER_NAME, AUTHORIZATION_HEADER_NAME)
                     .body(requestBody);
+			log.info("KYC Auth Request URI     : {}", requestEntity.getUrl());
+            log.info("KYC Auth Request Headers : {}", requestEntity.getHeaders());
+            log.info("KYC Auth Request Body    : {}", requestEntity.getBody());
             ResponseEntity<IdaResponseWrapper<IdaKycAuthResponse>> responseEntity = restTemplate.exchange(requestEntity,
                     new ParameterizedTypeReference<IdaResponseWrapper<IdaKycAuthResponse>>() {});
 
@@ -256,3 +259,4 @@ public class IdaAuthenticatorImpl implements Authenticator {
     	throw new KycSigningCertificateException();
     }
 }
+
