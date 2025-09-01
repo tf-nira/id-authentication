@@ -239,6 +239,11 @@ public class KycAuthController {
 			@ApiIgnore Errors errors, @PathVariable("IdP-LK") String mispLK, @PathVariable("Auth-Partner-ID") String partnerId,
 			@PathVariable("OIDC-Client-Id") String oidcClientId, HttpServletRequest request)
 			throws IdAuthenticationBusinessException, IdAuthenticationAppException, IdAuthenticationDaoException {
+		// Log request details
+		mosipLogger.info("Received KYC Auth Request: mispLK={}, partnerId={}, oidcClientId={}", mispLK, partnerId, oidcClientId);
+		mosipLogger.info("AuthRequestDTO: {}", authRequestDTO);
+		mosipLogger.info("Request IP: {}", request.getRemoteAddr());
+		mosipLogger.info("Signature Header: {}", request.getHeader("signature"));
 		if(request instanceof ObjectWithMetadata) {
 			ObjectWithMetadata requestWrapperWithMetadata = (ObjectWithMetadata) request;
 
