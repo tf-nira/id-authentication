@@ -10,6 +10,7 @@ import io.mosip.authentication.common.service.websub.impl.AuthAnonymousEventPubl
 import io.mosip.authentication.common.service.websub.impl.AuthTransactionStatusEventPublisher;
 import io.mosip.authentication.common.service.websub.impl.IdAuthFraudAnalysisEventPublisher;
 import io.mosip.authentication.common.service.websub.impl.MasterDataUpdateEventInitializer;
+import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
 import io.mosip.authentication.common.service.websub.impl.PartnerCACertEventInitializer;
 
 /**
@@ -37,6 +38,9 @@ public final class IdAuthWebSubInitializer extends CacheUpdatingWebsubInitialize
 	
 	@Autowired
 	private PartnerCACertEventInitializer partnerCACertEventInitializer;
+	
+	@Autowired
+	private OndemandTemplateEventPublisher ondemandTemplateEventPublisher;
 
 	/**
 	 * Do init subscriptions.
@@ -59,6 +63,7 @@ public final class IdAuthWebSubInitializer extends CacheUpdatingWebsubInitialize
 			webSubHelper.initRegistrar(fraudEventPublisher);
 		webSubHelper.initRegistrar(authTransactionStatusEventPublisher);
 		webSubHelper.initRegistrar(authAnonymousEventPublisher);
+		webSubHelper.initRegistrar(ondemandTemplateEventPublisher);
 		return HttpStatus.SC_OK;
 	}
 
