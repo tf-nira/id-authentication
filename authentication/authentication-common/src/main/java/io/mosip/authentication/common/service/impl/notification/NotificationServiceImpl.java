@@ -87,10 +87,15 @@ public class NotificationServiceImpl implements NotificationService {
 
 		Map<String, Object> values = new HashMap<>();
 		List<String> templateLanguages = getTemplateLanguages(idInfo);
+		System.out.println("DEBUG: Template languages = " + templateLanguages);
 		
 		for (String lang : templateLanguages) {
-			values.put(NAME + "_" + lang, infoHelper.getEntityInfoAsString(DemoMatchType.NAME, lang, idInfo));
+			Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
+			values.putAll(nameMap);
+			String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
+			values.put(NAME + "_" + lang, nameStr);
 		}
+       	values.put("identity", idInfo);
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
