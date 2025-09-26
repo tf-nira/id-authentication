@@ -21,6 +21,7 @@ on:
       - develop
       - MOSIP*
       - tf_nira_dev
+      - develop_shivam
 
 jobs:
   build-maven-authentication:
