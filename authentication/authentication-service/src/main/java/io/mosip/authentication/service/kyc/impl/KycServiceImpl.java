@@ -456,7 +456,7 @@ public class KycServiceImpl implements KycService {
 	@Override
 	public String buildKycExchangeResponse(String subject, Map<String, List<IdentityInfoDTO>> idInfo, 
 				List<String> consentedAttributes, List<String> consentedLocales, String idVid, KycExchangeRequestDTO kycExchangeRequestDTO) throws IdAuthenticationBusinessException {
-		
+        mosipLogger.info("IDINFO, CONSENTED ATTRIBUTES AND CONSENTED LOCALES: {}", idInfo, consentedAttributes, consentedLocales);
 		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
 					"Building claims response for PSU token: " + subject);
 					

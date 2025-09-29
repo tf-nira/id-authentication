@@ -223,6 +223,7 @@ public class IdInfoHelper {
 	
 	public Map<String, String> getEntityInfoAsStringWithKey(MatchType matchType, String langCode,
 			Map<String, List<IdentityInfoDTO>> idEntity, String key) throws IdAuthenticationBusinessException {
+        mosipLogger.info("IDENTITY and KEY: {}", idEntity, key);
 		Map<String, String> entityInfoMap = getIdEntityInfoMap(matchType, idEntity, langCode);
 		if(entityInfoMap == null || entityInfoMap.isEmpty()) {
 			return Map.of();
