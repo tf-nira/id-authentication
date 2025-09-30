@@ -91,11 +91,31 @@ public class NotificationServiceImpl implements NotificationService {
 		
 		for (String lang : templateLanguages) {
 			Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
+			System.out.println("DEBUG: nameMap for lang " + lang + ": " + nameMap);
 			values.putAll(nameMap);
 			String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
+			System.out.println("DEBUG: nameStr for lang " + lang + ": " + nameStr);
 			values.put(NAME + "_" + lang, nameStr);
+
+			// Fetch givenName and surname for template access
+			try {
+				Map<String, String> givenNameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.DYNAMIC, idInfo, lang, "givenName");
+				System.out.println("DEBUG: givenNameMap for lang " + lang + ": " + givenNameMap);
+				values.putAll(givenNameMap);
+			} catch (Exception e) {
+				System.out.println("DEBUG: Error fetching givenName: " + e.getMessage());
+			}
+
+			try {
+				Map<String, String> surnameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.DYNAMIC, idInfo, lang, "surname");
+				System.out.println("DEBUG: surnameMap for lang " + lang + ": " + surnameMap);
+				values.putAll(surnameMap);
+			} catch (Exception e) {
+				System.out.println("DEBUG: Error fetching surname: " + e.getMessage());
+			}
 		}
-       	values.put("identity", idInfo);
+		     	values.put("identity", idInfo);
+		System.out.println("DEBUG: Values map: " + values);
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
