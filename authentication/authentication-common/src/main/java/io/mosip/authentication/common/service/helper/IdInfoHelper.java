@@ -136,6 +136,8 @@ public class IdInfoHelper {
 	public List<String> getIdMappingValue(IdMapping idMapping, MatchType matchType)
 			throws IdAuthenticationBusinessException {
 		String type = matchType.getCategory().getType();
+        mosipLogger.info("IDMAPPING: {}", idMapping);
+        mosipLogger.info("MATCHTYPE: {}", matchType);
 		List<String> mappings = idMapping.getMappingFunction().apply(idMappingConfig, matchType);
 		if (mappings != null && !mappings.isEmpty()) {
 			List<String> fullMapping = new ArrayList<>();
@@ -156,6 +158,7 @@ public class IdInfoHelper {
 							IdAuthenticationErrorConstants.UNABLE_TO_PROCESS.getErrorMessage());
 				}
 			}
+            mosipLogger.info("FULLMAPPING: {}", fullMapping);
 			return fullMapping;
 		} else {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
@@ -815,6 +818,7 @@ public class IdInfoHelper {
 	public List<String> getIdentityAttributesForMatchType(MatchType matchType, String idName) {
 		String propertyName = idName != null ? idName : matchType.getIdMapping().getIdname();
 		List<String> propertyNames;
+        mosipLogger.info("PROPERTYNAME1: {}", propertyName);
 		if (!matchType.isDynamic()) {
 			if(matchType.getIdMapping().getIdname().equals(propertyName)) {
 				try {
@@ -835,6 +839,7 @@ public class IdInfoHelper {
 				propertyNames = List.of(idName);
 			}
 		}
+        mosipLogger.info("PROPERTYNAMES2: {}", propertyNames);
 		return propertyNames;
 	}
 	
