@@ -406,16 +406,18 @@ public class KycFacadeImpl implements KycFacade {
 			}
 
 			List<String> consentAttributes = kycExchangeRequestDTO.getConsentObtained();
+            mosipLogger.info("COCENTEDATTRIBUTES: {}", consentAttributes);
 			List<String> allowedConsentAttributes = exchangeDataAttributesUtil.filterAllowedUserClaims(oidcClientId, consentAttributes);
-
+            mosipLogger.info("ALLOWEDCOCENTEDATTRIBUTES: {}", allowedConsentAttributes);
 			PolicyDTO policyDto = policyDtoOpt.get();
 			List<String> policyAllowedKycAttribs = Optional.ofNullable(policyDto.getAllowedKycAttributes()).stream()
 						.flatMap(Collection::stream).map(KYCAttributes::getAttributeName).collect(Collectors.toList());
-
+            mosipLogger.info("POLICYALLOWEDATTRIBS: {}", policyAllowedKycAttribs);
 			Set<String> filterAttributes = new HashSet<>();
 			exchangeDataAttributesUtil.mapConsentedAttributesToIdSchemaAttributes(allowedConsentAttributes, filterAttributes, policyAllowedKycAttribs);
+            mosipLogger.info("FILTERATTRIBUTES: {}", filterAttributes);
 			Set<String> policyAllowedAttributes = exchangeDataAttributesUtil.filterByPolicyAllowedAttributes(filterAttributes, policyAllowedKycAttribs);
-
+            mosipLogger.info("POLICYALLOWEDATTRIBUTE: {}", policyAllowedAttributes);
 			boolean isBioRequired = false;
 			if (filterAttributes.contains(CbeffDocType.FACE.getType().value().toLowerCase()) || 
 						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase())) {
@@ -425,7 +427,9 @@ public class KycFacadeImpl implements KycFacade {
 
 			Map<String, Object> idResDTO = idService.processIdType(idvIdType, idVid, isBioRequired,
 					IdAuthCommonConstants.KYC_EXCHANGE_CONSUME_VID_DEFAULT, policyAllowedAttributes);
+            mosipLogger.info("IDRESDTO: {}", idResDTO);
 			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);
+            mosipLogger.info("IDINFO: {}", idInfo);
 			
 			String token = idService.getToken(idResDTO);
 			String psuToken = kycTokenData.getPsuToken();
