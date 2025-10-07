@@ -503,9 +503,11 @@ public class KycServiceImpl implements KycService {
 				return;
 			}
 			Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, idInfo, null);
+            mosipLogger.info("FACE_CBFF: {}", faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
 					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
+                    mosipLogger.info("FACE_JPEG: {}", face);
 					if (Objects.nonNull(face))
 						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 				} catch (Exception e) {
