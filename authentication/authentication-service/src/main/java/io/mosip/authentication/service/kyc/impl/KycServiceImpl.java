@@ -506,6 +506,7 @@ public class KycServiceImpl implements KycService {
             mosipLogger.info("FACE_CBFF: {}", faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
+
 					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
                     mosipLogger.info("FACE_JPEG: {}", face);
 					if (Objects.nonNull(face))
@@ -781,11 +782,14 @@ public class KycServiceImpl implements KycService {
 	}
 	
 	private String getFaceBDB(String faceCbeff) throws Exception {
+        mosipLogger.info("FACECBEFF: {}", faceCbeff);
 		List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(faceCbeff.getBytes(), CbeffDocType.FACE.getName());
+        mosipLogger.info("BIRDATA: {}", birDataFromXMLType);
 		if(birDataFromXMLType.isEmpty()) {
 			//This is unlikely as if empty the exception would have been thrown already
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
 		}
+        mosipLogger.info("EnocodedBASE64: {}", CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb()));
 		return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
 	}
 }
