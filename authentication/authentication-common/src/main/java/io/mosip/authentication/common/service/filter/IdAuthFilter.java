@@ -337,7 +337,9 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	 */
 	private void verifyDigitalIdSignature(String jwsSignature, int index) throws IdAuthenticationAppException {
 		if (!verifySignature(jwsSignature, null, DomainType.DIGITAL_ID.getType())) {
-			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(), "verifyDigitalIdSignature", "Invalid certificate in biometrics>data>digitalId");
+			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(), "verifyDigitalIdSignature",
+					"Digital signature verification failed for biometrics index: " + index + " - Domain: " + DomainType.DIGITAL_ID.getType() +
+					" - This indicates the signing certificate is not trusted for DIGITAL_ID domain");
 			throw new IdAuthenticationAppException(
 					IdAuthenticationErrorConstants.DSIGN_FALIED.getErrorCode(),
 					String.format(IdAuthenticationErrorConstants.DSIGN_FALIED.getErrorMessage(),
