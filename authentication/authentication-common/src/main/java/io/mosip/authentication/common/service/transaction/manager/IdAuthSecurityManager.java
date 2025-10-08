@@ -48,6 +48,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.retry.WithRetry;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.core.util.HMACUtils2;
+import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.crypto.jce.core.CryptoCore;
 import io.mosip.kernel.cryptomanager.dto.Argon2GenerateHashRequestDto;
 import io.mosip.kernel.cryptomanager.dto.Argon2GenerateHashResponseDto;
@@ -382,6 +383,11 @@ public class IdAuthSecurityManager {
 	 */
 	public boolean verifySignature(String signature, String domain, String requestData,
 			Boolean isTrustValidationRequired) {
+		String certThumbprint = extractCertificateThumbprint(signature);
+		if (certThumbprint != null) {
+			mosipLogger.info(getUser(), ID_AUTH_TRANSACTION_MANAGER, "verifySignature",
+					"Certificate thumbprint from JWT: " + certThumbprint + " for domain: " + domain);
+		}
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
 		jwtSignatureVerifyRequestDto.setApplicationId(signApplicationid);
 		jwtSignatureVerifyRequestDto.setReferenceId(signRefid);
@@ -723,5 +729,27 @@ public class IdAuthSecurityManager {
 		hashRequestDto.setSalt(salt);
 		Argon2GenerateHashResponseDto hashResponseDto = cryptomanagerService.generateArgon2Hash(hashRequestDto);
 		return hashResponseDto.getHashValue();
+	}
+	private String extractCertificateThumbprint(String signature) {
+		try {
+			String[] parts = signature.split("\\.");
+			if (parts.length > 0) {
+				String headerJson = new String(CryptoUtil.decodeBase64Url(parts[0]));
+				Map<String, Object> headerMap = JsonUtils.jsonStringToJavaMap(headerJson);
+				if (headerMap.containsKey("x5c")) {
+					List<String> certList = (List<String>) headerMap.get("x5c");
+					if (!certList.isEmpty()) {
+						String certPem = certList.get(0);
+						byte[] certBytes = java.util.Base64.getDecoder().decode(certPem);
+						CertificateFactory cf = CertificateFactory.getInstance("X.509");
+						X509Certificate cert = (X509Certificate) cf.generateCertificate(new ByteArrayInputStream(certBytes));
+						return generateHashAndDigestAsPlainText(cert.getEncoded());
+					}
+				}
+			}
+		} catch (Exception e) {
+			mosipLogger.debug("Failed to extract certificate thumbprint from JWT", e);
+		}
+		return null;
 	}
 }
