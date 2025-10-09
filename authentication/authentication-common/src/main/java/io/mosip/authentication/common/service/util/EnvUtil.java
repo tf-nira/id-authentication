@@ -205,6 +205,8 @@ public class EnvUtil {
 
 	@Getter @Setter private static String kycExchangeDefaultLanguage;
 
+	@Getter @Setter private static String digitalIdDomainOverride;
+
 	@Autowired
 	private Environment env;
 
@@ -278,7 +280,7 @@ public class EnvUtil {
 		setKycTokenExpireTimeAdjustmentSeconds(this.getProperty(KYC_TOKEN_EXPIRE_TIME_ADJUSTMENT_IN_SECONDS, Long.class,
 			DEFAULT_KYC_TOKEN_EXPIRE_TIME_ADJUSTMENT_IN_SECONDS));
 		setKycExchangeDefaultLanguage(this.getProperty(KYC_EXCHANGE_DEFAULT_LANGUAGE, DEFAULT_KYC_EXCHANGE_DEFAULT_LANGUAGE));
-			
+		setDigitalIdDomainOverride(this.getProperty("mosip.ida.digitalid.domain-override"));
 	}
 	
 	public String getProperty(String key) {
@@ -307,5 +309,8 @@ public class EnvUtil {
 
 	public Environment getEnvironment() {
 		return env;
+	}
+	public static String getDigitalIdDomain() {
+		return getDigitalIdDomainOverride() != null ? getDigitalIdDomainOverride() : "FTM";
 	}
 }
