@@ -385,8 +385,11 @@ public class IdAuthSecurityManager {
 			Boolean isTrustValidationRequired) {
 		String certThumbprint = extractCertificateThumbprint(signature);
 		if (certThumbprint != null) {
+			String actualDomain = domain.equals("FTM") && EnvUtil.getDigitalIdDomainOverride() != null ?
+					EnvUtil.getDigitalIdDomain() : domain;
 			mosipLogger.info(getUser(), ID_AUTH_TRANSACTION_MANAGER, "verifySignature",
-					"Certificate thumbprint from JWT: " + certThumbprint + " for domain: " + domain);
+					"Certificate thumbprint from JWT: " + certThumbprint + " for domain: " + actualDomain +
+					(EnvUtil.getDigitalIdDomainOverride() != null && domain.equals("FTM") ? " (overridden from FTM)" : ""));
 		}
 		JWTSignatureVerifyRequestDto jwtSignatureVerifyRequestDto = new JWTSignatureVerifyRequestDto();
 		jwtSignatureVerifyRequestDto.setApplicationId(signApplicationid);
