@@ -107,7 +107,7 @@ public class AuthFacadeImplTest {
 
 
 	/** The auth facade impl. */
-	@InjectMocks
+	// @InjectMocks
 	private AuthFacadeImpl authFacadeImpl;
 
 	@Mock
@@ -145,7 +145,7 @@ public class AuthFacadeImplTest {
 	@Mock
 	private IDAMappingConfig idMappingConfig;
 
-	@InjectMocks
+	// @InjectMocks
 	NotificationServiceImpl notificationService;
 
 	@Mock
@@ -208,16 +208,27 @@ public class AuthFacadeImplTest {
 	@Before
 	public void before() {
 		MockitoAnnotations.initMocks(this);
-		ReflectionTestUtils.setField(authFacadeImpl, "otpAuthService", otpAuthService);
-		ReflectionTestUtils.setField(authFacadeImpl, "tokenIdManager", tokenIdManager);
-		ReflectionTestUtils.setField(authFacadeImpl, "securityManager", idAuthSecurityManager);
-		ReflectionTestUtils.setField(authFacadeImpl, "bioAuthService", bioAuthService);
-		ReflectionTestUtils.setField(authFacadeImpl, "authTransactionHelper", authTransactionHelper);
+		authFacadeImpl = new AuthFacadeImpl();
+        notificationService = new NotificationServiceImpl();
+		ReflectionTestUtils.setField(notificationService, "idTemplateManager", idTemplateManager);
+        ReflectionTestUtils.setField(notificationService, "notificationManager", notificationManager);
 		ReflectionTestUtils.setField(authFacadeImpl, "env", env);
 		ReflectionTestUtils.setField(authFacadeImpl, "notificationService", notificationService);
-		ReflectionTestUtils.setField(notificationService, "idTemplateManager", idTemplateManager);
-		ReflectionTestUtils.setField(notificationService, "notificationManager", notificationManager);
+		ReflectionTestUtils.setField(authFacadeImpl, "idService", idService);
+		ReflectionTestUtils.setField(authFacadeImpl, "kycService", kycService);
+		ReflectionTestUtils.setField(authFacadeImpl, "auditHelper", auditHelper);
+		ReflectionTestUtils.setField(authFacadeImpl, "idInfoHelper", idInfoHelper);
+		ReflectionTestUtils.setField(authFacadeImpl, "idInfoFetcher", idInfoFetcher);
+		ReflectionTestUtils.setField(authFacadeImpl, "demoAuthService", demoAuthService);
+		ReflectionTestUtils.setField(authFacadeImpl, "bioAuthService", bioAuthService);
+		ReflectionTestUtils.setField(authFacadeImpl, "otpAuthService", otpAuthService);
 		ReflectionTestUtils.setField(authFacadeImpl, "partnerService", partnerService);
+		ReflectionTestUtils.setField(authFacadeImpl, "tokenIdManager", tokenIdManager);
+		ReflectionTestUtils.setField(authFacadeImpl, "securityManager", idAuthSecurityManager);
+		ReflectionTestUtils.setField(authFacadeImpl, "authTransactionHelper", authTransactionHelper);
+		ReflectionTestUtils.setField(authFacadeImpl, "authFiltersValidator", authFiltersValidator);
+		ReflectionTestUtils.setField(authFacadeImpl, "authTypeStatus", authTypeStatus);
+		ReflectionTestUtils.setField(authFacadeImpl, "mapper", mapper);
 
 		EnvUtil.setAuthTokenRequired(true);
 	}
