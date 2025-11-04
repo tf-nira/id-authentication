@@ -87,6 +87,7 @@ import io.mosip.authentication.core.spi.indauth.service.OTPAuthService;
 import io.mosip.authentication.core.spi.partner.service.PartnerService;
 import io.mosip.idrepository.core.dto.AuthtypeStatus;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
+import org.mockito.MockitoAnnotations;
 
 /**
  * The class validates AuthFacadeImpl.
@@ -206,6 +207,7 @@ public class AuthFacadeImplTest {
 	 */
 	@Before
 	public void before() {
+		MockitoAnnotations.initMocks(this);
 		ReflectionTestUtils.setField(authFacadeImpl, "otpAuthService", otpAuthService);
 		ReflectionTestUtils.setField(authFacadeImpl, "tokenIdManager", tokenIdManager);
 		ReflectionTestUtils.setField(authFacadeImpl, "securityManager", idAuthSecurityManager);
