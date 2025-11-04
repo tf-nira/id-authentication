@@ -82,9 +82,12 @@ import io.mosip.authentication.core.spi.id.service.IdService;
 import io.mosip.authentication.core.spi.indauth.match.IdInfoFetcher;
 import io.mosip.authentication.core.spi.indauth.service.BioAuthService;
 import io.mosip.authentication.core.spi.indauth.service.DemoAuthService;
+import io.mosip.authentication.core.spi.indauth.service.KeyBindedTokenAuthService;
 import io.mosip.authentication.core.spi.indauth.service.KycService;
 import io.mosip.authentication.core.spi.indauth.service.OTPAuthService;
+import io.mosip.authentication.core.spi.indauth.service.PasswordAuthService;
 import io.mosip.authentication.core.spi.partner.service.PartnerService;
+import io.mosip.authentication.core.util.LanguageComparator;
 import io.mosip.idrepository.core.dto.AuthtypeStatus;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
 import org.mockito.MockitoAnnotations;
@@ -122,18 +125,27 @@ public class AuthFacadeImplTest {
 	private OTPAuthService otpAuthService;
 
 	/** The IdAuthService */
-	// @Mock
+	@Mock
 	private IdService<AutnTxn> idService;
 	/** The KycService **/
-	@Mock
+	// @Mock
 	private KycService kycService;
 
 	@Mock
 	private AuditHelper auditHelper;
 
 	/** The IdInfoHelper **/
-	// @Mock
+	@Mock
 	private IdInfoHelper idInfoHelper;
+
+	@Mock
+	private KeyBindedTokenAuthService keyBindedTokenAuthService;
+
+	@Mock
+	private PasswordAuthService passwordAuthService;
+
+	@Mock
+	private LanguageComparator languageComparator;
 
 	@Mock
 	private IdInfoFetcher idInfoFetcher;
@@ -207,27 +219,32 @@ public class AuthFacadeImplTest {
 	 */
 	@Before
 	public void before() {
-		MockitoAnnotations.initMocks(this);
-	    authFacadeImpl = new AuthFacadeImpl();
-	    notificationService = new NotificationServiceImpl();
-	
-	    ReflectionTestUtils.setField(notificationService, "idTemplateManager", idTemplateManager);
-	    ReflectionTestUtils.setField(notificationService, "notificationManager", notificationManager);
-	
-	    ReflectionTestUtils.setField(authFacadeImpl, "otpAuthService", otpAuthService);
-	    ReflectionTestUtils.setField(authFacadeImpl, "idService", idService);
-	    ReflectionTestUtils.setField(authFacadeImpl, "auditHelper", auditHelper);
-	    ReflectionTestUtils.setField(authFacadeImpl, "env", env);
-	    ReflectionTestUtils.setField(authFacadeImpl, "demoAuthService", demoAuthService);
-	    ReflectionTestUtils.setField(authFacadeImpl, "bioAuthService", bioAuthService);
-	    ReflectionTestUtils.setField(authFacadeImpl, "notificationService", notificationService);
-	    ReflectionTestUtils.setField(authFacadeImpl, "tokenIdManager", tokenIdManager);
-	    ReflectionTestUtils.setField(authFacadeImpl, "securityManager", idAuthSecurityManager);
-	    ReflectionTestUtils.setField(authFacadeImpl, "partnerService", partnerService);
-	    ReflectionTestUtils.setField(authFacadeImpl, "authTransactionHelper", authTransactionHelper);
-	    ReflectionTestUtils.setField(authFacadeImpl, "authFiltersValidator", authFiltersValidator);
-	    ReflectionTestUtils.setField(authFacadeImpl, "idInfoHelper", idInfoHelper);
-		EnvUtil.setAuthTokenRequired(true);
+	MockitoAnnotations.initMocks(this);
+    authFacadeImpl = new AuthFacadeImpl();
+    notificationService = new NotificationServiceImpl();
+
+    ReflectionTestUtils.setField(notificationService, "idTemplateManager", idTemplateManager);
+    ReflectionTestUtils.setField(notificationService, "notificationManager", notificationManager);
+    ReflectionTestUtils.setField(notificationService, "infoHelper", idInfoHelper); // Was missing
+    ReflectionTestUtils.setField(notificationService, "idInfoFetcher", idInfoFetcher); // Was missing
+    ReflectionTestUtils.setField(notificationService, "languageComparator", languageComparator); // was missing
+
+    ReflectionTestUtils.setField(authFacadeImpl, "otpAuthService", otpAuthService);
+    ReflectionTestUtils.setField(authFacadeImpl, "idService", idService);
+    ReflectionTestUtils.setField(authFacadeImpl, "auditHelper", auditHelper);
+    ReflectionTestUtils.setField(authFacadeImpl, "env", env);
+    ReflectionTestUtils.setField(authFacadeImpl, "demoAuthService", demoAuthService);
+    ReflectionTestUtils.setField(authFacadeImpl, "bioAuthService", bioAuthService);
+    ReflectionTestUtils.setField(authFacadeImpl, "notificationService", notificationService);
+    ReflectionTestUtils.setField(authFacadeImpl, "tokenIdManager", tokenIdManager);
+    ReflectionTestUtils.setField(authFacadeImpl, "securityManager", idAuthSecurityManager);
+    ReflectionTestUtils.setField(authFacadeImpl, "partnerService", partnerService);
+    ReflectionTestUtils.setField(authFacadeImpl, "authTransactionHelper", authTransactionHelper);
+    ReflectionTestUtils.setField(authFacadeImpl, "authFiltersValidator", authFiltersValidator);
+    ReflectionTestUtils.setField(authFacadeImpl, "idInfoHelper", idInfoHelper);
+	ReflectionTestUtils.setField(authFacadeImpl, "keyBindedTokenAuthService", keyBindedTokenAuthService);
+	ReflectionTestUtils.setField(authFacadeImpl, "passwordAuthService", passwordAuthService); 
+	EnvUtil.setAuthTokenRequired(true);
 	}
 
 	/**
