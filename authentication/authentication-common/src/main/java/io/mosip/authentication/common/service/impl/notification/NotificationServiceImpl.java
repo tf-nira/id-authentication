@@ -90,17 +90,17 @@ public class NotificationServiceImpl implements NotificationService {
 		System.out.println("DEBUG: Template languages = " + templateLanguages);
 		
 		for (String lang : templateLanguages) {
-			Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
-			System.out.println("DEBUG: nameMap for lang " + lang + ": " + nameMap);
-			values.putAll(nameMap);
-			String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
-			System.out.println("DEBUG: nameStr for lang " + lang + ": " + nameStr);
-			values.put(NAME + "_" + lang, nameStr);
-
+			// Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
+			// System.out.println("DEBUG: nameMap for lang " + lang + ": " + nameMap);
+			// values.putAll(nameMap);
+			// String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
+			// System.out.println("DEBUG: nameStr for lang " + lang + ": " + nameStr);
+			values.put(NAME + "_"+ lang, idInfo.get("fullName").get(0).getValue());
 		}
-		values.put("identity", idInfo);
-        System.out.println("DEBUG: idInfo keys: " + idInfo.keySet());
-        System.out.println("DEBUG: Values map: " + values);
+		values.put(NAME + "_eng", idInfo.get("fullName").get(0).getValue());
+		// values.put("identity", idInfo);
+        // System.out.println("DEBUG: idInfo keys: " + idInfo.keySet());
+        // System.out.println("DEBUG: Values map: " + values);
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
