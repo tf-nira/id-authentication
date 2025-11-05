@@ -87,20 +87,15 @@ public class NotificationServiceImpl implements NotificationService {
 
 		Map<String, Object> values = new HashMap<>();
 		List<String> templateLanguages = getTemplateLanguages(idInfo);
-		System.out.println("DEBUG: Template languages = " + templateLanguages);
+		
+		System.out.println("DEBUG: Template languages identified = " + templateLanguages);
 		
 		for (String lang : templateLanguages) {
-			// Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
-			// System.out.println("DEBUG: nameMap for lang " + lang + ": " + nameMap);
-			// values.putAll(nameMap);
-			// String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
-			// System.out.println("DEBUG: nameStr for lang " + lang + ": " + nameStr);
-			values.put(NAME + "_"+ lang, idInfo.get("fullName").get(0).getValue());
+			String nameValue = infoHelper.getEntityInfoAsString(DemoMatchType.NAME, lang, idInfo);
+			System.out.println("DEBUG: For language '" + lang + "', the fetched name is: '" + nameValue + "'");
+			values.put(NAME + "_" + lang, nameValue);
 		}
-		values.put(NAME + "_eng", idInfo.get("fullName").get(0).getValue());
-		// values.put("identity", idInfo);
-        // System.out.println("DEBUG: idInfo keys: " + idInfo.keySet());
-        // System.out.println("DEBUG: Values map: " + values);
+
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
@@ -140,6 +135,8 @@ public class NotificationServiceImpl implements NotificationService {
 			// For internal auth no notification is done
 			notificationType = NotificationType.NONE.getName();
 		}
+
+		System.out.println("DEBUG: Final values map before sending notification: " + values);
 
 		sendNotification(values, email, phoneNumber, SenderType.AUTH, notificationType, templateLanguages);
 	}
@@ -294,8 +291,11 @@ public class NotificationServiceImpl implements NotificationService {
 	private String applyTemplate(Map<String, Object> values, String templateName, List<String> templateLanguages)
 			throws IdAuthenticationBusinessException {
 		try {
+			System.out.println("DEBUG: Applying template '" + templateName + "' with values: " + values + " for languages: " + templateLanguages);
 			Objects.requireNonNull(templateName);
-			return idTemplateManager.applyTemplate(templateName, values, templateLanguages);
+			String processedTemplate = idTemplateManager.applyTemplate(templateName, values, templateLanguages);
+			System.out.println("DEBUG: Processed template '" + templateName + "' output: " + processedTemplate);
+			return processedTemplate;
 		} catch (IOException e) {
 			// FIXME change the error code
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
