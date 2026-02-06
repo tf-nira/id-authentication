@@ -1,5 +1,5 @@
 #FROM openjdk:11
-FROM eclipse-temurin:11-jdk
+FROM eclipse-temurin:11-jdk-focal
 
 ARG SOURCE
 ARG COMMIT_HASH
@@ -124,3 +124,4 @@ CMD if [ "$is_glowroot_env" = "present" ]; then \
 
 #Sample docker run command:
 # sudo docker run --rm -it -e artifactory_url_env="http://artifactory" -e spring_config_label_env="1.0.9" -e active_profile_env="dev" -e spring_config_url_env="http://config-server/config" -e PKCS11_PROXY_SOCKET=tcp://softhsm-ida:5666 -p 8092:8092 authentication-otp-service:1.0.9
+
