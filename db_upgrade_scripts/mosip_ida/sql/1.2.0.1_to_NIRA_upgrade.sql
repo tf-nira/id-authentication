@@ -11,12 +11,12 @@ GRANT SELECT, INSERT, TRUNCATE, REFERENCES, UPDATE, DELETE ON ALL TABLES IN SCHE
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ida TO postgres;
 
 ----------------------------------------------Multiple table level changes on IDA db-------------------------------------------------------
-ALTER TABLE ida.partner_data ADD COLUMN requires_payment boolean NOT NULL;
+ALTER TABLE ida.partner_data ADD COLUMN requires_payment boolean NOT NULL DEFAULT false;
 --------------------------------------------------------------------------------------------------
 CREATE TABLE ida.auth_types (
 	code character varying(128) NOT NULL,
 	description character varying(128) NOT NULL,
-	is_active boolean NOT NULL DEFAULT TRUE
+	is_active boolean NOT NULL DEFAULT TRUE,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
@@ -40,12 +40,12 @@ COMMENT ON COLUMN ida.auth_types.upd_dtimes IS 'Updated DateTimestamp : Date and
 CREATE TABLE ida.auth_sub_types (
 	code character varying(128) NOT NULL,
 	description character varying(128) NOT NULL,
-	is_active boolean NOT NULL DEFAULT TRUE
+	is_active boolean NOT NULL DEFAULT TRUE,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
     upd_dtimes timestamp,
-	CONSTRAINT  pk_idCode PRIMARY KEY (code)
+	CONSTRAINT  pk_idSubTypeCode PRIMARY KEY (code)
 );
 
 COMMENT ON TABLE ida.auth_sub_types IS 'Auth Sub Types : Table to store authentication sub types used in the system.';
@@ -68,7 +68,6 @@ CREATE TABLE ida.auth_charges (
 	amount numeric NOT NULL,
 	effective_from timestamp NOT NULL,
 	effective_to timestamp ,
-	is_active boolean NOT NULL DEFAULT TRUE
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
@@ -82,7 +81,6 @@ COMMENT ON COLUMN ida.auth_charges.sub_type_code IS 'Authentication sub-type cod
 COMMENT ON COLUMN ida.auth_charges.amount IS 'Charge amount applicable for the given authentication type and subtype.';
 COMMENT ON COLUMN ida.auth_charges.effective_from IS 'Start timestamp from which the charge amount is effective.';
 COMMENT ON COLUMN ida.auth_charges.effective_to IS 'End timestamp until which the charge amount is effective (null means currently active).';
-COMMENT ON COLUMN ida.auth_charges.is_active IS 'Indicates whether the authentication charge record is active (true) or inactive (false).';
 COMMENT ON COLUMN ida.auth_charges.cr_by IS 'Created By : ID or name of the user who create / insert record.';
 -- ddl-end --
 COMMENT ON COLUMN ida.auth_charges.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted.';
@@ -121,7 +119,7 @@ CREATE TABLE ida.partner_payment_transactions (
 	amount numeric NOT NULL,
 	transaction_id character varying(128) NOT NULL,
     log_dtimes timestamp NOT NULL,
-	CONSTRAINT  pk_idPartner PRIMARY KEY (partner_id)
+	CONSTRAINT  pk_idPartnerPay PRIMARY KEY (partner_id)
 );
 
 COMMENT ON TABLE ida.partner_payment_transactions IS 'Partner Payment Transactions : Table to Stores payment transaction records associated with partners.';

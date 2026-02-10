@@ -1,12 +1,12 @@
 CREATE TABLE ida.auth_sub_types (
 	code character varying(128) NOT NULL,
 	description character varying(128) NOT NULL,
-	is_active boolean NOT NULL DEFAULT TRUE
+	is_active boolean NOT NULL DEFAULT TRUE,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
     upd_dtimes timestamp,
-	CONSTRAINT  pk_idCode PRIMARY KEY (code)
+	CONSTRAINT  pk_idSubTypeCode PRIMARY KEY (code)
 );
 
 COMMENT ON TABLE ida.auth_sub_types IS 'Auth Sub Types : Table to store authentication sub types used in the system.';

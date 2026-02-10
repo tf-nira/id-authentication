@@ -48,13 +48,8 @@ public class AuthCharges {
 	@Column(name = "effective_from")
 	private LocalDateTime effectiveFrom;
 
-
 	@Column(name = "effective_to")
 	private LocalDateTime effectiveTo;
-
-	@NotNull
-	@Column(name = "is_active")
-	private boolean isActive;
 
 	@NotNull
 	@Column(name = "cr_by")

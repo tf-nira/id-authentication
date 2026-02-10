@@ -23,6 +23,4 @@ public class AuthChargesDTO {
 
 	private LocalDateTime effectiveTo;
 
-	private boolean isActive;
-
 }

@@ -3,7 +3,7 @@ CREATE TABLE ida.partner_payment_transactions (
 	amount numeric NOT NULL,
 	transaction_id character varying(128) NOT NULL,
     log_dtimes timestamp NOT NULL,
-	CONSTRAINT  pk_idPartner PRIMARY KEY (partner_id)
+	CONSTRAINT  pk_idPartnerPay PRIMARY KEY (partner_id)
 );
 
 COMMENT ON TABLE ida.partner_payment_transactions IS 'Partner Payment Transactions : Table to Stores payment transaction records associated with partners.';
