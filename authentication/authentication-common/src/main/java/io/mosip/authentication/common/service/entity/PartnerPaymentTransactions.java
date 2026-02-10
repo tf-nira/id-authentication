@@ -25,6 +25,11 @@ public class PartnerPaymentTransactions {
 
 	@Id
 	@NotNull
+	@Column(name = "transaction_id")
+	private String transactionId;
+
+
+	@NotNull
 	@Column(name = "partner_id")
 	private String partnerId;
 
@@ -32,9 +37,6 @@ public class PartnerPaymentTransactions {
 	@Column(name = "amount", precision = 19, scale = 2)
 	private BigDecimal amount;
 
-	@NotNull
-	@Column(name = "transaction_id")
-	private String transactionId;
 
 	@NotNull
 	@Column(name = "log_dtimes")

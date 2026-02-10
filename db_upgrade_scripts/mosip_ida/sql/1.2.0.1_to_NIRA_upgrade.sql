@@ -115,11 +115,11 @@ COMMENT ON COLUMN ida.partner_current_balance.upd_dtimes IS 'Updated DateTimesta
 ------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE ida.partner_payment_transactions (
-	partner_id character varying(128) NOT NULL,
-	amount numeric NOT NULL,
 	transaction_id character varying(128) NOT NULL,
+	amount numeric NOT NULL,
+	partner_id character varying(128) NOT NULL,
     log_dtimes timestamp NOT NULL,
-	CONSTRAINT  pk_idPartnerPay PRIMARY KEY (partner_id)
+	CONSTRAINT  pk_idTransactionId PRIMARY KEY (transaction_id)
 );
 
 COMMENT ON TABLE ida.partner_payment_transactions IS 'Partner Payment Transactions : Table to Stores payment transaction records associated with partners.';
