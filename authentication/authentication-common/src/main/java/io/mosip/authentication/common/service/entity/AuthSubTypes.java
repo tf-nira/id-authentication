@@ -26,11 +26,11 @@ public class AuthSubTypes {
     private String code;
 	
 	@NotNull
-    @Column(name = "description ")
+	@Column(name = "description")
     private String description;
 
 	@NotNull
-	@Column(name = "is_active ")
+	@Column(name = "is_active")
 	private boolean isActive;
 
 	@NotNull

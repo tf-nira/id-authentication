@@ -1,6 +1,6 @@
 CREATE TABLE ida.partner_current_balance (
-	partner_id  character varying(128) NOT NULL,
-	balance   numeric NOT NULL,
+	partner_id character varying(128) NOT NULL,
+	balance numeric NOT NULL,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),

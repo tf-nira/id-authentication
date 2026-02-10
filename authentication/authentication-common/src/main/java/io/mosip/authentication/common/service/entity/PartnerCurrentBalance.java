@@ -29,7 +29,7 @@ public class PartnerCurrentBalance {
 	private String partnerId;
 
 	@NotNull
-	@Column(name = "balance ", precision = 19, scale = 2)
+	@Column(name = "balance", precision = 19, scale = 2)
 	private BigDecimal balance;
 
 	@NotNull

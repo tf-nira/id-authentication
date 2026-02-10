@@ -1,7 +1,7 @@
 CREATE TABLE ida.auth_charges (
 	type_code  character varying(128) NOT NULL,
 	sub_type_code character varying(128) NOT NULL,
-	amount   numeric NOT NULL,
+	amount numeric NOT NULL,
 	effective_from timestamp NOT NULL,
 	effective_to timestamp ,
 	is_active boolean NOT NULL DEFAULT TRUE

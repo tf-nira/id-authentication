@@ -40,7 +40,7 @@ public class AuthCharges {
     private String subTypeCode ;
 	
 	@NotNull
-	@Column(name = "amount ", precision = 19, scale = 2)
+	@Column(name = "amount", precision = 19, scale = 2)
 	private BigDecimal amount;
 
 	@Id
@@ -53,7 +53,7 @@ public class AuthCharges {
 	private LocalDateTime effectiveTo;
 
 	@NotNull
-	@Column(name = "is_active ")
+	@Column(name = "is_active")
 	private boolean isActive;
 
 	@NotNull

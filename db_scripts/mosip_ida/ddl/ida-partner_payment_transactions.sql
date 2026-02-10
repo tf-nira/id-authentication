@@ -1,7 +1,7 @@
 CREATE TABLE ida.partner_payment_transactions (
-	partner_id  character varying(128) NOT NULL,
-	amount   numeric NOT NULL,
-	transaction_id   character varying(128) NOT NULL,
+	partner_id character varying(128) NOT NULL,
+	amount numeric NOT NULL,
+	transaction_id character varying(128) NOT NULL,
     log_dtimes timestamp NOT NULL,
 	CONSTRAINT  pk_idPartner PRIMARY KEY (partner_id)
 );
