@@ -63,9 +63,9 @@ COMMENT ON COLUMN ida.auth_sub_types.upd_dtimes IS 'Updated DateTimestamp : Date
 
 
 CREATE TABLE ida.auth_charges (
-	type_code  character varying(128) NOT NULL,
+	type_code character varying(128) NOT NULL,
 	sub_type_code character varying(128) NOT NULL,
-	amount   numeric NOT NULL,
+	amount numeric NOT NULL,
 	effective_from timestamp NOT NULL,
 	effective_to timestamp ,
 	is_active boolean NOT NULL DEFAULT TRUE
@@ -94,8 +94,8 @@ COMMENT ON COLUMN ida.auth_charges.upd_dtimes IS 'Updated DateTimestamp : Date a
 -------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE ida.partner_current_balance (
-	partner_id  character varying(128) NOT NULL,
-	balance   numeric NOT NULL,
+	partner_id character varying(128) NOT NULL,
+	balance numeric NOT NULL,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
@@ -117,9 +117,9 @@ COMMENT ON COLUMN ida.partner_current_balance.upd_dtimes IS 'Updated DateTimesta
 ------------------------------------------------------------------------------------------------------------------
 
 CREATE TABLE ida.partner_payment_transactions (
-	partner_id  character varying(128) NOT NULL,
-	amount   numeric NOT NULL,
-	transaction_id   character varying(128) NOT NULL,
+	partner_id character varying(128) NOT NULL,
+	amount numeric NOT NULL,
+	transaction_id character varying(128) NOT NULL,
     log_dtimes timestamp NOT NULL,
 	CONSTRAINT  pk_idPartner PRIMARY KEY (partner_id)
 );
