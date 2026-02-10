@@ -48,6 +48,10 @@ public class PartnerData {
 	private String partnerStatus;
 	
 	@NotNull
+	@Column(name = "requires_payment")
+	private Boolean requiresPayment;
+	
+	@NotNull
 	@Column(name = "cr_by")
 	private String createdBy;
 
