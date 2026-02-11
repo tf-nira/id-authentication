@@ -53,7 +53,6 @@ import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 import io.mosip.authentication.core.partner.dto.PolicyDTO;
-import io.mosip.authentication.core.spi.authcharges.service.AuthChargesService;
 import io.mosip.authentication.core.spi.bioauth.CbeffDocType;
 import io.mosip.authentication.core.spi.id.service.IdService;
 import io.mosip.authentication.core.spi.indauth.facade.AuthFacade;
@@ -137,9 +136,6 @@ public class AuthFacadeImpl implements AuthFacade {
 
 	@Autowired
 	private PasswordAuthService passwordAuthService;
-	
-	@Autowired
-	private AuthChargesService authChargesService;
 
 	/*
 	 * (non-Javadoc)
@@ -451,7 +447,6 @@ public class AuthFacadeImpl implements AuthFacade {
 				boolean isStatus = otpValidationStatus != null && otpValidationStatus.isStatus();
 				auditHelper.audit(AuditModules.OTP_AUTH, getAuditEvent(isAuth), authRequestDTO.getTransactionID(),
 						idType, "authenticateApplicant status : " + isStatus);
-				authChargesService.findActiveAuthCharges();
 
 			} finally {
 				boolean isStatus = otpValidationStatus != null && otpValidationStatus.isStatus();
