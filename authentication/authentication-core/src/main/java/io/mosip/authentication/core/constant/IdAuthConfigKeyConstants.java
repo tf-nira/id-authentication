@@ -114,6 +114,7 @@ public final class IdAuthConfigKeyConstants {
 	public static final String IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_APPROVED = "ida-topic-pmp-partner-api-key-approved";
 	public static final String IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_UPDATED = "ida-topic-pmp-partner-api-key-updated";
 	public static final String IDA_WEBSUB_TOPIC_PMP_POLICY_UPDATED = "ida-topic-pmp-policy-updated";
+	public static final String IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED = "ida-topic-pmp-partner-amount-updated";
 	public static final String IDA_WEBSUB_CA_CERT_TOPIC = "ida-topic-pmp-ca-certificate-uploaded";
 	public static final String IDA_WEBSUB_HOTLIST_TOPIC = "ida-topic-hotlist";
 	public static final String IDA_WEBSUB_MASTERDATA_TEMPLATES_TOPIC = "ida-topic-masterdata-templates";
