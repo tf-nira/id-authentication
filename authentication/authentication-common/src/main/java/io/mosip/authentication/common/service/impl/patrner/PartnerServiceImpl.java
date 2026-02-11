@@ -64,7 +64,7 @@ public class PartnerServiceImpl implements PartnerService {
 	@Override
 	public PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId)
 	{
-		return null;
+		return partnerServiceManager.getPartnerCurrentBalance(partnerId);
 	}
 
 	@Override
