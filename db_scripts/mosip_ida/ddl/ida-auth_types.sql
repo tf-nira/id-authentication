@@ -1,7 +1,7 @@
 CREATE TABLE ida.auth_types (
 	code character varying(128) NOT NULL,
 	description character varying(128) NOT NULL,
-	is_active boolean NOT NULL DEFAULT TRUE,
+	is_active boolean NOT NULL,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),

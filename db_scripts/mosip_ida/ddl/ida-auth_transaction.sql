@@ -34,6 +34,7 @@ CREATE TABLE ida.auth_transaction(
 	static_tkn_id character varying(64),
 	request_signature character varying,
 	response_signature character varying,
+	amount numeric,
 	cr_by character varying(256) NOT NULL,
 	cr_dtimes timestamp NOT NULL,
 	upd_by character varying(256),
@@ -82,6 +83,8 @@ COMMENT ON COLUMN ida.auth_transaction.static_tkn_id IS 'Static Token Id : This 
 COMMENT ON COLUMN ida.auth_transaction.request_signature IS 'Request Signature: Request body information stored with signed';
 -- ddl-end --
 COMMENT ON COLUMN ida.auth_transaction.response_signature IS 'Response Signature: Response body stored with signed';
+
+COMMENT ON COLUMN ida.auth_transaction.amount IS 'Charge amount applicable for the the auth transaction.';
 -- ddl-end --
 COMMENT ON COLUMN ida.auth_transaction.cr_by IS 'Created By : ID or name of the user who create / insert record';
 -- ddl-end --

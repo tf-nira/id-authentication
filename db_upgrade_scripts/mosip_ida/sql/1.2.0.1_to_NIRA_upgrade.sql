@@ -13,6 +13,8 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ida TO postgres;
 ----------------------------------------------Multiple table level changes on IDA db-------------------------------------------------------
 ALTER TABLE ida.partner_data ADD COLUMN requires_payment boolean NOT NULL DEFAULT false;
 --------------------------------------------------------------------------------------------------
+ALTER TABLE ida.auth_transaction ADD COLUMN amount numeric;
+--------------------------------------------------------------------------------------------------
 CREATE TABLE ida.auth_types (
 	code character varying(128) NOT NULL,
 	description character varying(128) NOT NULL,
@@ -67,12 +69,15 @@ CREATE TABLE ida.auth_charges (
 	sub_type_code character varying(128) NOT NULL,
 	amount numeric NOT NULL,
 	effective_from timestamp NOT NULL,
-	effective_to timestamp ,
+	effective_to timestamp,
+	is_active boolean NOT NULL,
 	cr_by character varying(256) NOT NULL,
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
     upd_dtimes timestamp,
 	CONSTRAINT  pk_idTypeCodeSubTypeCodeEffectiveFrom PRIMARY KEY (type_code,sub_type_code,effective_from)
+	CONSTRAINT fk_auth_charges_type FOREIGN KEY (type_code) REFERENCES ida.auth_types(code),
+	CONSTRAINT fk_auth_charges_sub_type FOREIGN KEY (sub_type_code) REFERENCES ida.auth_sub_types(code)
 );
 
 COMMENT ON TABLE ida.auth_charges IS 'Auth Charges : Table to store  authentication charges by type and subtype with effective date versioning.';
@@ -81,6 +86,7 @@ COMMENT ON COLUMN ida.auth_charges.sub_type_code IS 'Authentication sub-type cod
 COMMENT ON COLUMN ida.auth_charges.amount IS 'Charge amount applicable for the given authentication type and subtype.';
 COMMENT ON COLUMN ida.auth_charges.effective_from IS 'Start timestamp from which the charge amount is effective.';
 COMMENT ON COLUMN ida.auth_charges.effective_to IS 'End timestamp until which the charge amount is effective (null means currently active).';
+COMMENT ON COLUMN ida.auth_charges.is_active IS 'Indicates whether the authentication type is active (true) or inactive (false).';
 COMMENT ON COLUMN ida.auth_charges.cr_by IS 'Created By : ID or name of the user who create / insert record.';
 -- ddl-end --
 COMMENT ON COLUMN ida.auth_charges.cr_dtimes IS 'Created DateTimestamp : Date and Timestamp when the record is created/inserted.';

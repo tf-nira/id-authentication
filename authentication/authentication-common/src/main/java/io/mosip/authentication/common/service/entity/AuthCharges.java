@@ -7,6 +7,8 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
 
@@ -52,6 +54,10 @@ public class AuthCharges {
 	private LocalDateTime effectiveTo;
 
 	@NotNull
+	@Column(name = "is_active")
+	private boolean isActive;
+
+	@NotNull
 	@Column(name = "cr_by")
 	private String crBy;
 
@@ -64,4 +70,13 @@ public class AuthCharges {
 
 	@Column(name = "upd_dtimes")
 	private LocalDateTime updDTimes;
+
+	@ManyToOne
+	@JoinColumn(name = "type_code", referencedColumnName = "code", insertable = false, updatable = false)
+	private AuthTypes authType;
+
+	@ManyToOne
+	@JoinColumn(name = "sub_type_code", referencedColumnName = "code", insertable = false, updatable = false)
+	private AuthSubTypes authSubType;
+
 }
