@@ -1,5 +1,32 @@
 package io.mosip.authentication.common.service.filter;
 
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.API_KEY;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIOMETRICS;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_DATA_INPUT_PARAM;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_DIGITALID_INPUT_PARAM_TYPE;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_SESSIONKEY_INPUT_PARAM;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_TIMESTAMP_INPUT_PARAM;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_TYPE;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_TYPE_INPUT_PARAM;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_VALUE;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BIO_VALUE_INPUT_PARAM;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.DATA;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.DEMOGRAPHICS;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.DIGITAL_ID;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.HASH;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.HASH_INPUT_PARAM;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.KEY_BINDED_TOKEN;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.KYC;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.METADATA;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.MISPLICENSE_KEY;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_ID;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.REQUEST;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.REQUEST_HMAC;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.REQUEST_SESSION_KEY;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.SESSION_KEY;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.TIMESTAMP;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.UTF_8;
+
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -7,9 +34,11 @@ import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -26,9 +55,6 @@ import java.util.stream.Stream;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
-
-import io.mosip.authentication.core.indauth.dto.KeyBindedTokenDTO;
-import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -55,12 +81,16 @@ import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.BioIdentityInfoDTO;
 import io.mosip.authentication.core.indauth.dto.DigitalId;
+import io.mosip.authentication.core.indauth.dto.KeyBindedTokenDTO;
+import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
+import io.mosip.authentication.core.partner.dto.AuthChargesDTO;
 import io.mosip.authentication.core.partner.dto.AuthPolicy;
 import io.mosip.authentication.core.partner.dto.KYCAttributes;
 import io.mosip.authentication.core.partner.dto.MispPolicyDTO;
 import io.mosip.authentication.core.partner.dto.PartnerDTO;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
+import io.mosip.authentication.core.spi.authcharges.service.AuthChargesService;
 import io.mosip.authentication.core.spi.authtype.acramr.AuthMethodsRefValues;
 import io.mosip.authentication.core.spi.authtype.acramr.AuthenticationFactor;
 import io.mosip.authentication.core.spi.indauth.match.MatchType;
@@ -73,8 +103,6 @@ import io.mosip.kernel.core.util.JsonUtils;
 import io.mosip.kernel.core.util.StringUtils;
 import io.mosip.kernel.core.util.exception.JsonMappingException;
 import io.mosip.kernel.core.util.exception.JsonParseException;
-
-import static io.mosip.authentication.core.constant.IdAuthCommonConstants.*;
 
 /**
  * The Class IdAuthFilter - the implementation for deciphering and validation of
@@ -111,6 +139,10 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 
 	private AuthMethodsRefValues authMethodsRefValues;
 	
+	private AuthChargesService authChargesService;
+
+	private List<AuthChargesDTO> authChargesDtoList;
+
 	/**
 	 * Initialize the filter.
 	 *
@@ -127,8 +159,11 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		// Internal auth is not depending on partner service
 		try {
 			partnerService = context.getBean(PartnerService.class);
+			authChargesService = context.getBean(AuthChargesService.class);
+			authChargesDtoList = authChargesService.findActiveAuthCharges();
 		} catch (NoSuchBeanDefinitionException ex) {
 			//
+			authChargesDtoList = Collections.emptyList();
 		}
 		authContextClazzRefProvider = context.getBean(AuthContextClazzRefProvider.class);
 		authMethodsRefValues = authContextClazzRefProvider.getAuthMethodsRefValues();
@@ -403,10 +438,12 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			checkAllowedAuthTypeBasedOnPolicy(partnerServiceResponse, requestBody);
 			// Later, Validate OIDC Client allowed AMR values.
 			checkAllowedAMRBasedOnClientConfig(requestBody, partnerServiceResponse);
+			checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
 			addMetadata(requestBody, partnerId, partnerApiKey, partnerServiceResponse,
 					partnerServiceResponse.getCertificateData());
 		}
 	}
+
 
 	/**
 	 * Checks if is partner certificate needed.
@@ -1234,4 +1271,44 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		return new HashSet<>(List.of(languages.split(",")));
 	}
 
+	private void checkPaymentChargesForAuth(Map<String, Object> requestBody,
+			PartnerPolicyResponseDTO partnerServiceResponse)
+			throws IdAuthenticationAppException {
+		try {
+		AuthRequestDTO authRequestDTO = mapper.readValue(mapper.writeValueAsBytes(requestBody), AuthRequestDTO.class);
+		String[] typeAndSubType = getTypeAndSubType(authRequestDTO);
+		if (typeAndSubType != null) {
+			String type = typeAndSubType[0];
+			String subType = typeAndSubType[1];
+			LocalDateTime currentTime = LocalDateTime.now();
+			AuthChargesDTO authChargesDTO = authChargesDtoList.stream()
+					.filter(dto -> dto.getTypeCode().equalsIgnoreCase(type)
+							&& dto.getSubTypeCode().equalsIgnoreCase(subType))
+					.filter(dto -> !dto.getEffectiveFrom().isAfter(currentTime))
+					.filter(dto -> dto.getEffectiveTo() == null || !dto.getEffectiveTo().isBefore(currentTime))
+					.max(Comparator.comparing(AuthChargesDTO::getEffectiveFrom)).orElse(null);
+			if (authChargesDTO == null) {
+				throw new IdAuthenticationAppException(
+						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorCode(),
+						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorMessage());
+			}
+
+		}
+
+
+	} catch (IOException e) {
+			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
+		}
+	}
+
+	private String[] getTypeAndSubType(AuthRequestDTO authRequestDTO) throws IdAuthenticationAppException {
+	    if (AuthTypeUtil.isDemo(authRequestDTO)) {
+	        return new String[] { "demo", "demo" };
+	    } else if (AuthTypeUtil.isBio(authRequestDTO)) {
+	        return new String[] { "bio", "bio" };
+	    } else if (AuthTypeUtil.isOtp(authRequestDTO)) {
+	        return new String[] { "otp", "otp" };
+		}
+		return null;
+	}
 }

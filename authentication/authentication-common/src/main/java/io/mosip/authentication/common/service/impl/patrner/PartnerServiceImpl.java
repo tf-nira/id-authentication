@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import io.mosip.authentication.common.service.integration.PartnerServiceManager;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
+import io.mosip.authentication.core.partner.dto.PartnerCurrentBalanceDTO;
 import io.mosip.authentication.core.partner.dto.PartnerDTO;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 import io.mosip.authentication.core.spi.partner.service.PartnerService;
@@ -57,5 +58,11 @@ public class PartnerServiceImpl implements PartnerService {
 			throws IdAuthenticationBusinessException {
 		String key = partnerId + partnerApiKey;
 		return Optional.ofNullable(mapper.convertValue(metadata.get(key), PartnerPolicyResponseDTO.class));
+	}
+
+	@Override
+	public PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId)
+			throws IdAuthenticationBusinessException {
+		return null;
 	}
 }

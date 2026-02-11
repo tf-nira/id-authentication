@@ -104,6 +104,7 @@ public class PartnerServiceManager {
 	@Autowired
 	private IdAuthSecurityManager securityManager;
 
+
 	/**
 	 * Validate and get policy.
 	 *

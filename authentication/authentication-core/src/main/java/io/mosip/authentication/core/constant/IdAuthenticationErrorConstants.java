@@ -153,7 +153,7 @@ public enum IdAuthenticationErrorConstants {
 	URI_PATH_PARAMS_MISSING("IDA-MPA-038", "Required Number of Path parameters are missing in URI",
 			"Please try adding all the required path parameters."),
 	PARTNER_API_EXPIRED("IDA-MPA-039", "Partner API is expired or using before Commence Start Date."),
-
+	AUTH_CHARGES_NOT_AVAILABLE("IDA-MPA-040", "Auth charges not available for auth type and sub type."),
 
 	DATA_VALIDATION_FAILED("IDA-IDV-001", "Input Data Validation Failed"),
 
