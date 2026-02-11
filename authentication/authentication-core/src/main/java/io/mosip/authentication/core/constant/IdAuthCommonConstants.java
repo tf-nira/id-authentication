@@ -304,6 +304,8 @@ public final class IdAuthCommonConstants {
 	public static final long DEFAULT_REQUEST_TIME_ADJUSTMENT_SECONDS = 30L;
 
 	public static final String PARTNER_UPDATED_EVENT_NAME = "partner_updated";
+	
+	public static final String PARTNER_AMOUNT_UPDATED_EVENT_NAME = "partner_amount";
 
 	public static final String PARTNER_API_KEY_UPDATED_EVENT_NAME = "partner_api_key_updated";
 

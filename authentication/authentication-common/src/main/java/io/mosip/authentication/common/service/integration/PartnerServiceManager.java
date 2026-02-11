@@ -2,6 +2,7 @@ package io.mosip.authentication.common.service.integration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -22,12 +23,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.authentication.common.service.entity.ApiKeyData;
 import io.mosip.authentication.common.service.entity.MispLicenseData;
 import io.mosip.authentication.common.service.entity.OIDCClientData;
+import io.mosip.authentication.common.service.entity.PartnerCurrentBalance;
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.entity.PartnerMapping;
 import io.mosip.authentication.common.service.entity.PolicyData;
 import io.mosip.authentication.common.service.repository.ApiKeyDataRepository;
 import io.mosip.authentication.common.service.repository.MispLicenseDataRepository;
 import io.mosip.authentication.common.service.repository.OIDCClientDataRepository;
+import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerMappingRepository;
 import io.mosip.authentication.common.service.repository.PolicyDataRepository;
@@ -66,6 +69,12 @@ public class PartnerServiceManager {
 
 	/** The Constant POLICY_DATA. */
 	private static final String POLICY_DATA = "policyData";
+	
+	/** The Constant PARTNER_DATA. */
+	private static final String PARTNER_AMOUNT = "creditedAmount";
+	
+	/** The Constant PARTNER_DATA. */
+	private static final String PARTNER_BALANCE_DATA = "updatedBalanceData";
 
 	/** The Constant MISP_LICENSE_DATA. */
 	private static final String MISP_LICENSE_DATA = "mispLicenseData";
@@ -80,6 +89,10 @@ public class PartnerServiceManager {
 	/** The partner data repo. */
 	@Autowired
 	private PartnerDataRepository partnerDataRepo;
+	
+	/** The partner data repo. */
+	@Autowired
+	private PartnerCurrentBalanceRepository PartnerCurrentBalanceRepo;
 
 	/** The policy data repo. */
 	@Autowired
@@ -446,6 +459,38 @@ public class PartnerServiceManager {
 			policyDataRepo.save(policyEventData);
 		}
 	}
+	
+	/**
+	 * Update partner Amount.
+	 *
+	 * @param eventModel the event model
+	 */
+	public void updatePartnerAmount(EventModel eventModel) {
+	    Map<String, Object> eventData = eventModel.getEvent().getData();
+	    BigDecimal creditedAmount = mapper.convertValue(eventData.get(PARTNER_AMOUNT), BigDecimal.class);
+	    PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
+	    Optional<PartnerCurrentBalance> partnerDataOptional = PartnerCurrentBalanceRepo.findById(partnerEventData.getPartnerId());
+	    
+	    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_AMOUNT", 
+				"Updating Partner Current Balance" + partnerEventData.getPartnerId() + ", Credited Amount : " + creditedAmount);
+	    if (partnerDataOptional.isPresent()) {
+	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
+	        BigDecimal currentBalance = Optional.ofNullable(partnerData.getBalance())
+	                .orElse(BigDecimal.ZERO);
+	        partnerData.setBalance(currentBalance.add(creditedAmount));
+	        partnerData.setUpdBy(getCreatedBy(eventModel));
+	        partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
+	        PartnerCurrentBalanceRepo.save(partnerData);
+	    } else {
+	        PartnerCurrentBalance newPartner = new PartnerCurrentBalance();
+	        newPartner.setPartnerId(partnerEventData.getPartnerId());
+	        newPartner.setBalance(creditedAmount);
+	        newPartner.setCrBy(getCreatedBy(eventModel));
+	        newPartner.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+	        PartnerCurrentBalanceRepo.save(newPartner);
+	    }
+	}
+
 
 	/**
 	 * Update misp license data.
