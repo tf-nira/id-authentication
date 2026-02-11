@@ -90,7 +90,7 @@ public class PartnerServiceCallbackController {
 			@ApiResponse(responseCode = "403", description = "Forbidden" ,content = @Content(schema = @Schema(hidden = true))),
 			@ApiResponse(responseCode = "404", description = "Not Found" ,content = @Content(schema = @Schema(hidden = true)))})
 	@PreAuthenticateContentAndVerifyIntent(secret = "${" + IDA_WEBSUB_PARTNER_SERVICE_CALLBACK_SECRET
-			+ "}", callback = "${ida-websub-partner-service-partner-amount-updated-callback-relative-url}", topic = "${" + IDA_WEBSUB_TOPIC_PMP_PARTNER_UPDATED + "}")
+			+ "}", callback = "${ida-websub-partner-service-partner-updated-callback-relative-url}", topic = "${" + IDA_WEBSUB_TOPIC_PMP_PARTNER_UPDATED + "}")
 	public void handlePartnerUpdated(@RequestBody EventModel eventModel) {
 		try {
 			logger.debug(securityManager.getUser(), "PartnerServiceCallbackController", "handlePartnerUpdated",
