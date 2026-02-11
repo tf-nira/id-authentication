@@ -75,7 +75,7 @@ CREATE TABLE ida.auth_charges (
     cr_dtimes timestamp NOT NULL,
     upd_by character varying(256),
     upd_dtimes timestamp,
-	CONSTRAINT  pk_idTypeCodeSubTypeCodeEffectiveFrom PRIMARY KEY (type_code,sub_type_code,effective_from)
+	CONSTRAINT  pk_idTypeCodeSubTypeCodeEffectiveFrom PRIMARY KEY (type_code,sub_type_code,effective_from),
 	CONSTRAINT fk_auth_charges_type FOREIGN KEY (type_code) REFERENCES ida.auth_types(code),
 	CONSTRAINT fk_auth_charges_sub_type FOREIGN KEY (sub_type_code) REFERENCES ida.auth_sub_types(code)
 );
