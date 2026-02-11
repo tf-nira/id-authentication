@@ -30,6 +30,7 @@ import static io.mosip.authentication.core.constant.IdAuthCommonConstants.UTF_8;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -88,6 +89,7 @@ import io.mosip.authentication.core.partner.dto.AuthChargesDTO;
 import io.mosip.authentication.core.partner.dto.AuthPolicy;
 import io.mosip.authentication.core.partner.dto.KYCAttributes;
 import io.mosip.authentication.core.partner.dto.MispPolicyDTO;
+import io.mosip.authentication.core.partner.dto.PartnerCurrentBalanceDTO;
 import io.mosip.authentication.core.partner.dto.PartnerDTO;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 import io.mosip.authentication.core.spi.authcharges.service.AuthChargesService;
@@ -141,7 +143,6 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	
 	private AuthChargesService authChargesService;
 
-	private List<AuthChargesDTO> authChargesDtoList;
 
 	/**
 	 * Initialize the filter.
@@ -160,10 +161,8 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		try {
 			partnerService = context.getBean(PartnerService.class);
 			authChargesService = context.getBean(AuthChargesService.class);
-			authChargesDtoList = authChargesService.findActiveAuthCharges();
 		} catch (NoSuchBeanDefinitionException ex) {
 			//
-			authChargesDtoList = Collections.emptyList();
 		}
 		authContextClazzRefProvider = context.getBean(AuthContextClazzRefProvider.class);
 		authMethodsRefValues = authContextClazzRefProvider.getAuthMethodsRefValues();
@@ -438,9 +437,9 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			checkAllowedAuthTypeBasedOnPolicy(partnerServiceResponse, requestBody);
 			// Later, Validate OIDC Client allowed AMR values.
 			checkAllowedAMRBasedOnClientConfig(requestBody, partnerServiceResponse);
-			checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
+			BigDecimal amountToBeCharge = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
 			addMetadata(requestBody, partnerId, partnerApiKey, partnerServiceResponse,
-					partnerServiceResponse.getCertificateData());
+					partnerServiceResponse.getCertificateData(), amountToBeCharge);
 		}
 	}
 
@@ -515,7 +514,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	 * @param partnerCertificate the partner certificate
 	 */
 	private void addMetadata(Map<String, Object> requestBody, String partnerId, String partnerApiKey,
-			PartnerPolicyResponseDTO partnerServiceResponse, String partnerCertificate) {
+			PartnerPolicyResponseDTO partnerServiceResponse, String partnerCertificate,BigDecimal amount) {
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("partnerId", partnerId);
 		metadata.put(partnerId, createPartnerDTO(partnerServiceResponse, partnerApiKey));
@@ -523,6 +522,9 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		metadata.put(IdAuthCommonConstants.KYC_LANGUAGES, validateAndGetKycLanguages(partnerServiceResponse.getPolicy().getKycLanguages()));
 		if (partnerCertificate != null) {
 			metadata.put(IdAuthCommonConstants.PARTNER_CERTIFICATE, partnerCertificate);
+		}
+		if(amount!=null) {
+			metadata.put("amount", amount);
 		}
 		requestBody.put(METADATA, metadata);
 	}
@@ -1271,7 +1273,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		return new HashSet<>(List.of(languages.split(",")));
 	}
 
-	private void checkPaymentChargesForAuth(Map<String, Object> requestBody,
+	private BigDecimal checkPaymentChargesForAuth(Map<String, Object> requestBody,
 			PartnerPolicyResponseDTO partnerServiceResponse)
 			throws IdAuthenticationAppException {
 		try {
@@ -1281,24 +1283,57 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			String type = typeAndSubType[0];
 			String subType = typeAndSubType[1];
 			LocalDateTime currentTime = LocalDateTime.now();
+			List<AuthChargesDTO> authChargesDtoList = authChargesService.findActiveAuthCharges();
 			AuthChargesDTO authChargesDTO = authChargesDtoList.stream()
 					.filter(dto -> dto.getTypeCode().equalsIgnoreCase(type)
 							&& dto.getSubTypeCode().equalsIgnoreCase(subType))
 					.filter(dto -> !dto.getEffectiveFrom().isAfter(currentTime))
 					.filter(dto -> dto.getEffectiveTo() == null || !dto.getEffectiveTo().isBefore(currentTime))
 					.max(Comparator.comparing(AuthChargesDTO::getEffectiveFrom)).orElse(null);
-			if (authChargesDTO == null) {
+			if (authChargesDTO == null || authChargesDTO.getAmount() == null) {
+				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+						"checkPaymentChargesForAuth",
+						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorMessage());
 				throw new IdAuthenticationAppException(
 						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorCode(),
 						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorMessage());
 			}
+			PartnerCurrentBalanceDTO partnerCurrentBalanceDTO = partnerService
+					.getPartnerCurrentBalance(partnerServiceResponse.getPartnerId());
+			if (partnerCurrentBalanceDTO == null || partnerCurrentBalanceDTO.getBalance() == null) {
+				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+						"checkPaymentChargesForAuth",
+						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorMessage());
+				throw new IdAuthenticationAppException(
+						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorCode(),
+						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorMessage());
+			}
+			BigDecimal amountToBeCharge = authChargesDTO.getAmount();
+			BigDecimal partnerBalance = partnerCurrentBalanceDTO.getBalance();
 
+			if (partnerBalance.compareTo(amountToBeCharge) < 0) { // balance < charge
+				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+						"checkPaymentChargesForAuth",
+						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorMessage());
+				throw new IdAuthenticationAppException(
+						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorCode(),
+						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorMessage());
+			}
+			// create new payment transaction
+			partnerService.addPartnerPaymentTransaction(partnerServiceResponse.getPartnerId(), amountToBeCharge);
+			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+					"checkPaymentChargesForAuth",
+					"created new partner transaction successfully");
+			return amountToBeCharge;
 		}
 
 
 	} catch (IOException e) {
 			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
+		} catch (IdAuthenticationBusinessException e) {
+			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
 		}
+		return null;
 	}
 
 	private String[] getTypeAndSubType(AuthRequestDTO authRequestDTO) throws IdAuthenticationAppException {

@@ -1,7 +1,10 @@
 package io.mosip.authentication.common.service.impl;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import javax.annotation.PostConstruct;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,17 +26,35 @@ public class AuthChargesServiceImpl implements AuthChargesService {
 
 	@Autowired
 	private AuthChargesRepository authChargesRepository;
+	
+	private volatile List<AuthChargesDTO> cachedAuthCharges = Collections.emptyList();
 
 	/** The logger. */
 	private static Logger logger = IdaLogger.getLogger(AuthChargesServiceImpl.class);
 
+	@PostConstruct
+	public void init() {
+		reloadAuthCharges();
+	}
+
+	public void reloadAuthCharges() {
+		// need to call this when we add more records to this table through api or
+		// update this table
+		logger.info("Reloading active auth charges...");
+
+		List<AuthChargesDTO> updatedList = authChargesRepository.findByIsActiveTrue().stream()
+				.map(this::fetchAuthChargesDTO).collect(Collectors.toList());
+
+
+		cachedAuthCharges = Collections.unmodifiableList(updatedList);
+
+		logger.info("Auth charges cache reloaded successfully.");
+	}
+
 	@Override
 	public List<AuthChargesDTO> findActiveAuthCharges() {
 
-		List<AuthCharges> authCharges = authChargesRepository.findByIsActiveTrue();
-		List<AuthChargesDTO> dtoList = authCharges.stream().map(this::fetchAuthChargesDTO)
-				.collect(Collectors.toList());
-		return dtoList;
+		return cachedAuthCharges;
 	}
 
 	public  AuthChargesDTO fetchAuthChargesDTO(AuthCharges authCharges) {

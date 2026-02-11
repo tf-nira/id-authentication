@@ -1,5 +1,6 @@
 package io.mosip.authentication.common.service.impl.patrner;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -62,7 +63,14 @@ public class PartnerServiceImpl implements PartnerService {
 
 	@Override
 	public PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId)
+	{
+		return partnerServiceManager.getPartnerCurrentBalance(partnerId);
+	}
+
+	@Override
+	public void addPartnerPaymentTransaction(String partnerId, BigDecimal amount)
 			throws IdAuthenticationBusinessException {
-		return null;
+
+		partnerServiceManager.addPartnerPaymentTransaction(partnerId, amount);
 	}
 }

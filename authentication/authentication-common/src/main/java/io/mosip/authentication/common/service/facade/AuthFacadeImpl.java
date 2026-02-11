@@ -8,6 +8,7 @@ import static io.mosip.authentication.core.constant.AuthTokenType.POLICY;
 import static io.mosip.authentication.core.constant.AuthTokenType.POLICY_GROUP;
 import static io.mosip.authentication.core.constant.AuthTokenType.RANDOM;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -19,7 +20,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import io.mosip.authentication.core.spi.indauth.service.KeyBindedTokenAuthService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -46,10 +46,10 @@ import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.AuthResponseDTO;
 import io.mosip.authentication.core.indauth.dto.AuthStatusInfo;
+import io.mosip.authentication.core.indauth.dto.EkycAuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.IdType;
 import io.mosip.authentication.core.indauth.dto.IdentityInfoDTO;
 import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
-import io.mosip.authentication.core.indauth.dto.EkycAuthRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 import io.mosip.authentication.core.partner.dto.PolicyDTO;
@@ -59,6 +59,7 @@ import io.mosip.authentication.core.spi.indauth.facade.AuthFacade;
 import io.mosip.authentication.core.spi.indauth.match.IdInfoFetcher;
 import io.mosip.authentication.core.spi.indauth.service.BioAuthService;
 import io.mosip.authentication.core.spi.indauth.service.DemoAuthService;
+import io.mosip.authentication.core.spi.indauth.service.KeyBindedTokenAuthService;
 import io.mosip.authentication.core.spi.indauth.service.OTPAuthService;
 import io.mosip.authentication.core.spi.indauth.service.PasswordAuthService;
 import io.mosip.authentication.core.spi.notification.service.NotificationService;
@@ -135,7 +136,7 @@ public class AuthFacadeImpl implements AuthFacade {
 
 	@Autowired
 	private PasswordAuthService passwordAuthService;
-	
+
 	/*
 	 * (non-Javadoc)
 	 * 
@@ -201,7 +202,10 @@ public class AuthFacadeImpl implements AuthFacade {
 			LinkedHashMap<String, Object> properties = new LinkedHashMap<>(authRequestDTO.getMetadata());
 			properties.put(IdAuthCommonConstants.TOKEN, token);
 			authFiltersValidator.validateAuthFilters(authRequestDTO, idInfo, properties);
-
+			BigDecimal amount = (BigDecimal) properties.get("amount");
+			if (amount != null) {
+				authTxnBuilder.withAmount(amount);
+			}
 			List<AuthStatusInfo> authStatusList = processAuthType(authRequestDTO, idInfo, token, isExternalAuth, authTokenId,
 					partnerId, authTxnBuilder, idvidHash);
 			authStatusList.stream().filter(Objects::nonNull).forEach(authResponseBuilder::addAuthStatusInfo);
@@ -232,7 +236,6 @@ public class AuthFacadeImpl implements AuthFacade {
 			requestWrapperMetadata.putMetadata(IdAuthCommonConstants.ERRORS, authResponseDTO.getErrors());
 
 			authTransactionHelper.setAuthTransactionEntityMetadata(requestWrapperMetadata, authTxnBuilder);
-
 			logger.info(IdAuthCommonConstants.SESSION_ID, EnvUtil.getAppId(),
 					AUTH_FACADE, "authenticateApplicant status : " + authResponseDTO.getResponse().isAuthStatus());
 		}
@@ -444,6 +447,7 @@ public class AuthFacadeImpl implements AuthFacade {
 				boolean isStatus = otpValidationStatus != null && otpValidationStatus.isStatus();
 				auditHelper.audit(AuditModules.OTP_AUTH, getAuditEvent(isAuth), authRequestDTO.getTransactionID(),
 						idType, "authenticateApplicant status : " + isStatus);
+
 			} finally {
 				boolean isStatus = otpValidationStatus != null && otpValidationStatus.isStatus();
 				logger.info(IdAuthCommonConstants.SESSION_ID, EnvUtil.getAppId(),
