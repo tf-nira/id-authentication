@@ -30,6 +30,7 @@ import static io.mosip.authentication.core.constant.IdAuthCommonConstants.UTF_8;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -88,6 +89,7 @@ import io.mosip.authentication.core.partner.dto.AuthChargesDTO;
 import io.mosip.authentication.core.partner.dto.AuthPolicy;
 import io.mosip.authentication.core.partner.dto.KYCAttributes;
 import io.mosip.authentication.core.partner.dto.MispPolicyDTO;
+import io.mosip.authentication.core.partner.dto.PartnerCurrentBalanceDTO;
 import io.mosip.authentication.core.partner.dto.PartnerDTO;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 import io.mosip.authentication.core.spi.authcharges.service.AuthChargesService;
@@ -1287,16 +1289,34 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 					.filter(dto -> !dto.getEffectiveFrom().isAfter(currentTime))
 					.filter(dto -> dto.getEffectiveTo() == null || !dto.getEffectiveTo().isBefore(currentTime))
 					.max(Comparator.comparing(AuthChargesDTO::getEffectiveFrom)).orElse(null);
-			if (authChargesDTO == null) {
+			if (authChargesDTO == null || authChargesDTO.getAmount() == null) {
 				throw new IdAuthenticationAppException(
 						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorCode(),
 						IdAuthenticationErrorConstants.AUTH_CHARGES_NOT_AVAILABLE.getErrorMessage());
 			}
+			PartnerCurrentBalanceDTO partnerCurrentBalanceDTO = partnerService
+					.getPartnerCurrentBalance(partnerServiceResponse.getPartnerId());
+			if (partnerCurrentBalanceDTO == null || partnerCurrentBalanceDTO.getBalance() == null) {
+				throw new IdAuthenticationAppException(
+						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorCode(),
+						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorMessage());
+			}
+			BigDecimal chargeAmount = authChargesDTO.getAmount();
+			BigDecimal partnerBalance = partnerCurrentBalanceDTO.getBalance();
 
+			if (partnerBalance.compareTo(chargeAmount) < 0) { // balance < charge
+				throw new IdAuthenticationAppException(
+						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorCode(),
+						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorMessage());
+			}
+			// create new payment transaction
+			partnerService.addPartnerPaymentTransaction(partnerServiceResponse.getPartnerId(), chargeAmount);
 		}
 
 
 	} catch (IOException e) {
+			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
+		} catch (IdAuthenticationBusinessException e) {
 			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
 		}
 	}

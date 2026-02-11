@@ -2,12 +2,15 @@ package io.mosip.authentication.common.service.integration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.transaction.Transactional;
 
@@ -24,12 +27,14 @@ import io.mosip.authentication.common.service.entity.MispLicenseData;
 import io.mosip.authentication.common.service.entity.OIDCClientData;
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.entity.PartnerMapping;
+import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 import io.mosip.authentication.common.service.entity.PolicyData;
 import io.mosip.authentication.common.service.repository.ApiKeyDataRepository;
 import io.mosip.authentication.common.service.repository.MispLicenseDataRepository;
 import io.mosip.authentication.common.service.repository.OIDCClientDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerMappingRepository;
+import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionsRepository;
 import io.mosip.authentication.common.service.repository.PolicyDataRepository;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
@@ -103,6 +108,9 @@ public class PartnerServiceManager {
 	/** The security manager. */
 	@Autowired
 	private IdAuthSecurityManager securityManager;
+
+	@Autowired
+	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
 
 
 	/**
@@ -592,5 +600,22 @@ public class PartnerServiceManager {
 
 		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT", 
 				"Updated OIDC client. OIDC Clinet Id: " + oidcClientEventData.getClientId());
+	}
+
+	public void addPartnerPaymentTransaction(String partnerId, BigDecimal amount)
+			throws IdAuthenticationBusinessException {
+		try {
+		PartnerPaymentTransactions partnerPaymentTransactions = new PartnerPaymentTransactions();
+		partnerPaymentTransactions.setTransactionId(UUID.randomUUID().toString());
+		partnerPaymentTransactions.setPartnerId(partnerId);
+		partnerPaymentTransactions.setLogDTimes(LocalDateTime.now());
+		partnerPaymentTransactions.setAmount(amount);
+		partnerPaymentTransactionsRepository.save(partnerPaymentTransactions);
+	} catch (Exception e) {
+		throw new IdAuthenticationBusinessException(
+				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorCode(),
+				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorMessage());
+	}
+
 	}
 }

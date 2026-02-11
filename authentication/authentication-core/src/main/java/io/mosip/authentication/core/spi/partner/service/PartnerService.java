@@ -1,5 +1,6 @@
 package io.mosip.authentication.core.spi.partner.service;
 
+import java.math.BigDecimal;
 import java.util.Map;
 import java.util.Optional;
 
@@ -27,5 +28,7 @@ public interface PartnerService {
 	Optional<PartnerPolicyResponseDTO> getPolicyForPartner(String partnerId, String partnerApiKey, Map<String, Object> metadata)
 			throws IdAuthenticationBusinessException;
 
-	PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId) throws IdAuthenticationBusinessException;
+	PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId);
+
+	void addPartnerPaymentTransaction(String partnerId, BigDecimal amount) throws IdAuthenticationBusinessException;
 }
