@@ -11,7 +11,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.authentication.common.service.entity.PartnerCurrentBalance;
 import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
-import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionRepository;
+import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionsRepository;
 import io.mosip.authentication.core.logger.IdaLogger;
 
 import java.math.BigDecimal;
@@ -31,7 +31,7 @@ public class PartnerPaymentTransactionJob {
     private int batchSize;
     
     @Autowired
-    private PartnerPaymentTransactionRepository paymentTransactionRepository;
+    private PartnerPaymentTransactionsRepository paymentTransactionsRepository;
 
     @Autowired
     private PartnerCurrentBalanceRepository partnerBalanceRepository;
@@ -70,7 +70,7 @@ public class PartnerPaymentTransactionJob {
         while (hasMore) {
             Pageable pageable = PageRequest.of(pageNumber, batchSize);
             List<PartnerPaymentTransactions> batchTransactions = 
-                    paymentTransactionRepository.findByIsProcessedFalse(pageable).getContent();
+                    paymentTransactionsRepository.findByIsProcessedFalse(pageable).getContent();
 
             if (batchTransactions.isEmpty()) {
                 hasMore = false;
@@ -176,7 +176,7 @@ public class PartnerPaymentTransactionJob {
     private void markAsProcessed(String sessionId, List<PartnerPaymentTransactions> transactions) {
         try {
             transactions.forEach(t -> t.setIsProcessed(true));
-            paymentTransactionRepository.saveAll(transactions);
+            paymentTransactionsRepository.saveAll(transactions);
             LOGGER.info(sessionId, JOB_NAME, "markAsProcessed", 
                     "Marked " + transactions.size() + " transactions as processed");
         } catch (Exception e) {
@@ -192,7 +192,7 @@ public class PartnerPaymentTransactionJob {
     @Transactional
     private void deleteProcessedTransactions(String sessionId, List<PartnerPaymentTransactions> transactions) {
         try {
-            paymentTransactionRepository.deleteAll(transactions);
+            paymentTransactionsRepository.deleteAll(transactions);
             LOGGER.info(sessionId, JOB_NAME, "deleteProcessedTransactions", 
                     "Deleted " + transactions.size() + " transactions");
         } catch (Exception e) {
