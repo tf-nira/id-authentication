@@ -437,7 +437,10 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			checkAllowedAuthTypeBasedOnPolicy(partnerServiceResponse, requestBody);
 			// Later, Validate OIDC Client allowed AMR values.
 			checkAllowedAMRBasedOnClientConfig(requestBody, partnerServiceResponse);
-			BigDecimal amountToBeCharge = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
+			BigDecimal amountToBeCharge = null;
+			if (partnerServiceResponse.isRequiresPayment()) {
+				amountToBeCharge = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
+			}
 			addMetadata(requestBody, partnerId, partnerApiKey, partnerServiceResponse,
 					partnerServiceResponse.getCertificateData(), amountToBeCharge);
 		}
@@ -1278,6 +1281,8 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			throws IdAuthenticationAppException {
 		try {
 		AuthRequestDTO authRequestDTO = mapper.readValue(mapper.writeValueAsBytes(requestBody), AuthRequestDTO.class);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+				"authRequestDTO********************", authRequestDTO);
 		String[] typeAndSubType = getTypeAndSubType(authRequestDTO);
 		if (typeAndSubType != null) {
 			String type = typeAndSubType[0];
@@ -1287,9 +1292,12 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			AuthChargesDTO authChargesDTO = authChargesDtoList.stream()
 					.filter(dto -> dto.getTypeCode().equalsIgnoreCase(type)
 							&& dto.getSubTypeCode().equalsIgnoreCase(subType))
-					.filter(dto -> !dto.getEffectiveFrom().isAfter(currentTime))
-					.filter(dto -> dto.getEffectiveTo() == null || !dto.getEffectiveTo().isBefore(currentTime))
+					.filter(dto -> dto.getEffectiveFrom().isBefore(currentTime)
+							|| dto.getEffectiveFrom().isEqual(currentTime))
+					.filter(dto -> dto.getEffectiveTo() == null || dto.getEffectiveTo().isAfter(currentTime)
+							|| dto.getEffectiveTo().isEqual(currentTime))
 					.max(Comparator.comparing(AuthChargesDTO::getEffectiveFrom)).orElse(null);
+
 			if (authChargesDTO == null || authChargesDTO.getAmount() == null) {
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
 						"checkPaymentChargesForAuth",

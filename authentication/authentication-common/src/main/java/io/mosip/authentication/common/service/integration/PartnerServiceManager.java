@@ -179,6 +179,7 @@ public class PartnerServiceManager {
 			String[] userClaims = oidcClientData.get().getUserClaims();
 			response.setOidcClientDto(new OIDCClientDTO(authContextRefs, userClaims));
 		}
+		response.setRequiresPayment(partnerData.getRequiresPayment());
 		return response;
 	}
 
