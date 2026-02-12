@@ -19,3 +19,4 @@ DROP TABLE IF EXISTS ida.auth_types;
 DROP TABLE IF EXISTS ida.auth_sub_types;
 DROP TABLE IF EXISTS ida.partner_current_balance;
 DROP TABLE IF EXISTS ida.partner_payment_transactions;
+DROP TABLE IF EXISTS ida.partner_balance_history;
