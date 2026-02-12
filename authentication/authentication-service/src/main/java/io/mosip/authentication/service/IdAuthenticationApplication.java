@@ -63,7 +63,6 @@ import io.mosip.authentication.common.service.websub.impl.MasterDataUpdateEventI
 import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
 import io.mosip.authentication.common.service.websub.impl.PartnerCACertEventInitializer;
 import io.mosip.authentication.common.service.websub.impl.PartnerServiceEventsInitializer;
-import io.mosip.authentication.core.spi.authcharges.service.AuthChargesService;
 import io.mosip.authentication.core.util.DemoMatcherUtil;
 import io.mosip.authentication.core.util.DemoNormalizer;
 import io.mosip.authentication.core.util.IdTypeUtil;
@@ -129,7 +128,7 @@ import io.mosip.kernel.zkcryptoservice.service.impl.ZKCryptoManagerServiceImpl;
 		PartnerCACertEventServiceImpl.class, PartnerCACertEventInitializer.class, EnvUtil.class, KeyBindedTokenMatcherUtil.class,
 		HSMHealthCheck.class, TokenValidationHelper.class, VCSchemaProviderUtil.class, PrivateKeyDecryptorHelper.class, 
 		PasswordAuthServiceImpl.class, PasswordComparator.class, OndemandTemplateEventPublisher.class,
-		AuthChargesService.class, AuthChargesServiceImpl.class })
+		AuthChargesServiceImpl.class })
 @ComponentScan(basePackages = { "io.mosip.authentication.service.*", "io.mosip.kernel.core.logger.config",
 		"io.mosip.authentication.common.service.config", "${mosip.auth.adapter.impl.basepackage}" }, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
 				"io.mosip.idrepository.core.config.IdRepoDataSourceConfig.*" }))
