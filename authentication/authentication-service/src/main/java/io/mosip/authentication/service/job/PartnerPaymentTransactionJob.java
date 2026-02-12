@@ -10,13 +10,11 @@ import org.springframework.data.domain.Pageable;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.authentication.common.service.entity.PartnerCurrentBalance;
 import io.mosip.authentication.common.service.entity.PartnerPaymentTransaction;
-import io.mosip.authentication.common.service.entity.PaymentProcessingAudit;
 import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
 import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionRepository;
-import io.mosip.authentication.common.service.repository.PaymentProcessingAuditRepository;
 import io.mosip.authentication.core.logger.IdaLogger;
 
-import java.time.LocalDateTime;
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -32,17 +30,12 @@ public class PartnerPaymentTransactionJob {
     @Value("${mosip.ida.partner-payment.batch.size:1000}")
     private int batchSize;
     
-    @Value("${mosip.ida.partner-payment.min-balance:0.0}")
-    private Double minimumBalance;
-
     @Autowired
     private PartnerPaymentTransactionRepository paymentTransactionRepository;
 
     @Autowired
     private PartnerCurrentBalanceRepository partnerBalanceRepository;
     
-    @Autowired
-    private PaymentProcessingAuditRepository auditRepository;
 
     /**
      * Using synchronized method as alternative to @DistributedLock 
@@ -64,8 +57,6 @@ public class PartnerPaymentTransactionJob {
         } catch (Exception e) {
             LOGGER.error(sessionId, JOB_NAME, "processPartnerPaymentTransactions", 
                     "Error processing payment transactions: " + e.getMessage());
-            recordAudit(sessionId, null, null, "FAILED", e.getMessage());
-            notifyAdministrators("Payment Processing Job Failed", e, sessionId);
             throw new RuntimeException("Payment transaction processing failed", e);
         }
     }
@@ -91,17 +82,7 @@ public class PartnerPaymentTransactionJob {
             LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions", 
                     "Processing batch " + pageNumber + " with " + batchTransactions.size() + " transactions");
 
-            // Batch fetch partner balances in single query
-            List<String> partnerIds = batchTransactions.stream()
-                    .map(PartnerPaymentTransaction::getPartnerId)
-                    .distinct()
-                    .collect(Collectors.toList());
-
-            Map<String, PartnerCurrentBalance> balanceMap = 
-                    partnerBalanceRepository.findByPartnerIdIn(partnerIds).stream()
-                    .collect(Collectors.toMap(PartnerCurrentBalance::getPartnerId, b -> b));
-
-            // Validate input data
+            // Validating input data and calculate amounts per partner
             Map<String, Double> partnerAmountMap = batchTransactions.stream()
                     .filter(t -> validateTransaction(t, sessionId))
                     .collect(Collectors.groupingBy(
@@ -112,50 +93,35 @@ public class PartnerPaymentTransactionJob {
             LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions", 
                     "Calculated amounts for " + partnerAmountMap.size() + " partners");
 
-            // Process with validation and auditing
+            // Processing each partner with calculated sum
             for (Map.Entry<String, Double> entry : partnerAmountMap.entrySet()) {
                 String partnerId = entry.getKey();
                 Double amount = entry.getValue();
 
                 try {
-                    PartnerCurrentBalance balance = balanceMap.get(partnerId);
-                    
-                    if (balance == null) {
+                    if (partnerBalanceRepository.findByPartnerId(partnerId).isEmpty()) {
                         String errorMsg = "Partner not found: " + partnerId;
                         LOGGER.error(sessionId, JOB_NAME, "processBatchedTransactions", errorMsg);
-                        recordAudit(sessionId, partnerId, amount, "FAILED_PARTNER_NOT_FOUND", errorMsg);
                         totalFailed++;
                         continue;
                     }
 
-                    // Validate balance won't go below a threshold
-                    Double newBalance = balance.getBalance() - amount;
-                    if (newBalance < minimumBalance) {
-                        String errorMsg = String.format(
-                            "Insufficient balance for partner %s: Current=%.2f, Required=%.2f",
-                            partnerId, balance.getBalance(), amount);
-                        LOGGER.error(sessionId, JOB_NAME, "processBatchedTransactions", errorMsg);
-                        recordAudit(sessionId, partnerId, amount, "FAILED_INSUFFICIENT_BALANCE", errorMsg);
-                        totalFailed++;
-                        continue;
-                    }
-
-                    // Perform update
+                    PartnerCurrentBalance balance = partnerBalanceRepository.findByPartnerId(partnerId).get();
+                    BigDecimal amountBigDecimal = BigDecimal.valueOf(totalFailed);
+                    BigDecimal newBalance = balance.getBalance().subtract(amountBigDecimal);
                     balance.setBalance(newBalance);
-                    balance.setUpdDtimes(LocalDateTime.now());
+                    //balance.setUpdDtimes(LocalDateTime.now());
                     balance.setUpdBy("SYSTEM_PAYMENT_JOB_" + sessionId);
                     partnerBalanceRepository.save(balance);
                     
                     LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions", 
                             "Updated balance for partner: " + partnerId + ", new balance: " + newBalance);
                     
-                    recordAudit(sessionId, partnerId, amount, "SUCCESS", null);
                     totalProcessed++;
                     
                 } catch (Exception e) {
                     String errorMsg = "Exception processing partner: " + partnerId + " - " + e.getMessage();
                     LOGGER.error(sessionId, JOB_NAME, "processBatchedTransactions", errorMsg);
-                    recordAudit(sessionId, partnerId, amount, "FAILED_EXCEPTION", errorMsg);
                     totalFailed++;
                 }
             }
@@ -183,24 +149,18 @@ public class PartnerPaymentTransactionJob {
         if (transaction.getAmount() == null) {
             LOGGER.warn(sessionId, JOB_NAME, "validateTransaction", 
                     "Transaction has null amount: " + transaction.getTransactionId());
-            recordAudit(sessionId, transaction.getPartnerId(), null, "SKIPPED_NULL_AMOUNT", 
-                    "Amount is null");
             return false;
         }
 
         if (transaction.getAmount() <= 0) {
             LOGGER.warn(sessionId, JOB_NAME, "validateTransaction", 
                     "Transaction has invalid amount: " + transaction.getAmount());
-            recordAudit(sessionId, transaction.getPartnerId(), transaction.getAmount(), 
-                    "SKIPPED_INVALID_AMOUNT", "Amount is not positive");
             return false;
         }
 
         if (transaction.getPartnerId() == null || transaction.getPartnerId().trim().isEmpty()) {
             LOGGER.warn(sessionId, JOB_NAME, "validateTransaction", 
                     "Transaction has invalid partnerId");
-            recordAudit(sessionId, null, transaction.getAmount(), "SKIPPED_INVALID_PARTNER_ID", 
-                    "Partner ID is null or empty");
             return false;
         }
 
@@ -240,35 +200,4 @@ public class PartnerPaymentTransactionJob {
         }
     }
 
-    /**
-     * Record audit trail for all operations
-     */
-    private void recordAudit(String sessionId, String partnerId, Double amount, 
-                            String status, String errorMessage) {
-        try {
-            PaymentProcessingAudit audit = new PaymentProcessingAudit();
-            audit.setAuditId(UUID.randomUUID().toString());
-            audit.setSessionId(sessionId);
-            audit.setPartnerId(partnerId);
-            audit.setAmount(amount);
-            audit.setStatus(status);
-            audit.setErrorMessage(errorMessage);
-            audit.setProcessedDtimes(LocalDateTime.now());
-            auditRepository.save(audit);
-        } catch (Exception e) {
-            LOGGER.error(sessionId, JOB_NAME, "recordAudit", 
-                    "Failed to record audit: " + e.getMessage());
-        }
-    }
-
-    private void notifyAdministrators(String subject, Exception exception, String sessionId) {
-        try {
-            // TODO: Implement notification mechanism (email, Slack, monitoring system, etc.)
-            LOGGER.error(sessionId, JOB_NAME, "notifyAdministrators", 
-                    "Alert: " + subject + " - Session: " + sessionId + " - Error: " + exception.getMessage());
-        } catch (Exception e) {
-            LOGGER.error(sessionId, JOB_NAME, "notifyAdministrators", 
-                    "Failed to send notification: " + e.getMessage());
-        }
-    }
 }
