@@ -41,6 +41,7 @@ import io.mosip.authentication.common.service.repository.PartnerMappingRepositor
 import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionsRepository;
 import io.mosip.authentication.common.service.repository.PolicyDataRepository;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
+import io.mosip.authentication.common.service.websub.impl.PartnerPaymentStatusEventPublisher;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.constant.IdAuthenticationErrorConstants;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
@@ -77,14 +78,21 @@ public class PartnerServiceManager {
 	/** The Constant POLICY_DATA. */
 	private static final String POLICY_DATA = "policyData";
 
-	/** The Constant PARTNER_DATA. */
+	/** The Constant PARTNER_AMOUNT. */
 	private static final String PARTNER_AMOUNT = "creditedAmount";
 
-	/** The Constant PARTNER_DATA. */
+	/** The Constant AMOUNT_CREDITED. */
+	private static final boolean AMOUNT_CREDITED = true;
+
+	/** The Constant PARTNER_PRN. */
 	private static final String PARTNER_PRN = "prnData";
 	
-	/** The Constant PARTNER_DATA. */
+	/** The Constant PARTNER_BALANCE_DATA. */
 	private static final String PARTNER_BALANCE_DATA = "updatedBalanceData";
+	
+	/** The auth transaction status event publisher. */
+	@Autowired
+	private PartnerPaymentStatusEventPublisher partnerPaymentStatusEventPublisher;
 	
 	/** The Constant MISP_LICENSE_DATA. */
 	private static final String MISP_LICENSE_DATA = "mispLicenseData";
@@ -519,6 +527,7 @@ public class PartnerServiceManager {
 	    partnerBalance.setUpdBy(getCreatedBy(eventModel));
 	    partnerBalance.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
         partnerBalanceHistoryRepo.save(partnerBalance);
+        partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED);
 	}
 
 	/**
