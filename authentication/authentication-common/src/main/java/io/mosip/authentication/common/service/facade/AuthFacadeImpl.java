@@ -8,7 +8,6 @@ import static io.mosip.authentication.core.constant.AuthTokenType.POLICY;
 import static io.mosip.authentication.core.constant.AuthTokenType.POLICY_GROUP;
 import static io.mosip.authentication.core.constant.AuthTokenType.RANDOM;
 
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -202,7 +201,7 @@ public class AuthFacadeImpl implements AuthFacade {
 			LinkedHashMap<String, Object> properties = new LinkedHashMap<>(authRequestDTO.getMetadata());
 			properties.put(IdAuthCommonConstants.TOKEN, token);
 			authFiltersValidator.validateAuthFilters(authRequestDTO, idInfo, properties);
-			BigDecimal amount = (BigDecimal) properties.get("amount");
+			Double amount = (Double) properties.get("amount");
 			if (amount != null) {
 				authTxnBuilder.withAmount(amount);
 			}

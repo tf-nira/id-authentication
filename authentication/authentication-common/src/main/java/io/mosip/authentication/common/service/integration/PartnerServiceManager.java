@@ -2,7 +2,6 @@ package io.mosip.authentication.common.service.integration;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -494,7 +493,7 @@ public class PartnerServiceManager {
 	 */
 	public void updatePartnerAmount(EventModel eventModel) {
 	    Map<String, Object> eventData = eventModel.getEvent().getData();
-	    BigDecimal creditedAmount = mapper.convertValue(eventData.get(PARTNER_AMOUNT), BigDecimal.class);
+		Double creditedAmount = mapper.convertValue(eventData.get(PARTNER_AMOUNT), Double.class);
 	    PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
 		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
 				.findById(partnerEventData.getPartnerId());
@@ -505,9 +504,10 @@ public class PartnerServiceManager {
 	    
 	    if (partnerDataOptional.isPresent()) {
 	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
-	        BigDecimal currentBalance = Optional.ofNullable(partnerData.getBalance())
-	                .orElse(BigDecimal.ZERO);
-	        partnerData.setBalance(currentBalance.add(creditedAmount));
+			Double currentBalance = Optional.ofNullable(partnerData.getBalance())
+					.orElse(0.0);
+			currentBalance += creditedAmount;
+			partnerData.setBalance(currentBalance);
 	        partnerData.setUpdBy(getCreatedBy(eventModel));
 	        partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerCurrentBalanceRepo.save(partnerData);
@@ -676,7 +676,7 @@ public class PartnerServiceManager {
 				"Updated OIDC client. OIDC Clinet Id: " + oidcClientEventData.getClientId());
 	}
 
-	public void addPartnerPaymentTransaction(String partnerId, BigDecimal amount)
+	public void addPartnerPaymentTransaction(String partnerId, Double amount)
 			throws IdAuthenticationBusinessException {
 		try {
 		PartnerPaymentTransactions partnerPaymentTransactions = new PartnerPaymentTransactions();
