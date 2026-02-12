@@ -25,6 +25,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.authentication.common.service.entity.ApiKeyData;
 import io.mosip.authentication.common.service.entity.MispLicenseData;
 import io.mosip.authentication.common.service.entity.OIDCClientData;
+import io.mosip.authentication.common.service.entity.PartnerBalanceHistory;
 import io.mosip.authentication.common.service.entity.PartnerCurrentBalance;
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.entity.PartnerMapping;
@@ -33,6 +34,7 @@ import io.mosip.authentication.common.service.entity.PolicyData;
 import io.mosip.authentication.common.service.repository.ApiKeyDataRepository;
 import io.mosip.authentication.common.service.repository.MispLicenseDataRepository;
 import io.mosip.authentication.common.service.repository.OIDCClientDataRepository;
+import io.mosip.authentication.common.service.repository.PartnerBalanceHistoryRepository;
 import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerMappingRepository;
@@ -77,6 +79,9 @@ public class PartnerServiceManager {
 
 	/** The Constant PARTNER_DATA. */
 	private static final String PARTNER_AMOUNT = "creditedAmount";
+
+	/** The Constant PARTNER_DATA. */
+	private static final String PARTNER_PRN = "prnData";
 	
 	/** The Constant PARTNER_DATA. */
 	private static final String PARTNER_BALANCE_DATA = "updatedBalanceData";
@@ -98,6 +103,10 @@ public class PartnerServiceManager {
 	/** The partner data repo. */
 	@Autowired
 	private PartnerCurrentBalanceRepository partnerCurrentBalanceRepo;
+	
+	/** The partner data repo. */
+	@Autowired
+	private PartnerBalanceHistoryRepository partnerBalanceHistoryRepo;
 	
 	/** The policy data repo. */
 	@Autowired
@@ -480,9 +489,11 @@ public class PartnerServiceManager {
 	    PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
 		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
 				.findById(partnerEventData.getPartnerId());
-	    
+		String partnerPrn = mapper.convertValue(eventData.get(PARTNER_PRN), String.class);
+		
 	    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_AMOUNT", 
-				"Updating Partner Current Balance" + partnerEventData.getPartnerId() + ", Credited Amount : " + creditedAmount);
+				"Updating Partner Current Balance & History" + partnerEventData.getPartnerId() + ", Credited Amount : " + creditedAmount);
+	    
 	    if (partnerDataOptional.isPresent()) {
 	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
 	        BigDecimal currentBalance = Optional.ofNullable(partnerData.getBalance())
@@ -499,6 +510,14 @@ public class PartnerServiceManager {
 	        newPartner.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerCurrentBalanceRepo.save(newPartner);
 	    }
+	    
+	    PartnerBalanceHistory partnerBalance = new PartnerBalanceHistory();
+	    partnerBalance.setTransactionId(partnerPrn);
+	    partnerBalance.setPartnerId(partnerEventData.getPartnerId());
+	    partnerBalance.setBalance(creditedAmount);
+	    partnerBalance.setUpdBy(getCreatedBy(eventModel));
+	    partnerBalance.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
+        partnerBalanceHistoryRepo.save(partnerBalance);
 	}
 
 	/**
