@@ -684,6 +684,7 @@ public class PartnerServiceManager {
 		partnerPaymentTransactions.setPartnerId(partnerId);
 		partnerPaymentTransactions.setLogDTimes(LocalDateTime.now());
 		partnerPaymentTransactions.setAmount(amount);
+		partnerPaymentTransactions.setIsProcessed(false);
 		partnerPaymentTransactionsRepository.save(partnerPaymentTransactions);
 		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_PAYMENT",
 				"Adding new partner payment transaction" + partnerId + ",  Amount : " + amount);
