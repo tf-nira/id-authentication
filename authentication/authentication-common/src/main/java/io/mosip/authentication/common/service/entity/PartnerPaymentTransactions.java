@@ -41,4 +41,8 @@ public class PartnerPaymentTransactions {
 	@NotNull
 	@Column(name = "log_dtimes")
 	private LocalDateTime logDTimes;
+	
+	// Added processing flag for idempotency
+    @Column(name = "is_processed", nullable = false)
+    private Boolean isProcessed = false;
 }
