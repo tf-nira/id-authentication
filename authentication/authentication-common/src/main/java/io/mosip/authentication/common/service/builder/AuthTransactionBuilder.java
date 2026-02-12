@@ -1,6 +1,5 @@
 package io.mosip.authentication.common.service.builder;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -104,7 +103,7 @@ public class AuthTransactionBuilder {
 	/** The auth type code. */
 	private String authTypeCode;
 
-	private BigDecimal amount;
+	private Double amount;
 
 	/**
 	 * Set the AuthRequestDTO.
@@ -225,12 +224,12 @@ public class AuthTransactionBuilder {
 		return requestTypes;
 	}
 
-	public AuthTransactionBuilder withAmount(BigDecimal amount) {
+	public AuthTransactionBuilder withAmount(Double amount) {
 		this.amount = amount;
 		return this;
 	}
 
-	public BigDecimal getAmount() {
+	public Double getAmount() {
 		return amount;
 	}
 

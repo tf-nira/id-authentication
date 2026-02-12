@@ -1,24 +1,24 @@
 package io.mosip.authentication.service.job;
 
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import io.mosip.kernel.core.logger.spi.Logger;
+
 import io.mosip.authentication.common.service.entity.PartnerCurrentBalance;
 import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
 import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionsRepository;
 import io.mosip.authentication.core.logger.IdaLogger;
-
-import java.math.BigDecimal;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
+import io.mosip.kernel.core.logger.spi.Logger;
 
 
 @Component
@@ -83,42 +83,43 @@ public class PartnerPaymentTransactionJob {
                     "Processing batch " + pageNumber + " with " + batchTransactions.size() + " transactions");
 
             // Validating input data and calculate amounts per partner
-            Map<String, BigDecimal> partnerAmountMap = batchTransactions.stream()
-                    .filter(t -> validateTransaction(t, sessionId))
-                    .collect(Collectors.groupingBy(
-                            PartnerPaymentTransactions::getPartnerId,
-                            Collectors.reducing(
-                                    BigDecimal.ZERO,
-                                    PartnerPaymentTransactions::getAmount,
-                                    BigDecimal::add
-                            )
-                    ));
+			Map<String, Double> partnerAmountMap = batchTransactions.stream()
 
+                    .filter(t -> validateTransaction(t, sessionId))
+
+                    .collect(Collectors.groupingBy(
+
+                            PartnerPaymentTransactions::getPartnerId,
+
+							Collectors.summingDouble(PartnerPaymentTransactions::getAmount)
+
+					));
             LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions", 
                     "Calculated amounts for " + partnerAmountMap.size() + " partners");
 
             // Processing each partner with calculated sum
-            for (Map.Entry<String, BigDecimal> entry : partnerAmountMap.entrySet()) {
+			for (Map.Entry<String, Double> entry : partnerAmountMap.entrySet()) {
+
                 String partnerId = entry.getKey();
-                BigDecimal amount = entry.getValue();
+
+				Double amount = entry.getValue();
 
                 try {
+
                     if (partnerBalanceRepository.findByPartnerId(partnerId).isEmpty()) {
                         String errorMsg = "Partner not found: " + partnerId;
                         LOGGER.error(sessionId, JOB_NAME, "processBatchedTransactions", errorMsg);
                         totalFailed++;
                         continue;
                     }
-
                     PartnerCurrentBalance balance = partnerBalanceRepository.findByPartnerId(partnerId).get();
-                    BigDecimal newBalance = balance.getBalance().subtract(amount);
+					Double newBalance = balance.getBalance() - amount;
                     balance.setBalance(newBalance);
                     balance.setUpdBy("SYSTEM_PAYMENT_JOB_" + sessionId);
                     partnerBalanceRepository.save(balance);
-                    
-                    LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions", 
+					LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions",
+
                             "Updated balance for partner: " + partnerId + ", new balance: " + newBalance);
-                    
                     totalProcessed++;
                     
                 } catch (Exception e) {
@@ -154,10 +155,11 @@ public class PartnerPaymentTransactionJob {
             return false;
         }
 
-        if (transaction.getAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            LOGGER.warn(sessionId, JOB_NAME, "validateTransaction", 
+		if (transaction.getAmount() <= 0.0) {
+			LOGGER.warn(sessionId, JOB_NAME, "validateTransaction",
                     "Transaction has invalid amount: " + transaction.getAmount());
             return false;
+
         }
 
         if (transaction.getPartnerId() == null || transaction.getPartnerId().trim().isEmpty()) {

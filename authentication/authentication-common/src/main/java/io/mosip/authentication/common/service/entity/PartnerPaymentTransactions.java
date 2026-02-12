@@ -1,6 +1,5 @@
 package io.mosip.authentication.common.service.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
@@ -35,7 +34,7 @@ public class PartnerPaymentTransactions {
 
 	@NotNull
 	@Column(name = "amount", precision = 19, scale = 2)
-	private BigDecimal amount;
+	private Double amount;
 
 
 	@NotNull
