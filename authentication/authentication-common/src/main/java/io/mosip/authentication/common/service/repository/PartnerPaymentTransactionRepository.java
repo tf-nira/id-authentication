@@ -5,18 +5,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
-import io.mosip.authentication.common.service.entity.PartnerPaymentTransaction;
+import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 
 
 @Repository
-public interface PartnerPaymentTransactionRepository extends JpaRepository<PartnerPaymentTransaction, String> {
+public interface PartnerPaymentTransactionRepository extends JpaRepository<PartnerPaymentTransactions, String> {
 
 	
 	/**
      *Query only unprocessed transactions
      *Use pagination to avoid loading all records
      */
-    Page<PartnerPaymentTransaction> findByIsProcessedFalse(Pageable pageable);
+    Page<PartnerPaymentTransactions> findByIsProcessedFalse(Pageable pageable);
     
     /**
      * For batch fetching partner balances
@@ -24,10 +24,5 @@ public interface PartnerPaymentTransactionRepository extends JpaRepository<Partn
     @Query("SELECT COUNT(t) FROM PartnerPaymentTransaction t WHERE t.isProcessed = false")
     Long countUnprocessedTransactions();
     
-    /**
-     * For cleanup of very old processed transactions (optional)
-     */
-    @Query(value = "DELETE FROM partner_payment_transactions WHERE is_processed = true AND log_dtimes < DATE_SUB(NOW(), INTERVAL 30 DAY)", nativeQuery = true)
-    void deleteOldProcessedTransactions();
 
 }
