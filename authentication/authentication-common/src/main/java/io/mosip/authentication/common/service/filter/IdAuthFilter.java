@@ -437,12 +437,12 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			checkAllowedAuthTypeBasedOnPolicy(partnerServiceResponse, requestBody);
 			// Later, Validate OIDC Client allowed AMR values.
 			checkAllowedAMRBasedOnClientConfig(requestBody, partnerServiceResponse);
-			BigDecimal amountToBeCharge = null;
+			BigDecimal amountToBeCharged = BigDecimal.ZERO;
 			if (partnerServiceResponse.isRequiresPayment()) {
-				amountToBeCharge = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
+				amountToBeCharged = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
 			}
 			addMetadata(requestBody, partnerId, partnerApiKey, partnerServiceResponse,
-					partnerServiceResponse.getCertificateData(), amountToBeCharge);
+					partnerServiceResponse.getCertificateData(), amountToBeCharged);
 		}
 	}
 
@@ -1316,10 +1316,10 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorMessage());
 			}
-			BigDecimal amountToBeCharge = authChargesDTO.getAmount();
+			BigDecimal amountToBeCharged = authChargesDTO.getAmount();
 			BigDecimal partnerBalance = partnerCurrentBalanceDTO.getBalance();
 
-			if (partnerBalance.compareTo(amountToBeCharge) < 0) { // balance < charge
+			if (partnerBalance.compareTo(amountToBeCharged) < 0) { // balance < charge
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
 						"checkPaymentChargesForAuth",
 						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorMessage());
@@ -1328,11 +1328,11 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorMessage());
 			}
 			// create new payment transaction
-			partnerService.addPartnerPaymentTransaction(partnerServiceResponse.getPartnerId(), amountToBeCharge);
+			partnerService.addPartnerPaymentTransaction(partnerServiceResponse.getPartnerId(), amountToBeCharged);
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
 					"checkPaymentChargesForAuth",
 					"created new partner transaction successfully");
-			return amountToBeCharge;
+			return amountToBeCharged;
 		}
 
 
