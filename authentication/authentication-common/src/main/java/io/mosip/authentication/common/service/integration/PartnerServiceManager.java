@@ -504,30 +504,30 @@ public class PartnerServiceManager {
 	    
 	    if (partnerDataOptional.isPresent()) {
 	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
-			Double currentBalance = Optional.ofNullable(partnerData.getBalance())
+			    Double currentBalance = Optional.ofNullable(partnerData.getBalance())
 					.orElse(0.0);
-			currentBalance += creditedAmount;
-			partnerData.setBalance(currentBalance);
+			    currentBalance += creditedAmount;
+			    partnerData.setBalance(currentBalance);
 	        partnerData.setUpdBy(getCreatedBy(eventModel));
 	        partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-			partnerCurrentBalanceRepo.save(partnerData);
+			    partnerCurrentBalanceRepo.save(partnerData);
 	    } else {
 	        PartnerCurrentBalance newPartner = new PartnerCurrentBalance();
 	        newPartner.setPartnerId(partnerEventData.getPartnerId());
 	        newPartner.setBalance(creditedAmount);
-	        newPartner.setCrBy(getCreatedBy(eventModel));
+	        newPartner.setCrBy(partnerEventData.getCrBy());
 	        newPartner.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-			partnerCurrentBalanceRepo.save(newPartner);
+			    partnerCurrentBalanceRepo.save(newPartner);
 	    }
 	    
 	    PartnerBalanceHistory partnerBalance = new PartnerBalanceHistory();
 	    partnerBalance.setTransactionId(partnerPrn);
 	    partnerBalance.setPartnerId(partnerEventData.getPartnerId());
 	    partnerBalance.setBalance(creditedAmount);
-	    partnerBalance.setUpdBy(getCreatedBy(eventModel));
-	    partnerBalance.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-        partnerBalanceHistoryRepo.save(partnerBalance);
-        partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED);
+	    partnerBalance.setCrBy(partnerEventData.getCrBy());
+	    partnerBalance.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+      partnerBalanceHistoryRepo.save(partnerBalance);
+      partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED);
 	}
 
 	/**
