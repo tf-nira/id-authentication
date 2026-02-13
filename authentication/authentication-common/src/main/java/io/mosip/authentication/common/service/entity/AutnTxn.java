@@ -1,6 +1,5 @@
 package io.mosip.authentication.common.service.entity;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import javax.persistence.Column;
@@ -112,7 +111,7 @@ public class AutnTxn {
 	private String responseSignature;
 	
 	@Column(name = "amount", precision = 19, scale = 2)
-	private BigDecimal amount;
+	private Double amount;
 
 	/**
 	 * The constructor used in retrieval of the specific fields.
@@ -126,7 +125,7 @@ public class AutnTxn {
 	 */
 	public AutnTxn(String requestTrnId, LocalDateTime requestDTtimes, String authTypeCode, String statusCode,
 			String statusComment, String refId, String refIdType, String entityName, String requestSignature,
-			String responseSignature, BigDecimal amount) {
+			String responseSignature, Double amount) {
 		this.requestTrnId = requestTrnId;
 		this.requestDTtimes = requestDTtimes; 
 		this.authTypeCode = authTypeCode; 

@@ -1,6 +1,5 @@
 package io.mosip.authentication.core.partner.dto;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import lombok.Data;
@@ -17,7 +16,7 @@ public class AuthChargesDTO {
 
 	private String subTypeCode;
 
-	private BigDecimal amount;
+	private Double amount;
 
 	private LocalDateTime effectiveFrom;
 

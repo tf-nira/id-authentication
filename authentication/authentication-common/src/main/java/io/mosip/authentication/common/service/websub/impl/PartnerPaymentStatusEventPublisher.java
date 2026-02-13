@@ -2,7 +2,6 @@ package io.mosip.authentication.common.service.websub.impl;
 
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.PARTNERS_PAYMENT_STATUS_ACK;
 
-import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -60,13 +59,13 @@ public class PartnerPaymentStatusEventPublisher extends BaseWebSubEventsInitiali
 		}
 	}
 	
-	public void publishEvent(String prn, BigDecimal creditedAmount, Boolean amountCredited) {
+	public void publishEvent(String prn, Double creditedAmount, Boolean amountCredited) {
 		EventModel eventModel = webSubHelper.createEventModel(partnerPaymentStatusTopic);
 		eventModel.getEvent().setData(createEventData(prn, creditedAmount, amountCredited));
 		webSubHelper.publishEvent(partnerPaymentStatusTopic, eventModel);
 	}
 	
-	private Map<String, Object> createEventData(String prn, BigDecimal amount, Boolean amountCredited) {
+	private Map<String, Object> createEventData(String prn, Double amount, Boolean amountCredited) {
 		Map<String, Object> data = new HashMap<>();
 		data.put(PARTNER_PRN, prn);
 		data.put(PARTNER_AMOUNT, amount);

@@ -30,7 +30,6 @@ import static io.mosip.authentication.core.constant.IdAuthCommonConstants.UTF_8;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.math.BigDecimal;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -437,7 +436,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			checkAllowedAuthTypeBasedOnPolicy(partnerServiceResponse, requestBody);
 			// Later, Validate OIDC Client allowed AMR values.
 			checkAllowedAMRBasedOnClientConfig(requestBody, partnerServiceResponse);
-			BigDecimal amountToBeCharged = BigDecimal.ZERO;
+			Double amountToBeCharged = 0.0;
 			if (partnerServiceResponse.isRequiresPayment()) {
 				amountToBeCharged = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
 			}
@@ -517,7 +516,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	 * @param partnerCertificate the partner certificate
 	 */
 	private void addMetadata(Map<String, Object> requestBody, String partnerId, String partnerApiKey,
-			PartnerPolicyResponseDTO partnerServiceResponse, String partnerCertificate,BigDecimal amount) {
+			PartnerPolicyResponseDTO partnerServiceResponse, String partnerCertificate, Double amount) {
 		Map<String, Object> metadata = new HashMap<>();
 		metadata.put("partnerId", partnerId);
 		metadata.put(partnerId, createPartnerDTO(partnerServiceResponse, partnerApiKey));
@@ -1276,7 +1275,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		return new HashSet<>(List.of(languages.split(",")));
 	}
 
-	private BigDecimal checkPaymentChargesForAuth(Map<String, Object> requestBody,
+	private Double checkPaymentChargesForAuth(Map<String, Object> requestBody,
 			PartnerPolicyResponseDTO partnerServiceResponse)
 			throws IdAuthenticationAppException {
 		try {
@@ -1316,8 +1315,8 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_CURRENT_BALANCE_AVAILABLE.getErrorMessage());
 			}
-			BigDecimal amountToBeCharged = authChargesDTO.getAmount();
-			BigDecimal partnerBalance = partnerCurrentBalanceDTO.getBalance();
+			Double amountToBeCharged = authChargesDTO.getAmount();
+			Double partnerBalance = partnerCurrentBalanceDTO.getBalance();
 
 			if (partnerBalance.compareTo(amountToBeCharged) < 0) { // balance < charge
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
