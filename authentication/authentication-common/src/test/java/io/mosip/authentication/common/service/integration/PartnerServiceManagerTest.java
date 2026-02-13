@@ -8,8 +8,6 @@ import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.Optional;
 
-import io.mosip.authentication.core.constant.IdAuthCommonConstants;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,6 +38,7 @@ import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerMappingRepository;
 import io.mosip.authentication.common.service.repository.PolicyDataRepository;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
+import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.constant.IdAuthenticationErrorConstants;
 import io.mosip.authentication.core.exception.IdAuthenticationBaseException;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
@@ -118,7 +117,7 @@ public class PartnerServiceManagerTest {
 
 	@Test
 	public void validateAndGetPolicyTest() throws IdAuthenticationBusinessException, Exception {
-		String partnerMappingObj = "{\"partnerId\":\"1635497344579\",\"policyId\":\"21\",\"apiKeyId\":\"130956\",\"partnerData\":{\"partnerId\":\"1635497344579\",\"partnerName\":\"1635497344579\",\"certificateData\":\"data\",\"partnerStatus\":\"ACTIVE\"},\"policyData\":{\"policyId\":\"644269\",\"policyName\":\"policy 1635497343191\",\"policyDescription\":\"Auth Policy\",\"policyStatus\":\"ACTIVE\",\"policyCommenceOn\":\"2021-10-10T06:12:52.994Z\",\"policyExpiresOn\":\"2020-12-11T06:12:52.994Z\",\"policy\":{\"authPolicies\":[{\"authType\":\"otp\",\"authSubType\":\"\",\"mandatory\":true},{\"authType\":\"demo\",\"authSubType\":\"\",\"mandatory\":false},{\"authType\":\"bio\",\"authSubType\":\"FINGER\",\"mandatory\":true},{\"authType\":\"bio\",\"authSubType\":\"IRIS\",\"mandatory\":false},{\"authType\":\"bio\",\"authSubType\":\"FACE\",\"mandatory\":false},{\"authType\":\"kyc\",\"authSubType\":\"\",\"mandatory\":false}],\"allowedKycAttributes\":[{\"attributeName\":\"fullName\",\"required\":true},{\"attributeName\":\"dateOfBirth\",\"required\":true},{\"attributeName\":\"gender\",\"required\":true},{\"attributeName\":\"phone\",\"required\":true},{\"attributeName\":\"email\",\"required\":true},{\"attributeName\":\"addressLine1\",\"required\":true},{\"attributeName\":\"addressLine2\",\"required\":true},{\"attributeName\":\"addressLine3\",\"required\":true},{\"attributeName\":\"location1\",\"required\":true},{\"attributeName\":\"location2\",\"required\":true},{\"attributeName\":\"location3\",\"required\":true},{\"attributeName\":\"postalCode\",\"required\":false},{\"attributeName\":\"photo\",\"required\":true}]}},\"apiKeyData\":{\"apiKeyId\":\"591856\",\"apiKeyStatus\":\"ACTIVE\",\"apiKeyCommenceOn\":\"2021-10-10T06:12:52.994Z\",\"apiKeyExpiresOn\":\"2020-12-11T06:12:52.994Z\"}}";
+		String partnerMappingObj = "{\"partnerId\":\"1635497344579\",\"policyId\":\"21\",\"apiKeyId\":\"130956\",\"partnerData\":{\"partnerId\":\"1635497344579\",\"partnerName\":\"1635497344579\",\"certificateData\":\"data\",\"partnerStatus\":\"ACTIVE\",\"requiresPayment\":\"true\"},\"policyData\":{\"policyId\":\"644269\",\"policyName\":\"policy 1635497343191\",\"policyDescription\":\"Auth Policy\",\"policyStatus\":\"ACTIVE\",\"policyCommenceOn\":\"2021-10-10T06:12:52.994Z\",\"policyExpiresOn\":\"2020-12-11T06:12:52.994Z\",\"policy\":{\"authPolicies\":[{\"authType\":\"otp\",\"authSubType\":\"\",\"mandatory\":true},{\"authType\":\"demo\",\"authSubType\":\"\",\"mandatory\":false},{\"authType\":\"bio\",\"authSubType\":\"FINGER\",\"mandatory\":true},{\"authType\":\"bio\",\"authSubType\":\"IRIS\",\"mandatory\":false},{\"authType\":\"bio\",\"authSubType\":\"FACE\",\"mandatory\":false},{\"authType\":\"kyc\",\"authSubType\":\"\",\"mandatory\":false}],\"allowedKycAttributes\":[{\"attributeName\":\"fullName\",\"required\":true},{\"attributeName\":\"dateOfBirth\",\"required\":true},{\"attributeName\":\"gender\",\"required\":true},{\"attributeName\":\"phone\",\"required\":true},{\"attributeName\":\"email\",\"required\":true},{\"attributeName\":\"addressLine1\",\"required\":true},{\"attributeName\":\"addressLine2\",\"required\":true},{\"attributeName\":\"addressLine3\",\"required\":true},{\"attributeName\":\"location1\",\"required\":true},{\"attributeName\":\"location2\",\"required\":true},{\"attributeName\":\"location3\",\"required\":true},{\"attributeName\":\"postalCode\",\"required\":false},{\"attributeName\":\"photo\",\"required\":true}]}},\"apiKeyData\":{\"apiKeyId\":\"591856\",\"apiKeyStatus\":\"ACTIVE\",\"apiKeyCommenceOn\":\"2021-10-10T06:12:52.994Z\",\"apiKeyExpiresOn\":\"2020-12-11T06:12:52.994Z\"}}";
 		String mispLicenseDataObj = "{\"mispId\":\"1635497344579\",\"licenseKey\":\"rtaCBxYlsrWeuYpLgfUFT5ic6LetsOZzbvxBEe8yR5FCKkEsvQ\",\"mispCommenceOn\":\"2021-10-10T06:12:52.994Z\",\"mispExpiresOn\":\"2020-12-11T06:12:52.994Z\",\"mispStatus\":\"ACTIVE\", \"policyId\":\"644269\"}";
 		String mispPartnerDataObj = "{\"partnerId\":\"1635497344579\",\"partnerName\":\"misp_partner\",\"certificateData\":\"DUMMY-CERTIFICATE-DATA\",\"partnerStatus\":\"ACTIVE\"}";
 
@@ -145,7 +144,7 @@ public class PartnerServiceManagerTest {
 		partnerPolicyResponseDTO.setPolicyStatus(policyData.getPolicyStatus().contentEquals("ACTIVE"));
 		partnerPolicyResponseDTO.setPartnerId(partnerData.getPartnerId());
 		partnerPolicyResponseDTO.setPartnerName(partnerData.getPartnerName());
-		
+		partnerPolicyResponseDTO.setRequiresPayment(true);
 		LocalDateTime plusHours = LocalDateTime.now().plusHours(1);
 		policyData.setPolicyExpiresOn(plusHours);
 		mispLicenseData.setMispExpiresOn(plusHours);

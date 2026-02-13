@@ -110,6 +110,9 @@ public class AutnTxn {
 	@Column(name = "response_signature")
 	private String responseSignature;
 	
+	@Column(name = "amount", precision = 19, scale = 2)
+	private Double amount;
+
 	/**
 	 * The constructor used in retrieval of the specific fields.
 	 * @param requestTrnId
@@ -122,7 +125,7 @@ public class AutnTxn {
 	 */
 	public AutnTxn(String requestTrnId, LocalDateTime requestDTtimes, String authTypeCode, String statusCode,
 			String statusComment, String refId, String refIdType, String entityName, String requestSignature,
-			String responseSignature) {
+			String responseSignature, Double amount) {
 		this.requestTrnId = requestTrnId;
 		this.requestDTtimes = requestDTtimes; 
 		this.authTypeCode = authTypeCode; 
@@ -133,6 +136,7 @@ public class AutnTxn {
 		this.entityName = entityName;
 		this.requestSignature = requestSignature;
 		this.responseSignature = responseSignature;
+		this.amount = amount;
 	}
 	
 	/**

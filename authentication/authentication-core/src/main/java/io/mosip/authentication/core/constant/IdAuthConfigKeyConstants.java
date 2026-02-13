@@ -114,6 +114,7 @@ public final class IdAuthConfigKeyConstants {
 	public static final String IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_APPROVED = "ida-topic-pmp-partner-api-key-approved";
 	public static final String IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_UPDATED = "ida-topic-pmp-partner-api-key-updated";
 	public static final String IDA_WEBSUB_TOPIC_PMP_POLICY_UPDATED = "ida-topic-pmp-policy-updated";
+	public static final String IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED = "ida-topic-pmp-partner-amount-updated";
 	public static final String IDA_WEBSUB_CA_CERT_TOPIC = "ida-topic-pmp-ca-certificate-uploaded";
 	public static final String IDA_WEBSUB_HOTLIST_TOPIC = "ida-topic-hotlist";
 	public static final String IDA_WEBSUB_MASTERDATA_TEMPLATES_TOPIC = "ida-topic-masterdata-templates";
@@ -135,7 +136,7 @@ public final class IdAuthConfigKeyConstants {
 	public static final String AUTH_ANONYMOUS_PROFILE_TOPIC = "ida-topic-auth-anonymous-profile";
 	public static final String AUTH_FRAUD_ANALYSIS_TOPIC = "ida-topic-fraud-analysis";
 	public static final String ON_DEMAND_TEMPLATE_EXTRACTION_TOPIC = "ida-topic-on-demand-template-extraction";
-
+	public static final String PARTNERS_PAYMENT_STATUS_ACK = "ida-topic-partners-amount-ack";
 
 	public static final String IDA_MAX_CREDENTIAL_PULL_WINDOW_DAYS = "ida-max-credential-pull-window-days";
 	public static final String IDA_MAX_WEBSUB_MSG_PULL_WINDOW_DAYS = "ida-max-websub-messages-pull-window-days";

@@ -5,9 +5,11 @@ import java.io.IOException;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.UUID;
 
 import javax.transaction.Transactional;
 
@@ -22,22 +24,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.mosip.authentication.common.service.entity.ApiKeyData;
 import io.mosip.authentication.common.service.entity.MispLicenseData;
 import io.mosip.authentication.common.service.entity.OIDCClientData;
+import io.mosip.authentication.common.service.entity.PartnerBalanceHistory;
+import io.mosip.authentication.common.service.entity.PartnerCurrentBalance;
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.entity.PartnerMapping;
+import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 import io.mosip.authentication.common.service.entity.PolicyData;
 import io.mosip.authentication.common.service.repository.ApiKeyDataRepository;
 import io.mosip.authentication.common.service.repository.MispLicenseDataRepository;
 import io.mosip.authentication.common.service.repository.OIDCClientDataRepository;
+import io.mosip.authentication.common.service.repository.PartnerBalanceHistoryRepository;
+import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerMappingRepository;
+import io.mosip.authentication.common.service.repository.PartnerPaymentTransactionsRepository;
 import io.mosip.authentication.common.service.repository.PolicyDataRepository;
 import io.mosip.authentication.common.service.transaction.manager.IdAuthSecurityManager;
+import io.mosip.authentication.common.service.websub.impl.PartnerPaymentStatusEventPublisher;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
 import io.mosip.authentication.core.constant.IdAuthenticationErrorConstants;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.logger.IdaLogger;
 import io.mosip.authentication.core.partner.dto.MispPolicyDTO;
 import io.mosip.authentication.core.partner.dto.OIDCClientDTO;
+import io.mosip.authentication.core.partner.dto.PartnerCurrentBalanceDTO;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 import io.mosip.authentication.core.partner.dto.PolicyDTO;
 import io.mosip.kernel.core.logger.spi.Logger;
@@ -67,6 +77,22 @@ public class PartnerServiceManager {
 	/** The Constant POLICY_DATA. */
 	private static final String POLICY_DATA = "policyData";
 
+	/** The Constant PARTNER_AMOUNT. */
+	private static final String PARTNER_AMOUNT = "creditedAmount";
+
+	/** The Constant AMOUNT_CREDITED. */
+	private static final boolean AMOUNT_CREDITED = true;
+
+	/** The Constant PARTNER_PRN. */
+	private static final String PARTNER_PRN = "prnData";
+	
+	/** The Constant PARTNER_BALANCE_DATA. */
+	private static final String PARTNER_BALANCE_DATA = "updatedBalanceData";
+	
+	/** The auth transaction status event publisher. */
+	@Autowired
+	private PartnerPaymentStatusEventPublisher partnerPaymentStatusEventPublisher;
+	
 	/** The Constant MISP_LICENSE_DATA. */
 	private static final String MISP_LICENSE_DATA = "mispLicenseData";
 
@@ -80,7 +106,15 @@ public class PartnerServiceManager {
 	/** The partner data repo. */
 	@Autowired
 	private PartnerDataRepository partnerDataRepo;
-
+	
+	/** The partner data repo. */
+	@Autowired
+	private PartnerCurrentBalanceRepository partnerCurrentBalanceRepo;
+	
+	/** The partner data repo. */
+	@Autowired
+	private PartnerBalanceHistoryRepository partnerBalanceHistoryRepo;
+	
 	/** The policy data repo. */
 	@Autowired
 	private PolicyDataRepository policyDataRepo;
@@ -103,6 +137,10 @@ public class PartnerServiceManager {
 	/** The security manager. */
 	@Autowired
 	private IdAuthSecurityManager securityManager;
+
+	@Autowired
+	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
+
 
 	/**
 	 * Validate and get policy.
@@ -157,6 +195,7 @@ public class PartnerServiceManager {
 			String[] userClaims = oidcClientData.get().getUserClaims();
 			response.setOidcClientDto(new OIDCClientDTO(authContextRefs, userClaims));
 		}
+		response.setRequiresPayment(partnerData.getRequiresPayment());
 		return response;
 	}
 
@@ -409,6 +448,7 @@ public class PartnerServiceManager {
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
 			partnerData.setCertificateData(partnerEventData.getCertificateData());
 			partnerData.setPartnerStatus(partnerEventData.getPartnerStatus());
+			partnerData.setRequiresPayment(partnerEventData.getRequiresPayment());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerData);
@@ -444,6 +484,50 @@ public class PartnerServiceManager {
 			policyEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			policyDataRepo.save(policyEventData);
 		}
+	}
+
+	/**
+	 * Update partner Amount.
+	 *
+	 * @param eventModel the event model
+	 */
+	public void updatePartnerAmount(EventModel eventModel) {
+	    Map<String, Object> eventData = eventModel.getEvent().getData();
+		Double creditedAmount= (Double) eventData.get(PARTNER_AMOUNT);
+	    PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
+		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
+				.findById(partnerEventData.getPartnerId());
+		String partnerPrn = mapper.convertValue(eventData.get(PARTNER_PRN), String.class);
+		
+	    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_AMOUNT", 
+				"Updating Partner Current Balance & History" + partnerEventData.getPartnerId() + ", Credited Amount : " + creditedAmount);
+	    
+	    if (partnerDataOptional.isPresent()) {
+	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
+			    Double currentBalance = Optional.ofNullable(partnerData.getBalance())
+					.orElse(0.0);
+			    currentBalance += creditedAmount;
+			    partnerData.setBalance(currentBalance);
+	        partnerData.setUpdBy(getCreatedBy(eventModel));
+	        partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
+			    partnerCurrentBalanceRepo.save(partnerData);
+	    } else {
+	        PartnerCurrentBalance newPartner = new PartnerCurrentBalance();
+	        newPartner.setPartnerId(partnerEventData.getPartnerId());
+	        newPartner.setBalance(creditedAmount);
+	        newPartner.setCrBy(partnerEventData.getCrBy());
+	        newPartner.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+			    partnerCurrentBalanceRepo.save(newPartner);
+	    }
+	    
+	    PartnerBalanceHistory partnerBalance = new PartnerBalanceHistory();
+	    partnerBalance.setTransactionId(partnerPrn);
+	    partnerBalance.setPartnerId(partnerEventData.getPartnerId());
+	    partnerBalance.setBalance(creditedAmount);
+	    partnerBalance.setCrBy(partnerEventData.getCrBy());
+	    partnerBalance.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+      partnerBalanceHistoryRepo.save(partnerBalance);
+      partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED);
 	}
 
 	/**
@@ -590,5 +674,39 @@ public class PartnerServiceManager {
 
 		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT", 
 				"Updated OIDC client. OIDC Clinet Id: " + oidcClientEventData.getClientId());
+	}
+
+	public void addPartnerPaymentTransaction(String partnerId, Double amount)
+			throws IdAuthenticationBusinessException {
+		try {
+		PartnerPaymentTransactions partnerPaymentTransactions = new PartnerPaymentTransactions();
+		partnerPaymentTransactions.setTransactionId(UUID.randomUUID().toString());
+		partnerPaymentTransactions.setPartnerId(partnerId);
+		partnerPaymentTransactions.setLogDTimes(LocalDateTime.now());
+		partnerPaymentTransactions.setAmount(amount);
+		partnerPaymentTransactions.setIsProcessed(false);
+		partnerPaymentTransactionsRepository.save(partnerPaymentTransactions);
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_PAYMENT",
+				"Adding new partner payment transaction" + partnerId + ",  Amount : " + amount);
+	} catch (Exception e) {
+		throw new IdAuthenticationBusinessException(
+				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorCode(),
+				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorMessage());
+	}
+
+	}
+
+	public PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId) {
+		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
+				.findById(partnerId);
+		PartnerCurrentBalanceDTO partnerCurrentBalanceDTO = null;
+	    if (partnerDataOptional.isPresent()) {
+	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
+			partnerCurrentBalanceDTO = new PartnerCurrentBalanceDTO();
+			partnerCurrentBalanceDTO.setPartnerId(partnerId);
+			partnerCurrentBalanceDTO.setBalance(partnerData.getBalance());
+		}
+		return partnerCurrentBalanceDTO;
+
 	}
 }

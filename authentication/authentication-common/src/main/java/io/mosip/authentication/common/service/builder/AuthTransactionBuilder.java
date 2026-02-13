@@ -103,6 +103,8 @@ public class AuthTransactionBuilder {
 	/** The auth type code. */
 	private String authTypeCode;
 
+	private Double amount;
+
 	/**
 	 * Set the AuthRequestDTO.
 	 *
@@ -222,6 +224,15 @@ public class AuthTransactionBuilder {
 		return requestTypes;
 	}
 
+	public AuthTransactionBuilder withAmount(Double amount) {
+		this.amount = amount;
+		return this;
+	}
+
+	public Double getAmount() {
+		return amount;
+	}
+
 	/**
 	 * Build {@code AutnTxn}.
 	 *
@@ -323,6 +334,9 @@ public class AuthTransactionBuilder {
 					autnTxn.setEntityName(partner.getPartnerName());
 				}
 
+			}
+			if (amount != null) {
+				autnTxn.setAmount(amount);
 			}
 
 			return autnTxn;

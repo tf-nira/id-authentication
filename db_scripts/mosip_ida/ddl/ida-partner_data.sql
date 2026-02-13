@@ -18,6 +18,7 @@ CREATE TABLE ida.partner_data (
 	partner_name character varying(128) NOT NULL,
 	certificate_data bytea ,
 	partner_status character varying(36) NOT NULL,
+	requires_payment boolean NOT NULL DEFAULT false,
 	cr_by character varying(256) NOT NULL,
 	cr_dtimes timestamp NOT NULL,
 	upd_by character varying(256),
