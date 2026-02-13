@@ -8,6 +8,7 @@ import static io.mosip.authentication.core.constant.IdAuthCommonConstants.OIDC_C
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_API_KEY_UPDATED_EVENT_NAME;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_UPDATED_EVENT_NAME;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.POLICY_UPDATED_EVENT_NAME;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_AMOUNT_UPDATED_EVENT_NAME;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_MISP_LICENSE_GENERATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_MISP_LICENSE_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_OIDC_CLIENT_CREATED;
@@ -16,6 +17,7 @@ import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_POLICY_UPDATED;
+import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED;
 public enum PartnerEventTypes {
 	
 	API_KEY_APPROVED(APIKEY_APPROVED, IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_APPROVED),
@@ -25,7 +27,8 @@ public enum PartnerEventTypes {
 	PARTNER_API_KEY_UPDATED(PARTNER_API_KEY_UPDATED_EVENT_NAME, IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_UPDATED),
 	POLICY_UPDATED(POLICY_UPDATED_EVENT_NAME, IDA_WEBSUB_TOPIC_PMP_POLICY_UPDATED),
 	OIDC_CLI_CREATED(OIDC_CLIENT_CREATED, IDA_WEBSUB_TOPIC_PMP_OIDC_CLIENT_CREATED),
-	OIDC_CLI_UPDATED(OIDC_CLIENT_UPDATED, IDA_WEBSUB_TOPIC_PMP_OIDC_CLIENT_UPDATED);
+	OIDC_CLI_UPDATED(OIDC_CLIENT_UPDATED, IDA_WEBSUB_TOPIC_PMP_OIDC_CLIENT_UPDATED),
+	PARTNERS_AMOUNT(PARTNER_AMOUNT_UPDATED_EVENT_NAME, IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED);
 
 	private String name;
 	private String topicPropertyName;
