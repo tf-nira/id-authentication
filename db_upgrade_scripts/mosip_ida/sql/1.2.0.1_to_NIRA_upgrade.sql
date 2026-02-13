@@ -167,3 +167,23 @@ COMMENT ON COLUMN ida.partner_balance_history.upd_by IS 'Updated By : ID or name
 -- ddl-end --
 COMMENT ON COLUMN ida.partner_balance_history.upd_dtimes IS 'Updated DateTimestamp : Date and Timestamp when any of the fields in the record is updated with new values.';
 -- ddl-end --
+
+--------------------------------------------------------------------------------------------------------------------------
+
+INSERT INTO ida.auth_types(code, description, is_active, cr_by, cr_dtimes, upd_by, upd_dtimes)
+VALUES
+('otp', 'One Time Password Authentication', true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'Demographic Authentication', true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('bio', 'Biometric Authentication', true, 'SYSTEM', NOW(), 'SYSTEM', NOW());
+
+INSERT INTO ida.auth_sub_types(code, description, is_active, cr_by, cr_dtimes, upd_by, upd_dtimes)
+VALUES ('auth', 'auth', true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('ekyc', 'ekyc', true, 'SYSTEM', NOW(), 'SYSTEM', NOW());
+ 
+INSERT INTO ida.auth_charges (type_code, sub_type_code, amount, effective_from, effective_to, is_active, cr_by, cr_dtimes, upd_by, upd_dtimes)
+VALUES('otp', 'auth', 10.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'auth', 20.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('bio', 'auth', 30.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'ekyc', 5.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'ekyc', 5.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'ekyc', 5.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW());
