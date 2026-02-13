@@ -1,5 +1,5 @@
 CREATE TABLE ida.partner_balance_history (
-    transaction_id numeric,
+    transaction_id character varying(128) NOT NULL,
     partner_id     character varying(128) NOT NULL,
     balance numeric NOT NULL,
 	cr_by character varying(256) NOT NULL,
