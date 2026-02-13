@@ -493,7 +493,7 @@ public class PartnerServiceManager {
 	 */
 	public void updatePartnerAmount(EventModel eventModel) {
 	    Map<String, Object> eventData = eventModel.getEvent().getData();
-		Double creditedAmount = mapper.convertValue(eventData.get(PARTNER_AMOUNT), Double.class);
+		Double creditedAmount= (Double) eventData.get(PARTNER_AMOUNT);
 	    PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
 		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
 				.findById(partnerEventData.getPartnerId());
