@@ -245,7 +245,7 @@ public class PartnerServiceCallbackController {
 			+ "}", callback = "${ida-websub-partner-service-partner-amount-updated-callback-relative-url}", topic = "${" + IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED + "}")
 	public void handlePartnerAmountUpdated(@RequestBody EventModel eventModel) {
 		try {
-			logger.debug(securityManager.getUser(), "PartnerServiceCallbackController", "handlePartnerAmountUpdated",
+			logger.info(securityManager.getUser(), "PartnerServiceCallbackController", "handlePartnerAmountUpdated",
 					PARTNER_AMOUNT_UPDATED_EVENT_NAME + " EVENT RECEIVED");
 			partnerManager.updatePartnerAmount(eventModel);
 		} catch (Exception e) {
