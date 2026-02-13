@@ -81,6 +81,7 @@ import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.BioIdentityInfoDTO;
 import io.mosip.authentication.core.indauth.dto.DigitalId;
+import io.mosip.authentication.core.indauth.dto.EkycAuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.KeyBindedTokenDTO;
 import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
@@ -1344,13 +1345,28 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	}
 
 	private String[] getTypeAndSubType(AuthRequestDTO authRequestDTO) throws IdAuthenticationAppException {
+		String type = null;
+
 	    if (AuthTypeUtil.isDemo(authRequestDTO)) {
-	        return new String[] { "demo", "demo" };
+			type = "demo";
+
 	    } else if (AuthTypeUtil.isBio(authRequestDTO)) {
-	        return new String[] { "bio", "bio" };
+			type = "bio";
+
 	    } else if (AuthTypeUtil.isOtp(authRequestDTO)) {
-	        return new String[] { "otp", "otp" };
+			type = "otp";
 		}
-		return null;
+
+		if (type == null) {
+			return null;
+		}
+
+		// If it is KYC or eKYC request
+		boolean isKycRequest = authRequestDTO instanceof KycAuthRequestDTO
+				|| authRequestDTO instanceof EkycAuthRequestDTO;
+
+		String subType = isKycRequest ? "ekyc" : "auth";
+
+		return new String[] { type, subType };
 	}
 }
