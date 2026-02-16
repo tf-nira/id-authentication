@@ -81,7 +81,6 @@ import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.BioIdentityInfoDTO;
 import io.mosip.authentication.core.indauth.dto.DigitalId;
-import io.mosip.authentication.core.indauth.dto.EkycAuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.KeyBindedTokenDTO;
 import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
@@ -438,8 +437,15 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			// Later, Validate OIDC Client allowed AMR values.
 			checkAllowedAMRBasedOnClientConfig(requestBody, partnerServiceResponse);
 			Double amountToBeCharged = 0.0;
+			boolean isKyc=false;
+			String url = requestWrapper.getRequestURL().toString();
+			if(url.contains("kyc")) {
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+						"validateDecipheredRequest", "KYC request: " + true);
+				isKyc = true;
+			}
 			if (partnerServiceResponse.isRequiresPayment()) {
-				amountToBeCharged = checkPaymentChargesForAuth(requestBody, partnerServiceResponse);
+				amountToBeCharged = checkPaymentChargesForAuth(requestBody, partnerServiceResponse, isKyc);
 			}
 			addMetadata(requestBody, partnerId, partnerApiKey, partnerServiceResponse,
 					partnerServiceResponse.getCertificateData(), amountToBeCharged);
@@ -1277,13 +1283,11 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 	}
 
 	private Double checkPaymentChargesForAuth(Map<String, Object> requestBody,
-			PartnerPolicyResponseDTO partnerServiceResponse)
+			PartnerPolicyResponseDTO partnerServiceResponse, boolean isKyc)
 			throws IdAuthenticationAppException {
 		try {
 		AuthRequestDTO authRequestDTO = mapper.readValue(mapper.writeValueAsBytes(requestBody), AuthRequestDTO.class);
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
-				"authRequestDTO********************", authRequestDTO);
-		String[] typeAndSubType = getTypeAndSubType(authRequestDTO);
+		String[] typeAndSubType = getTypeAndSubType(authRequestDTO, isKyc);
 		if (typeAndSubType != null) {
 			String type = typeAndSubType[0];
 			String subType = typeAndSubType[1];
@@ -1344,7 +1348,8 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 		return null;
 	}
 
-	private String[] getTypeAndSubType(AuthRequestDTO authRequestDTO) throws IdAuthenticationAppException {
+	private String[] getTypeAndSubType(AuthRequestDTO authRequestDTO, boolean isKyc)
+			throws IdAuthenticationAppException {
 		String type = null;
 
 	    if (AuthTypeUtil.isDemo(authRequestDTO)) {
@@ -1361,11 +1366,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			return null;
 		}
 
-		// If it is KYC or eKYC request
-		boolean isKycRequest = authRequestDTO instanceof KycAuthRequestDTO
-				|| authRequestDTO instanceof EkycAuthRequestDTO;
-
-		String subType = isKycRequest ? "ekyc" : "auth";
+		String subType = isKyc ? "ekyc" : "auth";
 
 		return new String[] { type, subType };
 	}
