@@ -37,7 +37,10 @@ public class PartnerPaymentStatusEventPublisher extends BaseWebSubEventsInitiali
 	private static final String PARTNER_AMOUNT = "creditedAmount";
 	
 	/** The Constant AMOUNT_CREDITED */
-	private static final String AMOUNT_CREDITED = "amountCredied";
+	private static final String AMOUNT_CREDITED = "amountCredited";
+	
+	/** The Constant PARTNER_ID */
+	private static final String PARTNER_ID = "partnerId";
 	
 	/**
 	 * Do subscribe.
@@ -59,17 +62,18 @@ public class PartnerPaymentStatusEventPublisher extends BaseWebSubEventsInitiali
 		}
 	}
 	
-	public void publishEvent(String prn, Double creditedAmount, Boolean amountCredited) {
+	public void publishEvent(String prn, Double creditedAmount, Boolean amountCredited, String partnerId) {
 		EventModel eventModel = webSubHelper.createEventModel(partnerPaymentStatusTopic);
-		eventModel.getEvent().setData(createEventData(prn, creditedAmount, amountCredited));
+		eventModel.getEvent().setData(createEventData(prn, creditedAmount, amountCredited, partnerId));
 		webSubHelper.publishEvent(partnerPaymentStatusTopic, eventModel);
 	}
 	
-	private Map<String, Object> createEventData(String prn, Double amount, Boolean amountCredited) {
+	private Map<String, Object> createEventData(String prn, Double amount, Boolean amountCredited, String partnerId) {
 		Map<String, Object> data = new HashMap<>();
 		data.put(PARTNER_PRN, prn);
 		data.put(PARTNER_AMOUNT, amount);
 		data.put(AMOUNT_CREDITED, amountCredited);
+		data.put(PARTNER_ID, partnerId);
 		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_PAYMENT_STATUS_UPDATE",
 		"Creating event data for PRN : " + prn);
 		return data;
