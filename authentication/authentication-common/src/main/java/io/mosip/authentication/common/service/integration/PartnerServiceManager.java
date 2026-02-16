@@ -527,7 +527,7 @@ public class PartnerServiceManager {
 	    partnerBalance.setCrBy(partnerEventData.getCrBy());
 	    partnerBalance.setCrDTimes(DateUtils.getUTCCurrentDateTime());
       partnerBalanceHistoryRepo.save(partnerBalance);
-      partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED);
+      partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED, partnerEventData.getPartnerId());
 	}
 
 	/**
