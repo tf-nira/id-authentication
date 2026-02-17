@@ -81,6 +81,7 @@ import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
 import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.BioIdentityInfoDTO;
 import io.mosip.authentication.core.indauth.dto.DigitalId;
+import io.mosip.authentication.core.indauth.dto.EkycAuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.KeyBindedTokenDTO;
 import io.mosip.authentication.core.indauth.dto.KycAuthRequestDTO;
 import io.mosip.authentication.core.logger.IdaLogger;
@@ -442,6 +443,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			if(url.contains("kyc")) {
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
 						"validateDecipheredRequest", "KYC request: " + true);
+
 				isKyc = true;
 			}
 			if (partnerServiceResponse.isRequiresPayment()) {
@@ -1287,6 +1289,13 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			throws IdAuthenticationAppException {
 		try {
 		AuthRequestDTO authRequestDTO = mapper.readValue(mapper.writeValueAsBytes(requestBody), AuthRequestDTO.class);
+		if (authRequestDTO instanceof EkycAuthRequestDTO) {
+			EkycAuthRequestDTO kycAuthRequestDTO = (EkycAuthRequestDTO) authRequestDTO;
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+					"checkPaymentChargesForAuth",
+					"KYC request allowed attributes: " + kycAuthRequestDTO.getAllowedKycAttributes());
+		}
+
 		String[] typeAndSubType = getTypeAndSubType(authRequestDTO, isKyc);
 		if (typeAndSubType != null) {
 			String type = typeAndSubType[0];
