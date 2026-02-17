@@ -443,7 +443,6 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			if(url.contains("kyc")) {
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
 						"validateDecipheredRequest", "KYC request: " + true);
-
 				isKyc = true;
 			}
 			if (partnerServiceResponse.isRequiresPayment()) {
@@ -1289,7 +1288,7 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 			throws IdAuthenticationAppException {
 		try {
 		AuthRequestDTO authRequestDTO = mapper.readValue(mapper.writeValueAsBytes(requestBody), AuthRequestDTO.class);
-		if (authRequestDTO instanceof EkycAuthRequestDTO) {
+		if (isKyc) {
 			EkycAuthRequestDTO kycAuthRequestDTO = (EkycAuthRequestDTO) authRequestDTO;
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
 					"checkPaymentChargesForAuth",
