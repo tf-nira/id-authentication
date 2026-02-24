@@ -734,6 +734,8 @@ public class KycServiceImpl implements KycService {
 			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
 			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
 			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+        			"convertRequestDto: " + convertRequestDto);
 			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
 			return CryptoUtil.encodeBase64(image);
 		} catch(Exception exp) {
