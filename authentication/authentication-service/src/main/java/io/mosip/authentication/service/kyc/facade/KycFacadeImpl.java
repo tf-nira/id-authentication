@@ -431,8 +431,8 @@ public class KycFacadeImpl implements KycFacade {
 			}
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
 			        this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg",
-			        "idvIdType: " + idvIdType, "idVid: " + idVid, "isBioRequired: " + isBioRequired);
+			        "processKycExchange",
+			        "idvIdType: " + idvIdType + ", idVid: " + idVid + ", isBioRequired: " + isBioRequired);
 			
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
 			        this.getClass().getSimpleName(),
