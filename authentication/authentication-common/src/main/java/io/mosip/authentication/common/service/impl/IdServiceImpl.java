@@ -247,11 +247,15 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 			}
 
 			if (entity.getBiometricData() != null) {
+				logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
+						"Biometric present in entity");
 				Map<String, String> bioDataMap = mapper.readValue(entity.getBiometricData(), Map.class);
 				if (!filterAttributesInLowercase.isEmpty()) {
 					Map<String, String> bioDataMapPostFilter = bioDataMap.entrySet().stream()
 							.filter(bio -> filterAttributesInLowercase.contains(bio.getKey().toLowerCase()))
 							.collect(Collectors.toMap(Entry::getKey, Entry::getValue));
+					logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
+							"bioDataMapPostFilter: " + bioDataMapPostFilter);
 					responseMap.put(BIOMETRICS, decryptConfiguredAttributes(id, bioDataMapPostFilter));
 				}
 			}
