@@ -503,6 +503,10 @@ public class KycServiceImpl implements KycService {
 				return;
 			}
 			Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, idInfo, null);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "faceEntityInfoMap: " + faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
 					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
@@ -731,6 +735,10 @@ public class KycServiceImpl implements KycService {
 
 	private String convertJP2ToJpeg(String jp2Image) {
 		try {
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "jp2Image: " + jp2Image);
 			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
 			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
 			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
@@ -780,6 +788,10 @@ public class KycServiceImpl implements KycService {
 	
 	private String getFaceBDB(String faceCbeff) throws Exception {
 		List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(faceCbeff.getBytes(), CbeffDocType.FACE.getName());
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+		        this.getClass().getSimpleName(),
+		        "convertJP2ToJpeg",
+		        "birDataFromXMLType: " + birDataFromXMLType);
 		if(birDataFromXMLType.isEmpty()) {
 			//This is unlikely as if empty the exception would have been thrown already
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
