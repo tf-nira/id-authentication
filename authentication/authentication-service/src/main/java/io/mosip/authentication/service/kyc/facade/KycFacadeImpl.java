@@ -387,8 +387,11 @@ public class KycFacadeImpl implements KycFacade {
 					"Processing Kyc Exchange request.");
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
 			        this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg",
-			        "kycExchangeRequestDTO: " + kycExchangeRequestDTO);
+			        "processKycExchange",
+			        "KYC Exchange request received. Consents: " 
+			        + kycExchangeRequestDTO.getConsentObtained() 
+			        + ", Locales: " + kycExchangeRequestDTO.getLocales()
+			        + ", RespType: " + kycExchangeRequestDTO.getRespType());
 			
 			String vciAuthToken = kycExchangeRequestDTO.getKycToken();
 			String idVid = kycExchangeRequestDTO.getIndividualId();
