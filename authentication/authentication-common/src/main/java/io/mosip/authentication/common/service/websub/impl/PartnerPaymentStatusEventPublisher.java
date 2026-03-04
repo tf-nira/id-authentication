@@ -31,7 +31,7 @@ public class PartnerPaymentStatusEventPublisher extends BaseWebSubEventsInitiali
 	private String partnerPaymentStatusTopic;
 	
 	/** The Constant PARTNER_PRN */
-	private static final String PARTNER_PRN = "partnerPrn";
+	private static final String PARTNER_PRN = "prn";
 
 	/** The Constant PARTNER_AMOUNT */
 	private static final String PARTNER_AMOUNT = "creditedAmount";

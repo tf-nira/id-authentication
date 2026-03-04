@@ -5,8 +5,10 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import io.mosip.authentication.service.event.PartnerBalanceUpdatedEvent;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -35,6 +37,9 @@ public class PartnerPaymentTransactionJob {
 
     @Autowired
     private PartnerCurrentBalanceRepository partnerBalanceRepository;
+
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
     
 
     /**
@@ -117,6 +122,9 @@ public class PartnerPaymentTransactionJob {
                     balance.setBalance(newBalance);
                     balance.setUpdBy("SYSTEM_PAYMENT_JOB_" + sessionId);
                     partnerBalanceRepository.save(balance);
+                    applicationEventPublisher.publishEvent(
+                            new PartnerBalanceUpdatedEvent(partnerId, newBalance)
+                    );
 					LOGGER.info(sessionId, JOB_NAME, "processBatchedTransactions",
 
                             "Updated balance for partner: " + partnerId + ", new balance: " + newBalance);

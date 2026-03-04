@@ -181,9 +181,9 @@ VALUES ('auth', 'auth', true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
 ('ekyc', 'ekyc', true, 'SYSTEM', NOW(), 'SYSTEM', NOW());
  
 INSERT INTO ida.auth_charges (type_code, sub_type_code, amount, effective_from, effective_to, is_active, cr_by, cr_dtimes, upd_by, upd_dtimes)
-VALUES('otp', 'auth', 10.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
-('demo', 'auth', 20.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
-('bio', 'auth', 30.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
-('demo', 'ekyc', 5.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
-('demo', 'ekyc', 5.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
-('demo', 'ekyc', 5.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW());
+VALUES('otp', 'auth', 100.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'auth', 100.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('bio', 'auth', 100.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('otp', 'ekyc', 500.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('demo', 'ekyc', 500.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW()),
+('bio', 'ekyc', 500.00, NOW(), NULL, true, 'SYSTEM', NOW(), 'SYSTEM', NOW());
