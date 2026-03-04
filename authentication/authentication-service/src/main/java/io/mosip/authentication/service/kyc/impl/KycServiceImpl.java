@@ -49,6 +49,7 @@ import io.mosip.authentication.core.spi.indauth.match.MappingConfig;
 import io.mosip.authentication.core.spi.indauth.match.MatchType;
 import io.mosip.authentication.core.spi.indauth.service.KycService;
 import io.mosip.authentication.core.util.CryptoUtil;
+import io.mosip.biometrics.util.CommonUtil;
 import io.mosip.biometrics.util.ConvertRequestDto;
 import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.kernel.biometrics.entities.BIR;
@@ -742,7 +743,8 @@ public class KycServiceImpl implements KycService {
 			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
 			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
 			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
-			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+//			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(CryptoUtil.decodeBase64(jp2Image), convertRequestDto.getCompressionRatio());
 			return CryptoUtil.encodeBase64(image);
 		} catch(Exception exp) {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
