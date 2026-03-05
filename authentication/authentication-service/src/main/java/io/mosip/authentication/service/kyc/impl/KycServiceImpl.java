@@ -734,19 +734,51 @@ public class KycServiceImpl implements KycService {
 		}
 	}
 
+	
+//	private String convertJP2ToJpeg(String jp2Image) {
+//		try {
+//			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+//			        this.getClass().getSimpleName(),
+//			        "convertJP2ToJpeg",
+//			        "jp2Image: " + jp2Image);
+//			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+//			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+//			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
+//			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+//			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(CryptoUtil.decodeBase64(jp2Image), convertRequestDto.getCompressionRatio());
+//			return CryptoUtil.encodeBase64(image);
+//		} catch(Exception exp) {
+//			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
+//		}
+//		return null;
+//	}
+	
 	private String convertJP2ToJpeg(String jp2Image) {
-		try {
-			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
-			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-			// byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(CryptoUtil.decodeBase64(jp2Image), convertRequestDto.getCompressionRatio());
-			return CryptoUtil.encodeBase64(image);
-		} catch(Exception exp) {
+	    try {
+
+	        byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
+	        mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg", "decodedBytes: " + decodedBytes);
+	        boolean isISO = decodedBytes.length > 4 &&
+	                (decodedBytes[0] == 0x46 || decodedBytes[0] == 0x34);
+	        byte[] imageBytes;
+	        if (isISO) {
+	        	 mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	 			        "convertJP2ToJpeg", "isISO: " + isISO);
+	            ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+	            convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+	            convertRequestDto.setInputBytes(decodedBytes);
+	            imageBytes = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+	        } else {
+	            imageBytes = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, 95);
+	        }
+	        return CryptoUtil.encodeBase64(imageBytes);
+	    } catch(Exception exp) {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
 					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
+			return jp2Image;
 		}
-		return null;
 	}
 
 	private Map<String, String> localesMapping(Set<String> locales) {
