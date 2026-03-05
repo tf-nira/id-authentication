@@ -787,6 +787,7 @@ public class KycServiceImpl implements KycService {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
 					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
 	    }
+	    return null;
 	}
 	
 	private Map<String, String> localesMapping(Set<String> locales) {
