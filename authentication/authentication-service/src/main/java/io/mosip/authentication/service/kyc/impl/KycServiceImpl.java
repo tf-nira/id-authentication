@@ -779,7 +779,6 @@ public class KycServiceImpl implements KycService {
 	        if (imageBytes == null) {
 	            mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
 	                    "Image conversion failed");
-	            return jp2Image;
 	        }
 
 	        return CryptoUtil.encodeBase64(imageBytes);
@@ -787,7 +786,6 @@ public class KycServiceImpl implements KycService {
 	    } catch(Exception exp) {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
 					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
-	        return jp2Image;
 	    }
 	}
 	
