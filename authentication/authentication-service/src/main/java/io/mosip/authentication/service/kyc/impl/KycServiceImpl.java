@@ -1,6 +1,8 @@
 package io.mosip.authentication.service.kyc.impl;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.LANG_CODE_SEPARATOR;
 
+import java.io.ByteArrayInputStream;
+import java.io.DataInputStream;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -51,6 +53,7 @@ import io.mosip.authentication.core.spi.indauth.service.KycService;
 import io.mosip.authentication.core.util.CryptoUtil;
 import io.mosip.biometrics.util.CommonUtil;
 import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceBDIR;
 import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.spi.CbeffUtil;
@@ -763,9 +766,7 @@ public class KycServiceImpl implements KycService {
 	        byte[] imageBytes = null;
 	        try {
 	            ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-	            convertRequestDto.setVersion("ISO19794_5_2011");
 	            convertRequestDto.setInputBytes(decodedBytes);
-	            convertRequestDto.setCompressionRatio(95);
 	            imageBytes = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
 	        } catch (Exception e) {
 	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
@@ -773,7 +774,27 @@ public class KycServiceImpl implements KycService {
 	        }
 
 	        if (imageBytes == null) {
-	            imageBytes = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, 95);
+	        	FaceBDIR faceBDIR = null;
+	        	try (ByteArrayInputStream bais = new ByteArrayInputStream(decodedBytes);
+	    				DataInputStream inputStream = new DataInputStream(bais);) {
+	    				faceBDIR = new FaceBDIR(inputStream);
+	    			// LOGGER.info("faceBDIR :: ", faceBDIR);
+	    		}
+	        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	        	        "convertJP2ToJpeg", "faceBDIR: " + faceBDIR);
+	        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation(): " + faceBDIR.getRepresentation());
+	        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation().getRepresentationData(): "
+	        	                + faceBDIR.getRepresentation().getRepresentationData());
+	        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation().getRepresentationData().getImageData(): "
+	        	                + faceBDIR.getRepresentation().getRepresentationData().getImageData());
+	        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation().getRepresentationData().getImageData().getImage(): "
+	        	                + faceBDIR.getRepresentation().getRepresentationData().getImageData().getImage());
+
+	            imageBytes = CommonUtil.convertJP2ToJPEGUsingOpenCV(faceBDIR.getRepresentation().getRepresentationData().getImageData().getImage(), 95);
 	        }
 
 	        if (imageBytes == null) {
