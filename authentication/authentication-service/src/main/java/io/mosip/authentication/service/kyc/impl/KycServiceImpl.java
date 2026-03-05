@@ -1,6 +1,9 @@
 package io.mosip.authentication.service.kyc.impl;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.LANG_CODE_SEPARATOR;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -18,6 +21,8 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import javax.imageio.ImageIO;
 
 import org.apache.commons.codec.DecoderException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -756,24 +761,20 @@ public class KycServiceImpl implements KycService {
 	
 	private String convertJP2ToJpeg(String jp2Image) {
 	    try {
-
+	        
 	        byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
 	        mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg", "decodedBytes: " + decodedBytes);
-	        boolean isISO = decodedBytes.length > 4 &&
-	                (decodedBytes[0] == 0x46 || decodedBytes[0] == 0x34);
-	        byte[] imageBytes;
-	        if (isISO) {
-	        	 mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-	 			        "convertJP2ToJpeg", "isISO: " + isISO);
-	            ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-	            convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-	            convertRequestDto.setInputBytes(decodedBytes);
-	            imageBytes = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-	        } else {
-	            imageBytes = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, 95);
-	        }
-	        return CryptoUtil.encodeBase64(imageBytes);
+			        "convertJP2ToJpeg", "decodedBytes: " + decodedBytes.length);
+	        
+            ByteArrayInputStream bis = new ByteArrayInputStream(decodedBytes);
+            BufferedImage image = ImageIO.read(bis);
+            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg", "image: " + image);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(image, "jpg", baos);
+
+            return CryptoUtil.encodeBase64(baos.toByteArray());
+	            
 	    } catch(Exception exp) {
 			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
 					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
