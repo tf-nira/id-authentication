@@ -129,6 +129,7 @@ public final class IdAuthConfigKeyConstants {
 	public static final String CREDENTIAL_STORE_RETRY_BACKOFF_EXPONENTIAL_MAX_INTERVAL_MILLISECS = "ida.credential.store.retry.backoff.exponential.max.interval.millisecs";
 	
 	public static final String IDA_DEFAULT_IDENTITY_FILTER_ATTRIBUTES = "ida-default-identity-filter-attributes";
+	public static final String IDA_DECEASED_ATTRIBUTE = "ida-deceased-attribute";
 
 	public static final String CREDENTIAL_STATUS_UPDATE_TOPIC = "ida-topic-credential-status-update";
 	public static final String AUTH_TYPE_STATUS_ACK_TOPIC = "ida-topic-auth-type-status-update-acknowledge";
