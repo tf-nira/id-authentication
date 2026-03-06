@@ -1,5 +1,7 @@
 package io.mosip.authentication.common.service.impl;
 
+import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_DECEASED_ATTRIBUTE;
+
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -14,6 +16,7 @@ import io.mosip.authentication.common.service.entity.AuthtypeLock;
 import io.mosip.authentication.common.service.repository.AuthLockRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.mosip.authentication.common.manager.IdAuthFraudAnalysisEventManager;
@@ -117,6 +120,9 @@ public class OTPServiceImpl implements OTPService {
 	@Qualifier("NotificationLangComparator")
 	private LanguageComparator languageComparator;
 	
+	@Value("${" + IDA_DECEASED_ATTRIBUTE + ":declaredAsDeceased}")
+	private String deceasedAttribute;
+	
 	/** The mosip logger. */
 	private static Logger mosipLogger = IdaLogger.getLogger(OTPServiceImpl.class);
 
@@ -216,7 +222,17 @@ public class OTPServiceImpl implements OTPService {
 			otpResponseDTO.setId(otpRequestDto.getId());
 			otpResponseDTO.setTransactionID(transactionId);
 			
-			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);			
+			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);	
+			
+			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
+			
+			if (deceased != null && !deceased.isEmpty()) {
+				if ("Y".equals(deceased.get(0).getValue())) {
+					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorCode(),
+							IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorMessage());
+				}
+			}
+			
 			Map<String, String> valueMap = new HashMap<>();
 			
 			List<String> templateLanguages = getTemplateLanguages(idInfo);			
