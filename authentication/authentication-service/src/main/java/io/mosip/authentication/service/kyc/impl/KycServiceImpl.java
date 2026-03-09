@@ -744,7 +744,7 @@ public class KycServiceImpl implements KycService {
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
 			        this.getClass().getSimpleName(),
 			        "convertJP2ToJpeg",
-			        "jp2Image: " + jp2Image);
+			        "Decoded JP2 bytes length: " + decodedBytes.length);
 			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
 			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
 			convertRequestDto.setInputBytes(decodedBytes);
