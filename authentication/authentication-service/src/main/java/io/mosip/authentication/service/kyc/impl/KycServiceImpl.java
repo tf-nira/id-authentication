@@ -738,89 +738,77 @@ public class KycServiceImpl implements KycService {
 	}
 
 	
-//	private String convertJP2ToJpeg(String jp2Image) {
-//		try {
-//			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-//			        this.getClass().getSimpleName(),
-//			        "convertJP2ToJpeg",
-//			        "jp2Image: " + jp2Image);
-//			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-//			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-//			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
-//			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-//			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(CryptoUtil.decodeBase64(jp2Image), convertRequestDto.getCompressionRatio());
-//			return CryptoUtil.encodeBase64(image);
-//		} catch(Exception exp) {
-//			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-//					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
-//		}
-//		return null;
-//	}
-	
 	private String convertJP2ToJpeg(String jp2Image) {
-	    try {
-	        byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
-	        mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-	                "Decoded image bytes length : " + decodedBytes.length);
-	        byte[] imageBytes = null;
-	        try {
-	            ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-	            convertRequestDto.setInputBytes(decodedBytes);
-	            imageBytes = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-	                    "Image converted using ISO decoder");
-	        } catch (Exception isoException) {
-	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-	                    "Not ISO format. Trying BDIR decode");
-	        }
-
-	        //If ISO failed → Parse BDIR
-	        if (imageBytes == null) {
-	            FaceBDIR faceBDIR;
-	            try (ByteArrayInputStream bais = new ByteArrayInputStream(decodedBytes);
-	                 DataInputStream dis = new DataInputStream(bais)) {
-	                faceBDIR = new FaceBDIR(dis);
-	            }
-	            if (faceBDIR == null || faceBDIR.getRepresentation() == null || faceBDIR.getRepresentation().getRepresentationData() == null
-	                    || faceBDIR.getRepresentation().getRepresentationData().getImageData() == null) {
-	            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-		        	        "convertJP2ToJpeg", "faceBDIR: " + faceBDIR);
-		        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-		        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation(): " + faceBDIR.getRepresentation());
-		        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-		        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation().getRepresentationData(): "
-		        	                + faceBDIR.getRepresentation().getRepresentationData());
-		        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-		        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation().getRepresentationData().getImageData(): "
-		        	                + faceBDIR.getRepresentation().getRepresentationData().getImageData());
-		        	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-		        	        "convertJP2ToJpeg", "faceBDIR.getRepresentation().getRepresentationData().getImageData().getImage(): "
-		        	                + faceBDIR.getRepresentation().getRepresentationData().getImageData().getImage());
-	                mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-	                        "Invalid FaceBDIR structure");
-	                return null;
-	            }
-	            byte[] jp2Bytes = faceBDIR.getRepresentation()
-	                    .getRepresentationData()
-	                    .getImageData()
-	                    .getImage();
-
-	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-	                    "JP2 Image bytes length : " + jp2Bytes.length);
-	            imageBytes = CommonUtil.convertJP2ToJPEGUsingOpenCV(jp2Bytes, 95);
-	        }
-	        if (imageBytes != null) {
-	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-	                    "convertJP2ToJpeg", "JPEG image bytes length : " + imageBytes.length);
-	            return CryptoUtil.encodeBase64(imageBytes);
-	        }
-
-	    } catch (Exception exp) {
-	        mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-	                "convertJP2ToJpeg", "Error converting JP2 to JPEG : " + exp.getMessage(), exp);
-	    }
-	    return null;
+		try {
+			byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "jp2Image: " + jp2Image);
+			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+			convertRequestDto.setInputBytes(decodedBytes);
+//			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, convertRequestDto.getCompressionRatio());
+			return CryptoUtil.encodeBase64(image);
+		} catch(Exception exp) {
+			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
+		}
+		return null;
 	}
+	
+//	private String convertJP2ToJpeg(String jp2Image) {
+//	    try {
+//	        byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
+//	        mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//	                "Decoded image bytes length : " + decodedBytes.length);
+//	        byte[] imageBytes = null;
+//	        try {
+//	            ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+//	            convertRequestDto.setInputBytes(decodedBytes);
+//	            imageBytes = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+//	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//	                    "Image converted using ISO decoder");
+//	        } catch (Exception isoException) {
+//	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//	                    "Not ISO format. Trying BDIR decode");
+//	        }
+//
+//	        //If ISO failed → Parse BDIR
+//	        if (imageBytes == null) {
+//	            FaceBDIR faceBDIR;
+//	            try (ByteArrayInputStream bais = new ByteArrayInputStream(decodedBytes);
+//	                 DataInputStream dis = new DataInputStream(bais)) {
+//	                faceBDIR = new FaceBDIR(dis);
+//	            }
+//	            if (faceBDIR == null || faceBDIR.getRepresentation() == null || faceBDIR.getRepresentation().getRepresentationData() == null
+//	                    || faceBDIR.getRepresentation().getRepresentationData().getImageData() == null) {
+//	                mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//	                        "Invalid FaceBDIR structure");
+//	                return null;
+//	            }
+//	            byte[] jp2Bytes = faceBDIR.getRepresentation()
+//	                    .getRepresentationData()
+//	                    .getImageData()
+//	                    .getImage();
+//
+//	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//	                    "JP2 Image bytes length : " + jp2Bytes.length);
+//	            imageBytes = CommonUtil.convertJP2ToJPEGUsingOpenCV(jp2Bytes, 95);
+//	        }
+//	        if (imageBytes != null) {
+//	            mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+//	                    "convertJP2ToJpeg", "JPEG image bytes length : " + imageBytes.length);
+//	            return CryptoUtil.encodeBase64(imageBytes);
+//	        }
+//
+//	    } catch (Exception exp) {
+//	        mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+//	                "convertJP2ToJpeg", "Error converting JP2 to JPEG : " + exp.getMessage(), exp);
+//	    }
+//	    return null;
+//	}
 	
 	private Map<String, String> localesMapping(Set<String> locales) {
 
@@ -858,7 +846,8 @@ public class KycServiceImpl implements KycService {
 	}
 	
 	private String getFaceBDB(String faceCbeff) throws Exception {
-		List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(faceCbeff.getBytes(), CbeffDocType.FACE.getName());
+		byte[] cbeffBytes = CryptoUtil.decodeBase64(faceCbeff);
+		List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(cbeffBytes, CbeffDocType.FACE.getName());
 		mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
 	            this.getClass().getSimpleName(), "getFaceBDB",
 	            "BIR count : " + birDataFromXMLType.size());
