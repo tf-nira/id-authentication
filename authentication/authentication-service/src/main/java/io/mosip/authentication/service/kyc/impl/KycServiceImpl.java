@@ -1,5 +1,13 @@
 package io.mosip.authentication.service.kyc.impl;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.LANG_CODE_SEPARATOR;
+import java.util.Base64;
+import java.util.Arrays;
+import java.io.ByteArrayOutputStream;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import java.awt.image.BufferedImage;
+import java.util.Iterator;
+import javax.imageio.stream.ImageInputStream;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
@@ -513,9 +521,12 @@ public class KycServiceImpl implements KycService {
 			        "faceEntityInfoMap: " + faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
-					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
-					if (Objects.nonNull(face))
-						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
+					String faceXml = faceEntityInfoMap.get("FACE");
+					String faceImage = extractFaceImage(faceXml);
+					respMap.put("face", "data:image/jpeg;base64," + faceImage);
+//					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
+//					if (Objects.nonNull(face))
+//						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 				} catch (Exception e) {
 					// Not throwing any exception because others claims will be returned without photo.
 					mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
@@ -738,25 +749,25 @@ public class KycServiceImpl implements KycService {
 	}
 
 	
-	private String convertJP2ToJpeg(String jp2Image) {
-		try {
-			byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-			        this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg",
-			        "Decoded JP2 bytes length: " + decodedBytes.length);
-			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-			convertRequestDto.setInputBytes(decodedBytes);
-//			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, convertRequestDto.getCompressionRatio());
-			return CryptoUtil.encodeBase64(image);
-		} catch(Exception exp) {
-			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
-		}
-		return null;
-	}
+//	private String convertJP2ToJpeg(String jp2Image) {
+//		try {
+//			byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
+//			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+//			        this.getClass().getSimpleName(),
+//			        "convertJP2ToJpeg",
+//			        "Decoded JP2 bytes length: " + decodedBytes.length);
+//			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+//			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+//			convertRequestDto.setInputBytes(decodedBytes);
+////			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+//			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, convertRequestDto.getCompressionRatio());
+//			return CryptoUtil.encodeBase64(image);
+//		} catch(Exception exp) {
+//			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+//					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
+//		}
+//		return null;
+//	}
 	
 //	private String convertJP2ToJpeg(String jp2Image) {
 //	    try {
@@ -810,6 +821,26 @@ public class KycServiceImpl implements KycService {
 //	    return null;
 //	}
 	
+	private byte[] convertJP2ToJpeg(byte[] jp2Bytes) throws Exception {
+
+	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+	            this.getClass().getSimpleName(),
+	            "convertJP2ToJpeg",
+	            "JP2 size : " + jp2Bytes.length);
+	    ByteArrayInputStream bis = new ByteArrayInputStream(jp2Bytes);
+	    Iterator<ImageReader> readers = ImageIO.getImageReadersByFormatName("JPEG2000");
+	    if (!readers.hasNext()) {
+	        throw new RuntimeException("JPEG2000 reader not found");
+	    }
+	    ImageReader reader = readers.next();
+	    ImageInputStream iis = ImageIO.createImageInputStream(bis);
+	    reader.setInput(iis);
+	    BufferedImage image = reader.read(0);
+	    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+	    ImageIO.write(image, "jpg", bos);
+	    return bos.toByteArray();
+	}
+	
 	private Map<String, String> localesMapping(Set<String> locales) {
 
 		Map<String, String> mappedLocales = new HashMap<>();
@@ -845,19 +876,49 @@ public class KycServiceImpl implements KycService {
 		return availableLangCodes;
 	}
 	
-	private String getFaceBDB(String faceCbeff) throws Exception {
-		byte[] cbeffBytes = CryptoUtil.decodeBase64(faceCbeff);
-		List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(cbeffBytes, CbeffDocType.FACE.getName());
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-	            this.getClass().getSimpleName(), "getFaceBDB",
+	private String  getFaceBDB(String faceCbeff) throws Exception {
+	    List<BIR> birDataFromXMLType =
+	            cbeffUtil.getBIRDataFromXMLType(faceCbeff.getBytes(), CbeffDocType.FACE.getName());
+	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+	            this.getClass().getSimpleName(),
+	            "getFaceBDB",
 	            "BIR count : " + birDataFromXMLType.size());
-		if(birDataFromXMLType.isEmpty()) {
-			//This is unlikely as if empty the exception would have been thrown already
-			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
-		}
-		byte[] bdb = birDataFromXMLType.get(0).getBdb();
-	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-	            "getFaceBDB", "BDB length : " + bdb.length);
-		return CryptoUtil.encodeBase64(bdb);
+	    if (birDataFromXMLType.isEmpty()) {
+	        throw new IdAuthenticationBusinessException(
+	                IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
+	    }
+	    return Base64.getEncoder().encodeToString(birDataFromXMLType.get(0).getBdb());
+	}
+	
+	private byte[] extractJP2(byte[] data) {
+	    for (int i = 0; i < data.length - 1; i++) {
+	        if ((char) data[i] == 'j' && (char) data[i + 1] == 'P') {
+	            int start = i - 4;
+	            if (start < 0) {
+	                start = i;
+	            }
+	            return Arrays.copyOfRange(data, start, data.length);
+	        }
+	    }
+	    return null;
+	}
+	
+	public String extractFaceImage(String faceXml) {
+	    try {
+	        String bdbBase64 = getFaceBDB(faceXml);
+	        if (bdbBase64 == null) {
+	            return null;
+	        }
+	        byte[] decoded = Base64.getDecoder().decode(bdbBase64);
+	        byte[] jp2 = extractJP2(decoded);
+	        if (jp2 == null) {
+	            return null;
+	        }
+	        byte[] jpeg = convertJP2ToJpeg(jp2);
+	        return Base64.getEncoder().encodeToString(jpeg);
+	    } catch (Exception e) {
+	        e.printStackTrace();
+	    }
+	    return null;
 	}
 }
