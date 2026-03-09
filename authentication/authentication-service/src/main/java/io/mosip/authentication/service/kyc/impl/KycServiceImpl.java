@@ -858,6 +858,6 @@ public class KycServiceImpl implements KycService {
 		byte[] bdb = birDataFromXMLType.get(0).getBdb();
 	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
 	            "getFaceBDB", "BDB length : " + bdb.length);
-		return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
+		return CryptoUtil.encodeBase64(bdb);
 	}
 }
