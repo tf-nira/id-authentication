@@ -1,19 +1,5 @@
 package io.mosip.authentication.service.kyc.impl;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.LANG_CODE_SEPARATOR;
-import java.util.Base64;
-import java.util.Arrays;
-import java.io.ByteArrayOutputStream;
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReader;
-import javax.xml.parsers.DocumentBuilder;
-import javax.xml.parsers.DocumentBuilderFactory;
-import java.awt.image.BufferedImage;
-
-import java.util.Iterator;
-
-import javax.imageio.stream.ImageInputStream;
-import org.w3c.dom.Document;
-import org.w3c.dom.NodeList;
 
 import java.io.ByteArrayInputStream;
 import java.io.DataInputStream;
