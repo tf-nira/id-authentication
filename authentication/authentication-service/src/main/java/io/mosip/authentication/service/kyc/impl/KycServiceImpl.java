@@ -521,7 +521,7 @@ public class KycServiceImpl implements KycService {
 			        "faceEntityInfoMap: " + faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
-					String faceXml = faceEntityInfoMap.get("FACE");
+					String faceXml = faceEntityInfoMap.get(CbeffDocType.FACE.getType().value());
 					String faceImage = extractFaceImage(faceXml);
 					respMap.put("face", "data:image/jpeg;base64," + faceImage);
 //					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
