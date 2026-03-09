@@ -802,20 +802,35 @@ public class KycServiceImpl implements KycService {
 		return null;
 	}
 	
-	private byte[] convertToJPG(byte[] jp2Data, String fileName) throws IOException {
-		ByteArrayOutputStream beforeUpScale = new ByteArrayOutputStream();
-		ByteArrayOutputStream afterUpScale = new ByteArrayOutputStream();
-		J2KImageReader j2kImageReader = new J2KImageReader(null);
-		j2kImageReader.setInput(ImageIO.createImageInputStream(new ByteArrayInputStream(jp2Data)));
-		ImageReadParam imageReadParam = j2kImageReader.getDefaultReadParam();
-		BufferedImage image = j2kImageReader.read(0, imageReadParam);
-		ImageIO.write(image, "PNG", beforeUpScale);
-		int height = image.getHeight();
-		int width = image.getWidth();
-		BufferedImage outputImage = createResizedCopy(image, 2 * width, 2 * height, true);
-		ImageIO.write(outputImage, "PNG", afterUpScale);
-		byte[] jpgImg = afterUpScale.toByteArray();
-		return jpgImg;
+	private byte[] convertToJPG(byte[] imageData, String fileName) throws IOException {
+
+	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+	    BufferedImage image = null;
+	    boolean isJP2 = imageData != null &&
+	            imageData.length > 8 &&
+	            imageData[4] == 0x6A &&
+	            imageData[5] == 0x50 &&
+	            imageData[6] == 0x20 &&
+	            imageData[7] == 0x20;
+	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+				        "convertToJPG", "isJP2: " + isJP2);
+
+	    if (isJP2) {
+	        J2KImageReader j2kImageReader = new J2KImageReader(null);
+	        j2kImageReader.setInput(ImageIO.createImageInputStream(new ByteArrayInputStream(imageData)));
+	        ImageReadParam imageReadParam = j2kImageReader.getDefaultReadParam();
+	        image = j2kImageReader.read(0, imageReadParam);
+	    } else {
+	        image = ImageIO.read(new ByteArrayInputStream(imageData));  // Read normal JPEG/PNG
+	    }
+	    if (image == null) {
+	        throw new RuntimeException("Unable to decode image: " + fileName);
+	    }
+	    int height = image.getHeight();
+	    int width = image.getWidth();
+	    BufferedImage outputImage = createResizedCopy(image, 2 * width, 2 * height, true);
+	    ImageIO.write(outputImage, "JPEG", outputStream);
+	    return outputStream.toByteArray();
 	}
 	
 	private BufferedImage createResizedCopy(Image originalImage, int scaledWidth, int scaledHeight,
