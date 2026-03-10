@@ -776,25 +776,35 @@ public class KycServiceImpl implements KycService {
 //		return null;
 //	}
 	
-	private byte[] convertJP2ToJpeg(String isoTemplate) {
-		byte[] inputFileBytes = Base64.decodeBase64(isoTemplate);
-		int index;
-		for (index = 0; index < inputFileBytes.length; index++) {
-			if ((char) inputFileBytes[index] == 'j' && (char) inputFileBytes[index + 1] == 'P') {
-				mosipLogger.info(
-		                IdAuthCommonConstants.SESSION_ID,
-		                this.getClass().getSimpleName(),
-		                "convertJP2ToJpeg",
-		                "JP2 header found at index: " + index);
-				break;
-			}
-		}
+	private byte[] convertJP2ToJpeg(String isoTemplate) throws Exception {
 		try {
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-			        this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg",
-			        "Input File bytes length: " + inputFileBytes.length);
-			return convertToJPG(Arrays.copyOfRange(inputFileBytes, index - 4, inputFileBytes.length), "image");
+			byte[] inputFileBytes = Base64.decodeBase64(isoTemplate);
+			mosipLogger.info(
+	                IdAuthCommonConstants.SESSION_ID,
+	                this.getClass().getSimpleName(),
+	                "convertJP2ToJpeg",
+	                "ISO byte length: " + inputFileBytes.length);
+			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+	        convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+	        convertRequestDto.setInputBytes(inputFileBytes);
+
+	        // Extract actual image from ISO
+	        byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+	        if (image == null) {
+	            mosipLogger.error(
+	                    IdAuthCommonConstants.SESSION_ID,
+	                    this.getClass().getSimpleName(),
+	                    "convertJP2ToJpeg",
+	                    "Decoded image is NULL from ISO template");
+	            return null;
+	        }
+	        mosipLogger.info(
+	                IdAuthCommonConstants.SESSION_ID,
+	                this.getClass().getSimpleName(),
+	                "convertJP2ToJpeg",
+	                "Extracted image byte length: " + image.length);
+
+	        return convertToJPG(image, "image");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -803,26 +813,13 @@ public class KycServiceImpl implements KycService {
 	}
 	
 	private byte[] convertToJPG(byte[] imageData, String fileName) throws IOException {
-
 	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	    BufferedImage image = null;
-	    boolean isJP2 = imageData != null &&
-	            imageData.length > 8 &&
-	            imageData[4] == 0x6A &&
-	            imageData[5] == 0x50 &&
-	            imageData[6] == 0x20 &&
-	            imageData[7] == 0x20;
-	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-				        "convertToJPG", "isJP2: " + isJP2);
-
-	    if (isJP2) {
-	        J2KImageReader j2kImageReader = new J2KImageReader(null);
-	        j2kImageReader.setInput(ImageIO.createImageInputStream(new ByteArrayInputStream(imageData)));
-	        ImageReadParam imageReadParam = j2kImageReader.getDefaultReadParam();
-	        image = j2kImageReader.read(0, imageReadParam);
-	    } else {
-	        image = ImageIO.read(new ByteArrayInputStream(imageData));  // Read normal JPEG/PNG
-	    }
+	    mosipLogger.info(
+                IdAuthCommonConstants.SESSION_ID,
+                this.getClass().getSimpleName(),
+                "convertToJPG",
+                "imageData: " + imageData);
+	    BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
 	    if (image == null) {
 	        throw new RuntimeException("Unable to decode image: " + fileName);
 	    }
