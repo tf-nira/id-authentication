@@ -784,12 +784,25 @@ public class KycServiceImpl implements KycService {
 	                this.getClass().getSimpleName(),
 	                "convertJP2ToJpeg",
 	                "ISO byte length: " + inputFileBytes.length);
-			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-	        convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-	        convertRequestDto.setInputBytes(inputFileBytes);
+			String type = detectImageType(inputFileBytes);
 
-	        // Extract actual image from ISO
-	        byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+			mosipLogger.info(
+			        IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "Detected Image Type: " + type);
+
+			byte[] image = null;
+
+			if ("ISO_FACE".equals(type)) {
+			    ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+			    convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+			    convertRequestDto.setInputBytes(inputFileBytes);
+			    image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+			} else {
+			    image = inputFileBytes;
+			}
+
 	        if (image == null) {
 	            mosipLogger.error(
 	                    IdAuthCommonConstants.SESSION_ID,
@@ -810,6 +823,25 @@ public class KycServiceImpl implements KycService {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	private String detectImageType(byte[] bytes) {
+
+	    if (bytes.length < 10) return "UNKNOWN";
+
+	    if (bytes[0] == (byte)0xFF && bytes[1] == (byte)0xD8)
+	        return "JPEG";
+
+	    if (bytes[0] == (byte)0x89 && bytes[1] == (byte)0x50)
+	        return "PNG";
+
+	    if (bytes[4] == (byte)0x6A && bytes[5] == (byte)0x50)
+	        return "JP2";
+	    
+	    if (bytes[0] == (byte)0x46 && bytes[1] == (byte)0x41)
+	        return "ISO_FACE";
+
+	    return "UNKNOWN";
 	}
 	
 	private byte[] convertToJPG(byte[] imageData, String fileName) throws IOException {
