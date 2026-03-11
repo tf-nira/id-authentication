@@ -1,15 +1,6 @@
 package io.mosip.authentication.service.kyc.impl;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.LANG_CODE_SEPARATOR;
 
-import java.awt.AlphaComposite;
-import java.awt.Graphics2D;
-import java.awt.Image;
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.util.Arrays;
-import org.apache.commons.codec.binary.Base64;
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
@@ -28,9 +19,6 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import javax.imageio.ImageIO;
-import javax.imageio.ImageReadParam;
-
 import org.apache.commons.codec.DecoderException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,7 +26,6 @@ import org.springframework.stereotype.Service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.jaiimageio.jpeg2000.impl.J2KImageReader;
 
 import io.mosip.authentication.common.service.entity.KycTokenData;
 import io.mosip.authentication.common.service.helper.IdInfoHelper;
@@ -62,7 +49,6 @@ import io.mosip.authentication.core.spi.indauth.match.MappingConfig;
 import io.mosip.authentication.core.spi.indauth.match.MatchType;
 import io.mosip.authentication.core.spi.indauth.service.KycService;
 import io.mosip.authentication.core.util.CryptoUtil;
-import io.mosip.biometrics.util.CommonUtil;
 import io.mosip.biometrics.util.ConvertRequestDto;
 import io.mosip.biometrics.util.face.FaceBDIR;
 import io.mosip.biometrics.util.face.FaceDecoder;
@@ -524,14 +510,7 @@ public class KycServiceImpl implements KycService {
 			        "faceEntityInfoMap: " + faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
-					String face = null;
-					String faceBdb = getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value()));
-					mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-					        this.getClass().getSimpleName(),
-					        "addEntityForLangCodes",
-					        "faceBdb: " + faceBdb);
-					byte[] faceData = convertJP2ToJpeg(faceBdb);
-					face = java.util.Base64.getEncoder().encodeToString(faceData);
+					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
 					if (Objects.nonNull(face))
 						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 				} catch (Exception e) {
@@ -756,127 +735,18 @@ public class KycServiceImpl implements KycService {
 	}
 
 	
-//	private String convertJP2ToJpeg(String jp2Image) {
-//		try {
-//			byte[] decodedBytes = CryptoUtil.decodeBase64(jp2Image);
-//			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-//			        this.getClass().getSimpleName(),
-//			        "convertJP2ToJpeg",
-//			        "Decoded JP2 bytes length: " + decodedBytes.length);
-//			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-//			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-//			convertRequestDto.setInputBytes(decodedBytes);
-////			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-//			byte[] image = CommonUtil.convertJP2ToJPEGUsingOpenCV(decodedBytes, convertRequestDto.getCompressionRatio());
-//			return CryptoUtil.encodeBase64(image);
-//		} catch(Exception exp) {
-//			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-//					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
-//		}
-//		return null;
-//	}
-	
-	private byte[] convertJP2ToJpeg(String isoTemplate) throws Exception {
+	private String convertJP2ToJpeg(String jp2Image) {
 		try {
-			byte[] inputFileBytes = Base64.decodeBase64(isoTemplate);
-			mosipLogger.info(
-	                IdAuthCommonConstants.SESSION_ID,
-	                this.getClass().getSimpleName(),
-	                "convertJP2ToJpeg",
-	                "ISO byte length: " + inputFileBytes.length);
-			String type = detectImageType(inputFileBytes);
-
-			mosipLogger.info(
-			        IdAuthCommonConstants.SESSION_ID,
-			        this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg",
-			        "Detected Image Type: " + type);
-
-			byte[] image = null;
-
-			if ("ISO_FACE".equals(type)) {
-			    ConvertRequestDto convertRequestDto = new ConvertRequestDto();
-			    convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
-			    convertRequestDto.setInputBytes(inputFileBytes);
-			    image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
-			} else {
-			    image = inputFileBytes;
-			}
-
-	        if (image == null) {
-	            mosipLogger.error(
-	                    IdAuthCommonConstants.SESSION_ID,
-	                    this.getClass().getSimpleName(),
-	                    "convertJP2ToJpeg",
-	                    "Decoded image is NULL from ISO template");
-	            return null;
-	        }
-	        mosipLogger.info(
-	                IdAuthCommonConstants.SESSION_ID,
-	                this.getClass().getSimpleName(),
-	                "convertJP2ToJpeg",
-	                "Extracted image byte length: " + image.length);
-
-	        return convertToJPG(image, "image");
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
+			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
+			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
+			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
+			return CryptoUtil.encodeBase64(image);
+		} catch(Exception exp) {
+			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
+					"Error Converting JP2 To JPEG. " + exp.getMessage(), exp);
 		}
 		return null;
-	}
-	
-	private String detectImageType(byte[] bytes) {
-
-	    if (bytes.length < 10) return "UNKNOWN";
-
-	    if (bytes[0] == (byte)0xFF && bytes[1] == (byte)0xD8)
-	        return "JPEG";
-
-	    if (bytes[0] == (byte)0x89 && bytes[1] == (byte)0x50)
-	        return "PNG";
-
-	    if (bytes[4] == (byte)0x6A && bytes[5] == (byte)0x50)
-	        return "JP2";
-	    
-	    if (bytes[0] == (byte)0x46 && bytes[1] == (byte)0x41)
-	        return "ISO_FACE";
-
-	    return "UNKNOWN";
-	}
-	
-	private byte[] convertToJPG(byte[] imageData, String fileName) throws IOException {
-	    ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-	    mosipLogger.info(
-                IdAuthCommonConstants.SESSION_ID,
-                this.getClass().getSimpleName(),
-                "convertToJPG",
-                "imageData: " + imageData);
-	    BufferedImage image = ImageIO.read(new ByteArrayInputStream(imageData));
-	    if (image == null) {
-	        throw new RuntimeException("Unable to decode image: " + fileName);
-	    }
-	    int height = image.getHeight();
-	    int width = image.getWidth();
-	    BufferedImage outputImage = createResizedCopy(image, 2 * width, 2 * height, true);
-	    ImageIO.write(outputImage, "JPEG", outputStream);
-	    return outputStream.toByteArray();
-	}
-	
-	private BufferedImage createResizedCopy(Image originalImage, int scaledWidth, int scaledHeight,
-			boolean preserveAlpha) {
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-		        this.getClass().getSimpleName(),
-		        "createResizedCopy",
-		        "Image Resizing: " + originalImage);
-		int imageType = preserveAlpha ? BufferedImage.TYPE_INT_RGB : BufferedImage.TYPE_INT_ARGB;
-		BufferedImage scaledBI = new BufferedImage(scaledWidth, scaledHeight, imageType);
-		Graphics2D g = scaledBI.createGraphics();
-		if (preserveAlpha) {
-			g.setComposite(AlphaComposite.Src);
-		}
-		g.drawImage(originalImage, 0, 0, scaledWidth, scaledHeight, null);
-		g.dispose();
-		return scaledBI;
 	}
 	
 	private Map<String, String> localesMapping(Set<String> locales) {
@@ -926,6 +796,5 @@ public class KycServiceImpl implements KycService {
 		}
 		return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
 	}
-	
 	
 }
