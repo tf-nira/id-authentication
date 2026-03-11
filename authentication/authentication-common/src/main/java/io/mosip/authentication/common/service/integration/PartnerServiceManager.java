@@ -15,6 +15,7 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -356,6 +357,7 @@ public class PartnerServiceManager {
 	 * @throws JsonMappingException the json mapping exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
+	@CacheEvict(value = {IdAuthCommonConstants.PARTNER_API_KEY_DATA, IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA}, allEntries = true)
 	public void handleApiKeyApproved(EventModel eventModel) throws JsonParseException, JsonMappingException, IOException {
 		PartnerMapping mapping = new PartnerMapping();
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA),
@@ -571,6 +573,7 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
+	@CacheEvict(value = {IdAuthCommonConstants.PARTNER_API_KEY_DATA, IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA}, allEntries = true)
 	public void createOIDCClientData(EventModel eventModel) throws IdAuthenticationBusinessException {
 		// OIDC client handling is different from API key.
 		// For API key there is no update available, API key will always be created.
