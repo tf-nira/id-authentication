@@ -156,19 +156,22 @@ public class PartnerServiceManager {
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
-		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findByPartnerId(partnerId);
+		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findByPartnerIdFromDB(partnerId);
+		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		if(partnerDataOptional.isPresent()){
 			PartnerData partnerData = partnerDataOptional.get();
+			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 			if (partnerDataOptional.isPresent()) {
 			    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
 			        "partner_data_validation", "partner data value in DB: " + partnerData.getPartnerStatus());
+			    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
+				        "partner_mapping_data_validation", "partner mapping data value in DB: " + partnerMapping.getPartnerData().getPartnerStatus());
 			    if (!"ACTIVE".equalsIgnoreCase(partnerData.getPartnerStatus())) {
 			    	throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
 							IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
 			    }
 			}
 		}
-		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		Optional<MispLicenseData> mispLicOptional = mispLicDataRepo.findByLicenseKey(misp_license_key);
 		Optional<OIDCClientData> oidcClientData = oidcClientDataRepo.findByClientId(partner_api_key);
 		validatePartnerMappingDetails(partnerMappingDataOptional, mispLicOptional, headerCertificateThumbprint, certValidationNeeded, oidcClientData);
@@ -373,7 +376,8 @@ public class PartnerServiceManager {
 	 */
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true)
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+		    beforeInvocation = true)
 	public void handleApiKeyApproved(EventModel eventModel) throws JsonParseException, JsonMappingException, IOException {
 		PartnerMapping mapping = new PartnerMapping();
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA),
@@ -459,13 +463,13 @@ public class PartnerServiceManager {
 	 */
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true)
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+		    beforeInvocation = true)
 	public void updatePartnerData(EventModel eventModel) {
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
 		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
 		if (partnerDataOptional.isPresent()) {
 			PartnerData partnerData = partnerDataOptional.get();
-			partnerData.setPartnerId(partnerEventData.getPartnerId());
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
 			partnerData.setCertificateData(partnerEventData.getCertificateData());
 			partnerData.setPartnerStatus(partnerEventData.getPartnerStatus());
@@ -487,7 +491,8 @@ public class PartnerServiceManager {
 	 */
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true)
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+		    beforeInvocation = true)
 	public void updatePolicyData(EventModel eventModel) {
 		PolicyData policyEventData = mapper.convertValue(eventModel.getEvent().getData().get(POLICY_DATA), PolicyData.class);
 		Optional<PolicyData> policyDataOptional = policyDataRepo.findById(policyEventData.getPolicyId());
@@ -561,7 +566,8 @@ public class PartnerServiceManager {
 	 */
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true)
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+		    beforeInvocation = true)
 	public void updateMispLicenseData(EventModel eventModel) {
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
 		MispLicenseData mispLicenseEventData = mapper.convertValue(eventDataMap.get(MISP_LICENSE_DATA), MispLicenseData.class);
@@ -665,7 +671,8 @@ public class PartnerServiceManager {
 	 */
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true)
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+		    beforeInvocation = true)
 	public void updateOIDCClientData(EventModel eventModel) throws IdAuthenticationBusinessException {
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
 		
