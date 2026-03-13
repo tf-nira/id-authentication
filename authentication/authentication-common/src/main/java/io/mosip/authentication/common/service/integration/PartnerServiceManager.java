@@ -157,10 +157,21 @@ public class PartnerServiceManager {
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
 		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findByPartnerId(partnerId);
+		if(partnerDataOptional.isPresent()){
+			PartnerData partnerData = partnerDataOptional.get();
+			if (partnerDataOptional.isPresent()) {
+			    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
+			        "partner_data_validation", "partner data value in DB: " + partnerData.getPartnerStatus());
+			    if (!"ACTIVE".equalsIgnoreCase(partnerData.getPartnerStatus())) {
+			    	throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
+							IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
+			    }
+			}
+		}
 		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		Optional<MispLicenseData> mispLicOptional = mispLicDataRepo.findByLicenseKey(misp_license_key);
 		Optional<OIDCClientData> oidcClientData = oidcClientDataRepo.findByClientId(partner_api_key);
-		validatePartnerMappingDetails(partnerMappingDataOptional, mispLicOptional, headerCertificateThumbprint, certValidationNeeded, oidcClientData, partnerDataOptional);
+		validatePartnerMappingDetails(partnerMappingDataOptional, mispLicOptional, headerCertificateThumbprint, certValidationNeeded, oidcClientData);
 		PartnerPolicyResponseDTO response = new PartnerPolicyResponseDTO();
 		PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 		PartnerData partnerData = partnerMapping.getPartnerData();
@@ -210,18 +221,7 @@ public class PartnerServiceManager {
 	 */
 	private void validatePartnerMappingDetails(Optional<PartnerMapping> partnerMappingDataOptional,
 											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint, 
-											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData, Optional<PartnerData> partnerDataOptional) throws IdAuthenticationBusinessException {
-		if(partnerDataOptional.isPresent()){
-			PartnerData partnerData = partnerDataOptional.get();
-			if (partnerDataOptional.isPresent()) {
-			    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
-			        "partner_data_validation", "partner data value in DB: " + partnerData.getPartnerStatus());
-			    if (!"ACTIVE".equalsIgnoreCase(partnerData.getPartnerStatus())) {
-			    	throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
-							IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
-			    }
-			}
-		}
+											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
 		if (partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
 			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 			logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
