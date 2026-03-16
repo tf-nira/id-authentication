@@ -217,7 +217,7 @@ public class PartnerServiceManager {
 				PartnerData partnerData = partnerDataOptional.get();
 				if (partnerDataOptional.isPresent()) {
 				    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
-				        "partner_data_validation", "partner data value in DB: " + partnerData.getPartnerStatus());
+				        "partner_data_validation", "Partner Id is: " + partnerData.getPartnerId() , "partner data value in DB: " + partnerData.getPartnerStatus());
 				    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
 					        "partner_mapping_data_validation", "partner mapping data value in DB: " + partnerMapping.getPartnerData().getPartnerStatus());
 				    if (!"ACTIVE".equalsIgnoreCase(partnerData.getPartnerStatus())) {
