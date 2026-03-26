@@ -208,11 +208,24 @@ public class PartnerServiceManager {
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
 	private void validatePartnerMappingDetails(Optional<PartnerMapping> partnerMappingDataOptional,
-											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint, 
+											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint,
 											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
+
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
+				"validatePartnerMappingDetails",
+				"START - PartnerMapping Optional Present: " + partnerMappingDataOptional.isPresent());
+
 		if (partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
 			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 			Optional<PartnerData> partnerDataOptional = partnerDataRepo.findByPartnerIdFromDB(partnerMapping.getPartnerData().getPartnerId());
+
+			logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
+					"partner_mapping_details",
+					"PartnerId: " + partnerMapping.getPartnerId() +
+							" | PartnerType: " + partnerMapping.getPartnerData().getPartnerName() +
+							" | PartnerStatus: " + partnerMapping.getPartnerData().getPartnerStatus() +
+							" | Deleted: " + partnerMapping.getPartnerData().isDeleted());
+
 			if(partnerDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()){
 				PartnerData partnerData = partnerDataOptional.get();
 				if (partnerDataOptional.isPresent()) {
