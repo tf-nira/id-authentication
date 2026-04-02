@@ -17,29 +17,23 @@ import io.mosip.authentication.core.logger.IdaLogger;
 import io.mosip.kernel.core.logger.spi.Logger;
 
 /**
- * The Class PartnerPaymentStatusEventPublisher.
+ * The Class AuthTransactionEventPublisher.
  *
- * @author Jagadeesh
+ * @author Karthik
  */
 @Component
 @Async("webSubHelperExecutor")
 public class AuthTransactionEventPublisher extends BaseWebSubEventsInitializer {
 
     /** The Constant logger. */
-    private static final Logger logger = IdaLogger.getLogger(PartnerBalanceWebSubPublisher.class);
+    private static final Logger logger = IdaLogger.getLogger(AuthTransactionEventPublisher.class);
 
-    /** The Partner payment status update topic. */
+    /** The Partner Auth transaction topic. */
     @Value("${" + AUTH_TRANSACTION_TOPIC + "}")
     private String authTransactionTopic;
 
     @Autowired
     private ObjectMapper objectMapper;
-
-    /** The Constant PARTNER_BALANCE */
-    private static final String UPDATED_BALANCE = "balance";
-
-    /** The Constant PARTNER_ID */
-    private static final String PARTNER_ID = "partnerId";
 
     /**
      * Do subscribe.
@@ -53,7 +47,7 @@ public class AuthTransactionEventPublisher extends BaseWebSubEventsInitializer {
     protected void doRegister() {
         try {
             logger.info(IdAuthCommonConstants.SESSION_ID, "doRegister", this.getClass().getSimpleName(),
-                    "Registering partner payment status event topic..");
+                    "Registering partner auth transaction event topic..");
             webSubHelper.registerTopic(authTransactionTopic);
         } catch (Exception e) {
             logger.info(IdAuthCommonConstants.SESSION_ID, "tryRegisterTopic", e.getClass().toString(),
