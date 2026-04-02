@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
 import org.hibernate.exception.JDBCConnectionException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,7 +50,11 @@ public class IdServiceImplTest {
 
 	@Mock
 	private AutnTxnRepository autntxnrepository;
-	
+
+	@Mock
+	private AuthTransactionEventPublisher authTransactionEventPublisher;
+
+
 	@Test
 	public void getIdentityTest1() throws IdAuthenticationBusinessException, IOException {
 		String uin = "12312312";
