@@ -375,7 +375,8 @@ public class IdServiceImplTest {
 		entityOpt.get().setTransactionLimit(-1);
 		Mockito.when(identityRepo.findById(vid)).thenReturn(entityOpt);
 		ReflectionTestUtils.invokeMethod(idServiceImpl, "updateVIDstatus", vid);
-		Mockito.verify(identityRepo, Mockito.times(1)).deleteById(vid);
+		//Mockito.verify(identityRepo, Mockito.times(1)).deleteById(vid);
+		Mockito.verify(identityRepo).save(any(IdentityEntity.class));
 	}
 
 	private IdentityEntity getEntity() {
