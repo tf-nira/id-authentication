@@ -160,9 +160,6 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.INVALID_VID, e);
 			}
 
-			if(markVidConsumed) {
-				updateVIDstatus(idvId);
-			}
 		}
 		return idResDTO;
 	}
@@ -381,7 +378,7 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 	 * @throws IdAuthenticationBusinessException
 	 *             the id authentication business exception
 	 */
-	private void updateVIDstatus(String vid) throws IdAuthenticationBusinessException {
+	public void updateVIDstatus(String vid) throws IdAuthenticationBusinessException {
 		try {
 			vid = securityManager.hash(vid);
 			// Assumption : If transactionLimit is null, id is considered as Perpetual VID

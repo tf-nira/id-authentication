@@ -259,6 +259,10 @@ public class AuthFacadeImpl implements AuthFacade {
 			notificationService.sendAuthNotification(authRequestDTO, idvid, authResponseDTO, idInfo, isExternalAuth);
 		}
 
+		if(markVidConsumed) {
+			idService.updateVIDstatus(idvid);
+		}
+
 		return authResponseDTO;
 
 	}
