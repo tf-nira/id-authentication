@@ -352,7 +352,9 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 						entity.setTransactionLimit(newTransactionLimit);
 						identityRepo.save(entity);
 					} else {
-						identityRepo.deleteById(vid);
+						//identityRepo.deleteById(vid);
+						entity.setTransactionLimit(0);
+						identityRepo.save(entity);
 					}
 				}
 			}
