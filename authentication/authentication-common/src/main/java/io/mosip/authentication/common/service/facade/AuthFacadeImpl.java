@@ -184,9 +184,9 @@ public class AuthFacadeImpl implements AuthFacade {
 		
 		Map<String, Object> idResDTO = idService.processIdType(idvIdType, idvid, idInfoHelper.isBiometricDataNeeded(authRequestDTO),
 				markVidConsumed, filterAttributes);
-		logger.info("after processIdType");
+
 		String token = idService.getToken(idResDTO);
-		logger.info("after getToken");
+
 		AuthResponseDTO authResponseDTO;
 		AuthResponseBuilder authResponseBuilder = AuthResponseBuilder.newInstance();
 		Map<String, List<IdentityInfoDTO>> idInfo = null;
@@ -196,20 +196,17 @@ public class AuthFacadeImpl implements AuthFacade {
 		AuthTransactionBuilder authTxnBuilder = (AuthTransactionBuilder) authRequestDTO.getMetadata()
 				.get(AuthTransactionBuilder.class.getSimpleName());
 		authTxnBuilder.withToken(token);
-		logger.info("after AuthTransactionBuilder");
+
 		String transactionID = authRequestDTO.getTransactionID();
 		try {
 			idInfo = IdInfoFetcher.getIdInfo(idResDTO);
-			logger.info("after IdInfoFetcher");
 			authResponseBuilder.setTxnID(transactionID);
 			authTokenId = authTokenRequired && isExternalAuth ? getToken(authRequestDTO, partnerId, partnerApiKey, idvid, token)
 					: null;
 
 			LinkedHashMap<String, Object> properties = new LinkedHashMap<>(authRequestDTO.getMetadata());
 			properties.put(IdAuthCommonConstants.TOKEN, token);
-			logger.info("before validateAuthFilters");
 			authFiltersValidator.validateAuthFilters(authRequestDTO, idInfo, properties);
-			logger.info("after validateAuthFilters");
 			Double amount = (Double) properties.get("amount");
 			if (amount != null) {
 				authTxnBuilder.withAmount(amount);
