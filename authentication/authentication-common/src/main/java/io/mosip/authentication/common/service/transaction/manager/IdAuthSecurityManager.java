@@ -412,6 +412,12 @@ public class IdAuthSecurityManager {
 	}
 	
 	public String hash(String id) throws IdAuthenticationBusinessException {
+		mosipLogger.info(
+				IdAuthCommonConstants.SESSION_ID,
+				this.getClass().getSimpleName(),
+				"VID_DEBUG",
+				"Incoming ID=" + id
+		);
 		String hashWithNewMethod = null;
 		try {
 			hashWithNewMethod = newHash(id);
@@ -439,10 +445,10 @@ public class IdAuthSecurityManager {
 			}
 			
 			String hashWithLegacyMethod = legacyHash(id);
-			if(!identityRepo.existsById(hashWithLegacyMethod)) {
-				//Throw error
-				throwIdNotAvailabeError(id);
-			}
+//			if(!identityRepo.existsById(hashWithLegacyMethod)) {
+//				//Throw error
+//				throwIdNotAvailabeError(id);
+//			}
 			
 			return hashWithLegacyMethod;
 		}
