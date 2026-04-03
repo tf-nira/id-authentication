@@ -261,7 +261,8 @@ public class IdServiceImplTest {
 		IdServiceImpl idServiceSpy = Mockito.spy(idServiceImpl);
 		Mockito.doReturn(null).when(idServiceSpy).getIdByVid(idvId, isBio, filterAttributes);
 		String idvIdType = "VID";
-		Mockito.doThrow(JDBCConnectionException.class).when(identityRepo).deleteById("11");
+		//Mockito.doThrow(JDBCConnectionException.class).when(identityRepo).deleteById("11");
+		Mockito.doThrow(JDBCConnectionException.class).when(identityRepo).save(Mockito.any());
 		idServiceSpy.processIdType(idvIdType, idvId, isBio, markVidConsumed, filterAttributes);
 	}
 
@@ -355,7 +356,8 @@ public class IdServiceImplTest {
 		entityOpt.get().setTransactionLimit(1);
 		Mockito.when(identityRepo.findById(vid)).thenReturn(entityOpt);
 		ReflectionTestUtils.invokeMethod(idServiceImpl, "updateVIDstatus", vid);
-		Mockito.verify(identityRepo, Mockito.times(1)).deleteById(vid);
+		//Mockito.verify(identityRepo, Mockito.times(1)).deleteById(vid);
+		Mockito.verify(identityRepo).save(any(IdentityEntity.class));
 	}
 
 	/**
