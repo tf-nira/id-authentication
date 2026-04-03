@@ -137,6 +137,9 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 				updateVIDstatus(idvId);
 			}
 		}
+		logger.info("processIdType completed for idType={}, id={}",
+				idvIdType,
+				idvId);
 		return idResDTO;
 	}
 
@@ -197,6 +200,10 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 		try {
 			IdentityEntity entity = null;
 			if (!identityRepo.existsById(hashedId)) {
+				logger.info("VID LOOKUP FAILED for id={}", id);
+
+				logger.info("STACK TRACE AT SECOND LOOKUP:");
+				Thread.dumpStack();
 				logger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
 						"Id not found in DB");
 				throw new IdAuthenticationBusinessException(
@@ -352,6 +359,10 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 						entity.setTransactionLimit(newTransactionLimit);
 						identityRepo.save(entity);
 					} else {
+						logger.info("VID DELETE TRIGGERED for vid={} ", vid);
+
+						logger.info("STACK TRACE AT DELETE:");
+						Thread.dumpStack();
 						identityRepo.deleteById(vid);
 					}
 				}
@@ -379,6 +390,8 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 	@Override
 	public void checkIdKeyBindingPermitted(String idvId, String idvIdType) throws IdAuthenticationBusinessException {
 		try {
+			logger.info("checkIdKeyBindingPermitted called for id={}", idvId);
+			Thread.dumpStack();
 			String idVidHash = securityManager.hash(idvId);
 			logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "checkIdKeyBindingPermitted",
 						"Checking Id Key Binding Permitted or not. IdVidHash: " + idVidHash);
