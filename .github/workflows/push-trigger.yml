@@ -24,6 +24,7 @@ on:
       - tf_nira*
       - Satyam_Devlop
       - updatevid
+      - authNotiTest
 
 jobs:
   build-maven-authentication:
