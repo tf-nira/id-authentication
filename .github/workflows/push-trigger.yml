@@ -24,6 +24,7 @@ on:
       - tf_nira*
       - Satyam_Devlop
       - updatevid
+      - shivam_test
 
 jobs:
   build-maven-authentication:
