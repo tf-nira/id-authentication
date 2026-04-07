@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,7 +57,7 @@ import reactor.util.function.Tuples;
  */
 @Service
 public class NotificationServiceImpl implements NotificationService {
-	
+
 	private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
 	/** The Constant AUTH_TYPE. */
@@ -93,10 +94,33 @@ public class NotificationServiceImpl implements NotificationService {
 		List<String> templateLanguages = getTemplateLanguages(idInfo);
 		
 		for (String lang : templateLanguages) {
+			List<String> identityAttributes = infoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "name");
+			logger.info("sendAuthNotification - idMapping value for NAME: {}", infoHelper.getIdMappingValue(DemoMatchType.NAME.getIdMapping(), DemoMatchType.NAME));
+			logger.info("sendAuthNotification - idInfo keySet: {}", idInfo.keySet());
+			logger.info("sendAuthNotification - Checking if 'fullName' exists in idInfo: {}", idInfo.containsKey("fullName"));
+			logger.info("sendAuthNotification - identityAttributes for NAME: {}", identityAttributes);
+			
 			Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
 			values.putAll(nameMap);
 			String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
 			values.put(NAME + "_" + lang, nameStr);
+			
+			if (idInfo.containsKey("fullName")) {
+				List<IdentityInfoDTO> fullNameList = idInfo.get("fullName");
+				if (fullNameList != null && !fullNameList.isEmpty()) {
+					for (IdentityInfoDTO nameInfo : fullNameList) {
+						if (nameInfo.getLanguage() != null && nameInfo.getLanguage().equals(lang)) {
+							values.put("fullName", nameInfo.getValue());
+							values.put("fullName_" + lang, nameInfo.getValue());
+							break;
+						}
+					}
+					IdentityInfoDTO firstNameInfo = fullNameList.stream().filter(n -> n.getLanguage() == null).findFirst().orElse(null);
+					if (firstNameInfo != null) {
+						values.put("fullName", firstNameInfo.getValue());
+					}
+				}
+			}
 		}
 		values.put("identity", idInfo);
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
@@ -140,11 +164,17 @@ public class NotificationServiceImpl implements NotificationService {
 		}
 
 		sendNotification(values, email, phoneNumber, SenderType.AUTH, notificationType, templateLanguages);
+
 		logger.info("sendAuthNotification - Values map keys: {}", values.keySet());
 		logger.info("sendAuthNotification - identity value: {}", values.get("identity"));
 		logger.info("sendAuthNotification - nameMap from getIdEntityInfoMap: {}", infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, "eng"));
+		logger.info("sendAuthNotification - identity attributes for NAME: {}", infoHelper.getIdentityAttributesForMatchType(DemoMatchType.NAME, "name"));
+		logger.info("sendAuthNotification - idMapping value for NAME: {}", infoHelper.getIdMappingValue(DemoMatchType.NAME.getIdMapping(), DemoMatchType.NAME));
 		for (String lang : templateLanguages) {
-			logger.info("sendAuthNotification - name for lang {}: {}, givenName_eng: {}, surname_eng: {}", lang, values.get("name_" + lang), values.get("givenName_eng"), values.get("surname_eng"));
+			logger.info("sendAuthNotification - idMapping value for NAME: {}", infoHelper.getIdMappingValue(DemoMatchType.NAME.getIdMapping(), DemoMatchType.NAME));
+			logger.info("sendAuthNotification - idInfo keySet: {}", idInfo.keySet());
+			logger.info("sendAuthNotification - Checking if 'fullName' exists in idInfo: {}", idInfo.containsKey("fullName"));
+			logger.info("sendAuthNotification - fullName value: {}", idInfo.get("fullName"));
 		}
 	}
 
