@@ -15,6 +15,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -55,6 +57,8 @@ import reactor.util.function.Tuples;
 @Service
 public class NotificationServiceImpl implements NotificationService {
 
+	private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
+
 	/** The Constant AUTH_TYPE. */
 	private static final String AUTH_TYPE = "authType";
 	/** The Constant NAME. */
@@ -81,67 +85,102 @@ public class NotificationServiceImpl implements NotificationService {
 	@Autowired
 	@Qualifier("NotificationLangComparator")
 	private LanguageComparator languageComparator;
-	
-	public void sendAuthNotification(AuthRequestDTO authRequestDTO, String idvid, AuthResponseDTO authResponseDTO,
-			Map<String, List<IdentityInfoDTO>> idInfo, boolean isAuth) throws IdAuthenticationBusinessException {
 
+	public void sendAuthNotification(AuthRequestDTO authRequestDTO, String idvid, AuthResponseDTO authResponseDTO,
+									 Map<String, List<IdentityInfoDTO>> idInfo, boolean isAuth) throws IdAuthenticationBusinessException {
+
+		logger.info("sendAuthNotification - Method started for idvid: {}", idvid);
 		Map<String, Object> values = new HashMap<>();
 		List<String> templateLanguages = getTemplateLanguages(idInfo);
-		System.out.println("DEBUG: Template languages = " + templateLanguages);
-		
+		logger.info("sendAuthNotification - Detected template languages: {}", templateLanguages);
+
 		for (String lang : templateLanguages) {
-			// Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
-			// System.out.println("DEBUG: nameMap for lang " + lang + ": " + nameMap);
-			// values.putAll(nameMap);
-			// String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
-			// System.out.println("DEBUG: nameStr for lang " + lang + ": " + nameStr);
-			values.put(NAME + "_"+ lang, idInfo.get("fullName").get(0).getValue());
+			// 1. Try to get name map using the helper
+			Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
+			logger.info("sendAuthNotification - nameMap for lang {}: {}", lang, nameMap);
+
+			if (nameMap != null && !nameMap.isEmpty()) {
+				values.putAll(nameMap);
+				// Standard MOSIP name_eng, name_fra etc.
+				String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
+				values.put(NAME + "_" + lang, nameStr);
+			}
+
+			// 2. Manual Fallback for 'fullName' if nameMap is empty or missing specific keys
+			// This ensures $!identity.fullName[0].value or similar works by putting it directly in values
+			if (idInfo.containsKey("fullName")) {
+				List<IdentityInfoDTO> fullNameList = idInfo.get("fullName");
+				String fullNameVal = fullNameList.stream()
+						.filter(dto -> lang.equals(dto.getLanguage()) || dto.getLanguage() == null)
+						.map(IdentityInfoDTO::getValue)
+						.findFirst().orElse("");
+
+				logger.info("sendAuthNotification - Found 'fullName' in idInfo for lang {}: {}", lang, fullNameVal);
+				values.put("fullName_" + lang, fullNameVal);
+
+				// If name_lang wasn't set by the helper, set it here
+				if (!values.containsKey(NAME + "_" + lang)) {
+					values.put(NAME + "_" + lang, fullNameVal);
+				}
+			}
+
+			// 3. Explicitly set surname and givenName for the template variables: $surname_eng, $givenName_eng
+			// We try to pull from the nameMap first, then idInfo directly
+			values.put("surname_" + lang, getSingleValue(idInfo, "surname", lang));
+			values.put("givenName_" + lang, getSingleValue(idInfo, "givenName", lang));
 		}
-		values.put(NAME + "_eng", idInfo.get("fullName").get(0).getValue());
-		// values.put("identity", idInfo);
-        // System.out.println("DEBUG: idInfo keys: " + idInfo.keySet());
-        // System.out.println("DEBUG: Values map: " + values);
+
+		// Inject the raw identity map so $!identity.fullName[0].value works
+		values.put("identity", idInfo);
+
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
+
 		String maskedUin = "";
 		String charCount = EnvUtil.getUinMaskingCharCount();
 		if (charCount != null && !charCount.isEmpty()) {
 			maskedUin = MaskUtil.generateMaskValue(idvid, Integer.parseInt(charCount));
 		}
 		values.put("idvid", maskedUin);
-		String idvidType = authRequestDTO.getIndividualIdType();
-		values.put("idvidType", idvidType);
+		values.put("idvidType", authRequestDTO.getIndividualIdType());
 
-		// TODO add for all auth types
 		String authTypeStr = Stream
 				.of(Stream.<AuthType>of(DemoAuthType.values()), Stream.<AuthType>of(BioAuthType.values()),
-						Stream.<AuthType>of(PinAuthType.values()), Stream.<AuthType>of(PasswordAuthType.values()), 
+						Stream.<AuthType>of(PinAuthType.values()), Stream.<AuthType>of(PasswordAuthType.values()),
 						Stream.<AuthType>of(KeyBindedTokenAuthType.values()))
 				.flatMap(Function.identity())
 				.filter(authType -> authType.isAuthTypeEnabled(authRequestDTO, idInfoFetcher))
-				.peek(System.out::println)
 				.map(authType -> authType.getDisplayName(authRequestDTO, idInfoFetcher)).distinct().collect(Collectors.joining(","));
 		values.put(AUTH_TYPE, authTypeStr);
+
 		if (authResponseDTO.getResponse().isAuthStatus()) {
 			values.put(IdAuthCommonConstants.STATUS, "Passed");
 		} else {
 			values.put(IdAuthCommonConstants.STATUS, "Failed");
 		}
 
-		String phoneNumber = null;
-		String email = null;
-		phoneNumber = infoHelper.getEntityInfoAsString(DemoMatchType.PHONE, idInfo);
-		email = infoHelper.getEntityInfoAsString(DemoMatchType.EMAIL, idInfo);
-		String notificationType = null;
-		if (isAuth) {
-			notificationType = EnvUtil.getNotificationType();
-		} else {
-			// For internal auth no notification is done
-			notificationType = NotificationType.NONE.getName();
-		}
+		String phoneNumber = infoHelper.getEntityInfoAsString(DemoMatchType.PHONE, idInfo);
+		String email = infoHelper.getEntityInfoAsString(DemoMatchType.EMAIL, idInfo);
+		String notificationType = isAuth ? EnvUtil.getNotificationType() : NotificationType.NONE.getName();
+
+		logger.info("sendAuthNotification - Final values map keys: {}", values.keySet());
+		logger.info("sendAuthNotification - Final name_eng: {}", values.get("name_eng"));
 
 		sendNotification(values, email, phoneNumber, SenderType.AUTH, notificationType, templateLanguages);
+	}
+
+	/**
+	 * Helper method to extract a single string value from the idInfo map for a specific language
+	 */
+	private String getSingleValue(Map<String, List<IdentityInfoDTO>> idInfo, String key, String lang) {
+		if (idInfo.containsKey(key)) {
+			return idInfo.get(key).stream()
+					.filter(dto -> lang.equals(dto.getLanguage()) || dto.getLanguage() == null)
+					.map(IdentityInfoDTO::getValue)
+					.findFirst().orElse("");
+		}
+		return "";
 	}
 
 	public void sendOTPNotification(String idvid, String idvidType, Map<String, String> valueMap,
