@@ -15,8 +15,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -56,8 +54,6 @@ import reactor.util.function.Tuples;
  */
 @Service
 public class NotificationServiceImpl implements NotificationService {
-	
-	private static final Logger logger = LoggerFactory.getLogger(NotificationServiceImpl.class);
 
 	/** The Constant AUTH_TYPE. */
 	private static final String AUTH_TYPE = "authType";
@@ -140,12 +136,6 @@ public class NotificationServiceImpl implements NotificationService {
 		}
 
 		sendNotification(values, email, phoneNumber, SenderType.AUTH, notificationType, templateLanguages);
-		logger.info("sendAuthNotification - Values map keys: {}", values.keySet());
-		logger.info("sendAuthNotification - identity value: {}", values.get("identity"));
-		logger.info("sendAuthNotification - nameMap from getIdEntityInfoMap: {}", infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, "eng"));
-		for (String lang : templateLanguages) {
-			logger.info("sendAuthNotification - name for lang {}: {}, givenName_eng: {}, surname_eng: {}", lang, values.get("name_" + lang), values.get("givenName_eng"), values.get("surname_eng"));
-		}
 	}
 
 	public void sendOTPNotification(String idvid, String idvidType, Map<String, String> valueMap,
