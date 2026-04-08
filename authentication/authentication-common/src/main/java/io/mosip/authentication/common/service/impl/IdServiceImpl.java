@@ -152,8 +152,18 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 	 *                                           exception
 	 */
 	public void saveAutnTxn(AutnTxn authTxn) throws IdAuthenticationBusinessException {
-		authTransactionEventPublisher.publishEvent(authTxn);
-		autntxnrepository.saveAndFlush(authTxn);
+		try {
+
+			AutnTxn savedTxn = autntxnrepository.saveAndFlush(authTxn);
+			authTransactionEventPublisher.publishEvent(savedTxn);
+
+		} catch (Exception e) {
+			throw new IdAuthenticationBusinessException(
+					"FAILED_TO_SAVE_TXN",
+					"Failed to save auth transaction",
+					e
+			);
+		}
 	}
 
 	/**

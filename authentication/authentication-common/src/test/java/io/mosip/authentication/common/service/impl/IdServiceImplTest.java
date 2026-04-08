@@ -270,9 +270,15 @@ public class IdServiceImplTest {
 	}
 
 	@Test
-	public void saveAutnTxnTest() throws IdAuthenticationBusinessException {
+	public void saveAutnTxnTest()
+			throws IdAuthenticationBusinessException {
+
 		AutnTxn autnTxn = new AutnTxn();
+		Mockito.when(autntxnrepository.saveAndFlush(Mockito.any(AutnTxn.class))).thenReturn(autnTxn);
 		idServiceImpl.saveAutnTxn(autnTxn);
+		Mockito.verify(autntxnrepository).saveAndFlush(Mockito.any(AutnTxn.class));
+
+		Mockito.verify(authTransactionEventPublisher).publishEvent(Mockito.any(AutnTxn.class));
 	}
 
 	@Test

@@ -1,6 +1,8 @@
 package io.mosip.authentication.common.service.websub.impl;
 
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.AUTH_TRANSACTION_TOPIC;
+
+import java.util.HashMap;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -64,10 +66,20 @@ public class AuthTransactionEventPublisher extends BaseWebSubEventsInitializer {
     }
 
     private Map<String, Object> createEventData(AutnTxn authTxn) {
-        return objectMapper.convertValue(
-                authTxn,
-                new TypeReference<Map<String, Object>>() {}
-        );
+
+        Map<String, Object> eventData = new HashMap<>();
+
+        eventData.put("id", authTxn.getId());
+        eventData.put("request_dtimes", authTxn.getRequestDTtimes());
+        eventData.put("response_dtimes", authTxn.getResponseDTimes());
+        eventData.put("request_trn_id", authTxn.getRequestTrnId());
+        eventData.put("auth_type_code", authTxn.getAuthTypeCode());
+        eventData.put("status_code", authTxn.getStatusCode());
+        eventData.put("status_comment", authTxn.getStatusComment());
+        eventData.put("requested_entity_id", authTxn.getEntityId());
+        eventData.put("requested_entity_name", authTxn.getEntityName());
+        eventData.put("ChargeAmount", authTxn.getAmount());
+        return eventData;
     }
 
 }
