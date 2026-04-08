@@ -23,6 +23,7 @@ on:
       - tf_nira_dev
       - tf_nira*
       - Satyam_Devlop
+      - updtpr
 
 jobs:
   build-maven-authentication:
