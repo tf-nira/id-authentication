@@ -16,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
 import org.hibernate.exception.JDBCConnectionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,6 +73,9 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 
 	@Autowired
 	private IdAuthSecurityManager securityManager;
+
+	@Autowired
+	private AuthTransactionEventPublisher authTransactionEventPublisher;
 
 	@Value("${" + IDA_ZERO_KNOWLEDGE_UNENCRYPTED_CREDENTIAL_ATTRIBUTES + ":#{null}" + "}")
 	private String zkUnEncryptedCredAttribs;
@@ -145,7 +149,18 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 	 *                                           exception
 	 */
 	public void saveAutnTxn(AutnTxn authTxn) throws IdAuthenticationBusinessException {
-		autntxnrepository.saveAndFlush(authTxn);
+		try {
+
+			AutnTxn savedTxn = autntxnrepository.saveAndFlush(authTxn);
+			authTransactionEventPublisher.publishEvent(savedTxn);
+
+		} catch (Exception e) {
+			throw new IdAuthenticationBusinessException(
+					"FAILED_TO_SAVE_TXN",
+					"Failed to save auth transaction",
+					e
+			);
+		}
 	}
 
 	/**
