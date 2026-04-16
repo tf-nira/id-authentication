@@ -11,9 +11,11 @@ import org.springframework.stereotype.Component;
 import io.mosip.authentication.common.service.entity.AuthtypeLock;
 import io.mosip.authentication.common.service.repository.AuthLockRepository;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
+import io.mosip.authentication.core.logger.IdaLogger;
 import io.mosip.authentication.core.spi.authtype.status.service.AuthtypeStatusService;
 import io.mosip.idrepository.core.dto.AuthtypeStatus;
 import io.mosip.kernel.core.util.DateUtils;
+import io.mosip.kernel.core.logger.spi.Logger;
 
 /**
  * The Class AuthtypeStatusImpl - implementation of
@@ -25,6 +27,8 @@ import io.mosip.kernel.core.util.DateUtils;
 @Component
 public class AuthtypeStatusImpl implements AuthtypeStatusService {
 
+	private static Logger logger = IdaLogger.getLogger(AuthtypeStatusImpl.class);
+
 	/** The Constant HYPHEN. */
 	private static final String HYPHEN = "-";
 
@@ -34,13 +38,24 @@ public class AuthtypeStatusImpl implements AuthtypeStatusService {
 
 	@Override
 	public List<AuthtypeStatus> fetchAuthtypeStatus(String token) throws IdAuthenticationBusinessException {
+		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - START for token: " + token);
 		List<AuthtypeLock> authTypeLockList = getAuthTypeList(token);
-		return processAuthtypeList(authTypeLockList);
+		logger.debug("AuthtypeStatusImpl.fetchAuthtypeStatus - Got " + (authTypeLockList != null ? authTypeLockList.size() : 0) + " lock records");
+		List<AuthtypeStatus> result = processAuthtypeList(authTypeLockList);
+		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - END - Returning: " + result);
+		return result;
 	}
 
 	public List<AuthtypeLock> getAuthTypeList(String token) throws IdAuthenticationBusinessException {
+		logger.debug("AuthtypeStatusImpl.getAuthTypeList - Calling repository for token: " + token);
 		List<AuthtypeLock> authTypeLockList;
 		List<Object[]> authTypeLockObjectsList = authLockRepository.findByToken(token);
+		logger.debug("AuthtypeStatusImpl.getAuthTypeList - DB query returned " + (authTypeLockObjectsList != null ? authTypeLockObjectsList.size() : 0) + " rows");
+		if(authTypeLockObjectsList != null) {
+			for(Object[] row : authTypeLockObjectsList) {
+				logger.debug("AuthtypeStatusImpl.getAuthTypeList - DB Row: authTypeCode=" + row[0] + ", statusCode=" + row[1] + ", expiry=" + row[2]);
+			}
+		}
 		authTypeLockList = authTypeLockObjectsList.stream()
 				.map(obj -> new AuthtypeLock((String) obj[0], (String) obj[1], Objects.nonNull(obj[2]) ? ((Timestamp) obj[2]).toLocalDateTime() : null))
 				.collect(Collectors.toList());
@@ -55,7 +70,13 @@ public class AuthtypeStatusImpl implements AuthtypeStatusService {
 	 * @return the list
 	 */
 	private List<AuthtypeStatus> processAuthtypeList(List<AuthtypeLock> authtypelockList) {
-		return authtypelockList.stream().map(this::getAuthTypeStatus).collect(Collectors.toList());
+		List<AuthtypeStatus> result = authtypelockList.stream().map(this::getAuthTypeStatus).collect(Collectors.toList());
+		logger.debug("AuthtypeStatusImpl.processAuthtypeList - Processed " + result.size() + " status objects");
+		for(AuthtypeStatus status : result) {
+			logger.debug("AuthtypeStatusImpl.processAuthtypeList - Processed status: authType=" + status.getAuthType() + 
+				", subType=" + status.getAuthSubType() + ", locked=" + status.getLocked());
+		}
+		return result;
 	}
 
 	/**
@@ -80,6 +101,11 @@ public class AuthtypeStatusImpl implements AuthtypeStatusService {
 		boolean isAuthTypeUnlockedTemporarily = isLocked && Objects.nonNull(authtypeLock.getUnlockExpiryDTtimes())
 				&& authtypeLock.getUnlockExpiryDTtimes().isAfter(DateUtils.getUTCCurrentDateTime());
 		authtypeStatus.setLocked(isAuthTypeUnlockedTemporarily ? false : isLocked);
+		logger.debug("AuthtypeStatusImpl.getAuthTypeStatus - authTypeCode=" + authtypecode + 
+			", statusCode=" + authtypeLock.getStatuscode() + 
+			", isLocked=" + isLocked + 
+			", isTempUnlocked=" + isAuthTypeUnlockedTemporarily + 
+			", finalLocked=" + authtypeStatus.getLocked());
 		return authtypeStatus;
 	}
 
