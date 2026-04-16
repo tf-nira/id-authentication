@@ -76,10 +76,14 @@ public class InternalUpdateAuthTypeController {
 	@PreAuthenticateContentAndVerifyIntent(secret = "${"+ IDA_WEBSUB_AUTHTYPE_CALLBACK_SECRET +"}", callback = "${ida-websub-auth-type-callback-relative-url}", topic = "${ida-topic-auth-type-status-updated}")
 	public void updateAuthtypeStatus(@RequestBody EventModel eventModel, @PathVariable("partnerId") String partnerId)
 			throws IdAuthenticationAppException, IDDataValidationException {
+		logger.info("InternalUpdateAuthTypeController.updateAuthtypeStatus - RECEIVED WebSub callback - PartnerId: " + partnerId);
+		logger.info("InternalUpdateAuthTypeController.updateAuthtypeStatus - EventModel: " + eventModel);
 		if(eventModel.getEvent() != null && eventModel.getEvent().getData() != null) {
 			AuthTypeStatusEventDTO event = mapper.convertValue(eventModel.getEvent().getData(), AuthTypeStatusEventDTO.class);
+			logger.info("InternalUpdateAuthTypeController.updateAuthtypeStatus - TokenId from event: " + event.getTokenId());
+			logger.info("InternalUpdateAuthTypeController.updateAuthtypeStatus - AuthTypeStatusList: " + event.getAuthTypeStatusList());
 			try {
-					logger.debug(IdAuthCommonConstants.SESSION_ID, "updateAuthtypeStatus", this.getClass().getCanonicalName(), "handling updateAuthtypeStatus event for partnerId: " + partnerId);
+					logger.info(IdAuthCommonConstants.SESSION_ID, "updateAuthtypeStatus", this.getClass().getCanonicalName(), "handling updateAuthtypeStatus event for partnerId: " + partnerId);
 	
 					authtypeStatusService.updateAuthTypeStatus(event.getTokenId(), event.getAuthTypeStatusList());
 	
@@ -91,6 +95,8 @@ public class InternalUpdateAuthTypeController {
 						eventModel.getEvent().getId(), IdType.UIN, e);
 				throw new IdAuthenticationAppException(e.getErrorCode(), e.getErrorText(), e);
 			}
+		} else {
+			logger.warn("InternalUpdateAuthTypeController.updateAuthtypeStatus - Event or EventData is NULL!");
 		}
 
 	}
