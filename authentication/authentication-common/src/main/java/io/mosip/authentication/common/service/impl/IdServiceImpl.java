@@ -272,6 +272,7 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 				}
 			}
 			responseMap.put(TOKEN, entity.getToken());
+			logger.info("Token in responseMap >>> "+entity.getToken());
 			responseMap.put(ID_HASH, hashedId);
 			logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
 					"TOKEN in responseMap >> " + entity.getToken());
