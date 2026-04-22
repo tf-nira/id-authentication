@@ -60,9 +60,9 @@ public class UpdateAuthtypeStatusServiceImpl implements UpdateAuthtypeStatusServ
 	@Override
 	public void updateAuthTypeStatus(String tokenId, List<AuthtypeStatus> authTypeStatusList)
 			throws IdAuthenticationBusinessException {
-		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - START");
-		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - TokenId: " + tokenId);
-		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - AuthTypes: " + authTypeStatusList);
+		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - ========== IDA WRITE (LOCK) START ==========");
+		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - TokenId received from WebSub: " + tokenId);
+		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - AuthTypes to lock: " + authTypeStatusList);
 		
 		List<Entry<String, AuthtypeLock>> entitiesForRequestId = authTypeStatusList.stream()
 				.map(authTypeStatus -> new SimpleEntry<>(authTypeStatus.getRequestId(),
@@ -70,9 +70,9 @@ public class UpdateAuthtypeStatusServiceImpl implements UpdateAuthtypeStatusServ
 				.collect(Collectors.toList());
 		List<AuthtypeLock> entities = entitiesForRequestId.stream().map(Entry::getValue).collect(Collectors.toList());
 		
-		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - Entities to save: " + entities.size());
+		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - ========== DATABASE WRITE ==========");
 		for(AuthtypeLock entity : entities) {
-			mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - Saving: token=" + entity.getToken() + 
+			mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - INSERT: token=" + entity.getToken() + 
 				", authTypeCode=" + entity.getAuthtypecode() + 
 				", statusCode=" + entity.getStatuscode());
 		}
@@ -81,10 +81,9 @@ public class UpdateAuthtypeStatusServiceImpl implements UpdateAuthtypeStatusServ
 				.forEach(authLockRepository::delete));
 		authLockRepository.saveAll(entities);
 		
-		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - Saved " + entities.size() + " records for token: " + tokenId);
-		mosipLogger.debug("List of Auth Type Status- "+ authTypeStatusList);
+		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - SAVED " + entities.size() + " records for token: " + tokenId);
+		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - ========== IDA WRITE (LOCK) END ==========");
 		authTypeStatusEventPublisherManager.publishEvent(authTypeStatusList);
-		mosipLogger.info("UpdateAuthtypeStatusServiceImpl.updateAuthTypeStatus - END");
 	}
 
 	/**
