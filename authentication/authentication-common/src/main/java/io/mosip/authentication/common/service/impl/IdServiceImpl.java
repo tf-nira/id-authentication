@@ -275,7 +275,11 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 			logger.info("Token in responseMap >>> "+entity.getToken());
 			responseMap.put(ID_HASH, hashedId);
 			logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
-					"TOKEN in responseMap >> " + entity.getToken());
+					"========== TOKEN FROM IDENTITY_ENTITY ==========");
+			logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
+					"Token stored in identity_entity table: " + entity.getToken());
+			logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
+					"This token will be used to check locks in uin_auth_lock table");
 			return responseMap;
 		} catch (IOException | DataAccessException | TransactionException | JDBCConnectionException e) {
 			logger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdentity",
