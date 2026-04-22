@@ -8,6 +8,8 @@ import org.springframework.stereotype.Repository;
 
 import io.mosip.authentication.common.service.entity.AuthtypeLock;
 import io.mosip.kernel.core.dataaccess.spi.repository.BaseRepository;
+import io.mosip.kernel.core.logger.spi.Logger;
+import io.mosip.authentication.core.logger.IdaLogger;
 
 /**
  * 
@@ -16,6 +18,8 @@ import io.mosip.kernel.core.dataaccess.spi.repository.BaseRepository;
  */
 @Repository
 public interface AuthLockRepository extends BaseRepository<AuthtypeLock, Integer> {
+
+	static Logger logger = IdaLogger.getLogger(AuthLockRepository.class);
 
 	@Query(value = "select " + 
 			"        t.auth_type_code, " + 
