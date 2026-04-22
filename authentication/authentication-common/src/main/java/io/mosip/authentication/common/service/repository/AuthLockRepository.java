@@ -19,7 +19,7 @@ import io.mosip.authentication.core.logger.IdaLogger;
 @Repository
 public interface AuthLockRepository extends BaseRepository<AuthtypeLock, Integer> {
 
-	private static Logger logger = IdaLogger.getLogger(AuthLockRepository.class);
+	static Logger logger = IdaLogger.getLogger(AuthLockRepository.class);
 
 	@Query(value = "select " + 
 			"        t.auth_type_code, " + 

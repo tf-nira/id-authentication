@@ -60,7 +60,7 @@ public class AuthTypeLockFilterImpl implements IMosipAuthFilter {
 		String token = (String)properties.get(IdAuthCommonConstants.TOKEN);
 		logger.info("AuthTypeLockFilterImpl.validate - ========== AUTH VALIDATION START ==========");
 		logger.info("AuthTypeLockFilterImpl.validate - Token from identity_entity: " + token);
-		logger.info("AuthTypeLockFilterImpl.validate - Auth request type: " + authRequest.getRequestedAuthType());
+//		logger.info("AuthTypeLockFilterImpl.validate - Auth request type: " + authRequest.getRequestedAuthType());
 		validateAuthTypeStatus(authRequest, token);
 		logger.info("AuthTypeLockFilterImpl.validate - ========== AUTH VALIDATION END ==========");
 	}
