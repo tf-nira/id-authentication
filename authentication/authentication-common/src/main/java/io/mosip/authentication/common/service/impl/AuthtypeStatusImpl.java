@@ -38,22 +38,24 @@ public class AuthtypeStatusImpl implements AuthtypeStatusService {
 
 	@Override
 	public List<AuthtypeStatus> fetchAuthtypeStatus(String token) throws IdAuthenticationBusinessException {
-		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - START for token: " + token);
+		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - ========== READ (AUTH) FLOW START ==========");
+		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - Token being searched: " + token);
 		List<AuthtypeLock> authTypeLockList = getAuthTypeList(token);
-		logger.debug("AuthtypeStatusImpl.fetchAuthtypeStatus - Got " + (authTypeLockList != null ? authTypeLockList.size() : 0) + " lock records");
+		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - Found " + (authTypeLockList != null ? authTypeLockList.size() : 0) + " lock records");
 		List<AuthtypeStatus> result = processAuthtypeList(authTypeLockList);
-		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - END - Returning: " + result);
+		logger.info("AuthtypeStatusImpl.fetchAuthtypeStatus - ========== READ (AUTH) FLOW END ==========");
 		return result;
 	}
 
 	public List<AuthtypeLock> getAuthTypeList(String token) throws IdAuthenticationBusinessException {
-		logger.debug("AuthtypeStatusImpl.getAuthTypeList - Calling repository for token: " + token);
+		logger.info("AuthtypeStatusImpl.getAuthTypeList - ========== DATABASE READ ==========");
+		logger.info("AuthtypeStatusImpl.getAuthTypeList - QUERY with token: " + token);
 		List<AuthtypeLock> authTypeLockList;
 		List<Object[]> authTypeLockObjectsList = authLockRepository.findByToken(token);
-		logger.debug("AuthtypeStatusImpl.getAuthTypeList - DB query returned " + (authTypeLockObjectsList != null ? authTypeLockObjectsList.size() : 0) + " rows");
+		logger.info("AuthtypeStatusImpl.getAuthTypeList - DB returned " + (authTypeLockObjectsList != null ? authTypeLockObjectsList.size() : 0) + " rows");
 		if(authTypeLockObjectsList != null) {
 			for(Object[] row : authTypeLockObjectsList) {
-				logger.debug("AuthtypeStatusImpl.getAuthTypeList - DB Row: authTypeCode=" + row[0] + ", statusCode=" + row[1] + ", expiry=" + row[2]);
+				logger.info("AuthtypeStatusImpl.getAuthTypeList - DB Row: authTypeCode=" + row[0] + ", statusCode=" + row[1] + ", expiry=" + row[2]);
 			}
 		}
 		authTypeLockList = authTypeLockObjectsList.stream()
