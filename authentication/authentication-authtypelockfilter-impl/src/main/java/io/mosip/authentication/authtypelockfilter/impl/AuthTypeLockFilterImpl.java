@@ -58,28 +58,30 @@ public class AuthTypeLockFilterImpl implements IMosipAuthFilter {
 	public void validate(AuthRequestDTO authRequest, Map<String, List<IdentityInfoDTO>> identityData,
 			Map<String, Object> properties) throws IdAuthenticationFilterException {
 		String token = (String)properties.get(IdAuthCommonConstants.TOKEN);
-		logger.info("AuthTypeLockFilterImpl.validate - START for token: " + token);
+		logger.info("AuthTypeLockFilterImpl.validate - ========== AUTH VALIDATION START ==========");
+		logger.info("AuthTypeLockFilterImpl.validate - Token from identity_entity: " + token);
+		logger.info("AuthTypeLockFilterImpl.validate - Auth request type: " + authRequest.getRequestedAuthType());
 		validateAuthTypeStatus(authRequest, token);
-		logger.info("AuthTypeLockFilterImpl.validate - END for token: " + token);
+		logger.info("AuthTypeLockFilterImpl.validate - ========== AUTH VALIDATION END ==========");
 	}
 	
 	private void validateAuthTypeStatus(AuthRequestDTO authRequestDTO, String token) throws IdAuthenticationFilterException {
 		try {
-			logger.debug("AuthTypeLockFilterImpl.validateAuthTypeStatus - Fetching auth type status for token: " + token);
+			logger.info("AuthTypeLockFilterImpl.validateAuthTypeStatus - FETCHING lock status for token: " + token);
 			List<AuthtypeStatus> authtypeStatusList = authTypeStatusService
 					.fetchAuthtypeStatus(token);
-			logger.debug("AuthTypeLockFilterImpl.validateAuthTypeStatus - Got " + (authtypeStatusList != null ? authtypeStatusList.size() : 0) + " status records");
+			logger.info("AuthTypeLockFilterImpl.validateAuthTypeStatus - Got " + (authtypeStatusList != null ? authtypeStatusList.size() : 0) + " status records");
 			if (Objects.nonNull(authtypeStatusList) && !authtypeStatusList.isEmpty()) {
 				for (AuthtypeStatus authTypeStatus : authtypeStatusList) {
-					logger.debug("AuthTypeLockFilterImpl.validateAuthTypeStatus - Checking status: authType=" + authTypeStatus.getAuthType() + 
+					logger.info("AuthTypeLockFilterImpl.validateAuthTypeStatus - CHECKING: authType=" + authTypeStatus.getAuthType() + 
 						", subType=" + authTypeStatus.getAuthSubType() + ", locked=" + authTypeStatus.getLocked());
 					validateAuthTypeStatus(authRequestDTO, authTypeStatus, authtypeStatusList);
 				}
 			} else {
-				logger.debug("AuthTypeLockFilterImpl.validateAuthTypeStatus - No locked auth types found for token: " + token);
+				logger.info("AuthTypeLockFilterImpl.validateAuthTypeStatus - NO lock records found for token: " + token);
 			}
 		} catch (IdAuthenticationFilterException e) {
-			logger.info("AuthTypeLockFilterImpl.validateAuthTypeStatus - THROWING AUTH_TYPE_LOCKED exception: " + e.getErrorCode());
+			logger.info("AuthTypeLockFilterImpl.validateAuthTypeStatus - THROWING AUTH_TYPE_LOCKED: " + e.getErrorCode());
 			throw e;
 		} catch (IdAuthenticationBusinessException e) {
 			logger.error("AuthTypeLockFilterImpl.validateAuthTypeStatus - Error: " + e.getErrorCode() + ", " + e.getErrorText());
