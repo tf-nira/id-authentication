@@ -85,7 +85,7 @@ public class ExchangeDataAttributesUtil {
 		}
 
 		return consentAttributes.stream()
-							    .filter(claim -> oidcClientAllowedUserClaims.contains(claim.toLowerCase()))
+							    .filter(claim -> oidcClientAllowedUserClaims.contains(claim))
 								.collect(Collectors.toList());
 
 	}
