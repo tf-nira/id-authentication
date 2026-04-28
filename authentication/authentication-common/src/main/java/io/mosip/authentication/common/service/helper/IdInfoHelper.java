@@ -887,7 +887,8 @@ public class IdInfoHelper {
 				.stream()
 				.flatMap(List::stream)
 				.filter(elem -> elem.equalsIgnoreCase(IdAuthCommonConstants.PHOTO.toLowerCase())
-						|| elem.equalsIgnoreCase(CbeffDocType.FACE.getType().value().toLowerCase()))
+						|| elem.equalsIgnoreCase(CbeffDocType.FACE.getType().value().toLowerCase())
+						|| elem.equalsIgnoreCase(IdAuthCommonConstants.FACE_RAW_IMAGE.toLowerCase()))
 				.findAny();
 	}
 }

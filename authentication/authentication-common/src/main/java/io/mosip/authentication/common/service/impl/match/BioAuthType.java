@@ -169,7 +169,28 @@ public enum BioAuthType implements AuthType {
 			return getFaceValuesCountInIdentity(reqDTO, helper);
 		}
 	},
-	
+
+	FACE_RAW_IMG("FaceRawImage", AuthType.setOf(BioMatchType.FACE_RAW_IMAGE), getFaceName(), value -> value == 1,
+			"bio-FaceRawImage", "FaceRawImage") {
+
+		@Override
+		public Map<String, Object> getMatchProperties(AuthRequestDTO authRequestDTO, IdInfoFetcher idInfoFetcher,
+				String language) {
+			return getSingleMatchProperties(authRequestDTO, IdaIdMapping.FACE_RAW_IMAGE, idInfoFetcher);
+		}
+
+		@Override
+		public Optional<Integer> getMatchingThreshold(AuthRequestDTO authReq, String languageInfoFetcher,
+				Environment environment, IdInfoFetcher idInfoFetcher) {
+			return idInfoFetcher.getMatchingThreshold(getThresholdConfigKey().toLowerCase().concat(SINGLE_THRESHOLD));
+		}
+
+		@Override
+		protected Long getBioIdentityValuesCount(AuthRequestDTO reqDTO, IdInfoFetcher helper) {
+			return (long) helper.getIdentityRequestInfo(BioMatchType.FACE_RAW_IMAGE, reqDTO.getRequest(), null).size();
+		}
+	},
+
 	MULTI_MODAL("bio", AuthType.setOf(BioMatchType.MULTI_MODAL), getBiometricsName(), null, "bio-composite-dummyConfigKey", "bio") {
 
 		@Override
