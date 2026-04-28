@@ -154,8 +154,7 @@ public class KycServiceImpl implements KycService {
 						Map<String, String> faceRawImageEntityInfoMap = idInfoHelper
 								.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, identityInfo, null);
 						if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
-							String faceRawKey = faceRawImageEntityInfoMap.keySet().iterator().next();
-							String faceRawCbeff = faceRawImageEntityInfoMap.get(faceRawKey);
+							String faceRawCbeff = faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value());
 
 							String faceRaw;
 							if (sendFaceAsCbeffXml) {
@@ -181,9 +180,9 @@ public class KycServiceImpl implements KycService {
 				Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, identityInfo,
 						null);
 				if (faceEntityInfoMap != null && !faceEntityInfoMap.isEmpty()) {
-					String faceKey = faceEntityInfoMap.keySet().iterator().next();
-					String faceCbeff = faceEntityInfoMap.get(faceKey);
-
+					String faceCbeff = Objects.nonNull(faceEntityInfoMap)
+							? faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())
+							: null;
 					String face;
 					if (sendFaceAsCbeffXml) {
 						face = faceCbeff;
@@ -546,9 +545,8 @@ public class KycServiceImpl implements KycService {
 
 				if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
 					try {
-						String faceRawKey = faceRawImageEntityInfoMap.keySet().iterator().next();
-						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageEntityInfoMap.get(faceRawKey), CbeffDocType.FACE_RAW_IMAGE.getName()));
-						if (face != null) {
+						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value()), CbeffDocType.FACE_RAW_IMAGE.getName()));
+			            if (face != null) {
 							respMap.put(IdAuthCommonConstants.FACE_RAW_IMAGE, consentedPictureAttributePrefix + face);
 						}
 
@@ -573,9 +571,8 @@ public class KycServiceImpl implements KycService {
 			        "faceEntityInfoMap: " + faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
-					String faceKey = faceEntityInfoMap.keySet().iterator().next();
-					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(faceKey)));
-					if (face != null)
+					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
+					if (Objects.nonNull(face))
 						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 				} catch (Exception e) {
 					// Not throwing any exception because others claims will be returned without
