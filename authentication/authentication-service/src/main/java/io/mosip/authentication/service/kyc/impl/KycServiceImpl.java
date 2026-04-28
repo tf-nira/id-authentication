@@ -170,13 +170,37 @@ public class KycServiceImpl implements KycService {
 					identityInfoDTO.setValue(face);
 					bioValue.add(identityInfoDTO);
 					identityInfo.put(faceAttribute.get(), bioValue);
-			}
+				}
 
-			Map<String, List<IdentityInfoDTO>> filteredIdentityInfo = filterIdentityInfo(allowedkycAttributes,
-					identityInfo, langCodes);
-			if (Objects.nonNull(filteredIdentityInfo)) {
-				setKycInfo(allowedkycAttributes, kycResponseDTO, filteredIdentityInfo, langCodes);
-			}
+				if (allowedkycAttributes.contains("faceRawImage")) {
+
+					Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE,
+							identityInfo, null);
+
+					String faceCbeff = faceEntityInfoMap.get(CbeffDocType.FACE.getType().value());
+
+					String face;
+					try {
+						face = getFaceBDB(faceCbeff);
+					} catch (Exception e) {
+						throw new IdAuthenticationBusinessException(
+								IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorCode(),
+								String.format(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorMessage(),
+										CbeffDocType.FACE.getName()),
+								e);
+					}
+
+					IdentityInfoDTO dto = new IdentityInfoDTO();
+					dto.setValue(face);
+
+					identityInfo.put("faceRawImage", List.of(dto));
+				}
+
+				Map<String, List<IdentityInfoDTO>> filteredIdentityInfo = filterIdentityInfo(allowedkycAttributes,
+						identityInfo, langCodes);
+				if (Objects.nonNull(filteredIdentityInfo)) {
+					setKycInfo(allowedkycAttributes, kycResponseDTO, filteredIdentityInfo, langCodes);
+				}
 		}
 		return kycResponseDTO;
 	}
@@ -497,6 +521,30 @@ public class KycServiceImpl implements KycService {
 				Map<String, Object> respMap, String consentedAttribute, List<String> idSchemaAttributes) 
 				throws IdAuthenticationBusinessException {
 		
+		if (consentedAttribute.equals("faceRawImage")) {
+
+		    Map<String, String> faceEntityInfoMap =
+		        idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, idInfo, null);
+
+		    if (faceEntityInfoMap != null) {
+		        try {
+		            String face = convertJP2ToJpeg(
+		                getFaceBDB(faceEntityInfoMap.get(
+		                    CbeffDocType.FACE.getType().value()
+		                ))
+		            );
+
+		            if (face != null) {
+		                respMap.put("faceRawImage",
+		                    "data:image/jpeg;base64," + face);
+		            }
+
+		        } catch (Exception e) {
+		        }
+		    }
+
+		    return;
+		}
 		if (consentedAttribute.equals(consentedFaceAttributeName)) {
 			if (!idInfo.keySet().contains(BioMatchType.FACE.getIdMapping().getIdname())) {
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
