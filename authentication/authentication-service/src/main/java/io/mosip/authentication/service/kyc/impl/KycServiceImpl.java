@@ -147,62 +147,72 @@ public class KycServiceImpl implements KycService {
 		EKycResponseDTO kycResponseDTO = new EKycResponseDTO();
 		if (Objects.nonNull(identityInfo) && Objects.nonNull(allowedkycAttributes) && !allowedkycAttributes.isEmpty()) {
 			Optional<String> faceAttribute = IdInfoHelper.getKycAttributeHasPhoto(allowedkycAttributes);
-			if(faceAttribute.isPresent()) {
-				Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, identityInfo,
-						null);
-				String faceCbeff = Objects.nonNull(faceEntityInfoMap)
-						? faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())
-						: null;
-				
-				String face;
-				if(sendFaceAsCbeffXml) {
-					face = faceCbeff;
-				} else {
+			if (faceAttribute.isPresent()) {
+				// --- Raw Face Image ---
+				if (identityInfo.containsKey(BioMatchType.FACE_RAW_IMAGE.getIdMapping().getIdname())) {
 					try {
-						face = getFaceBDB(faceCbeff);
+						Map<String, String> faceRawImageEntityInfoMap = idInfoHelper
+								.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, identityInfo, null);
+						if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
+							String faceRawKey = faceRawImageEntityInfoMap.keySet().iterator().next();
+							String faceRawCbeff = faceRawImageEntityInfoMap.get(faceRawKey);
+
+							String faceRaw;
+							if (sendFaceAsCbeffXml) {
+								faceRaw = faceRawCbeff;
+							} else {
+								faceRaw = getFaceBDB(faceRawCbeff, CbeffDocType.FACE_RAW_IMAGE.getName());
+							}
+
+							if (faceRaw != null) {
+								List<IdentityInfoDTO> bioValue = new ArrayList<>();
+								IdentityInfoDTO identityInfoDTO = new IdentityInfoDTO();
+								identityInfoDTO.setValue(faceRaw);
+								bioValue.add(identityInfoDTO);
+								identityInfo.put(IdAuthCommonConstants.FACE_RAW_IMAGE, bioValue);
+							}
+						}
 					} catch (Exception e) {
-						throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorCode(),
-								String.format(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorMessage(), CbeffDocType.FACE.getName()), e);
+						mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
+								"Error retrieving raw face image for KYC. " + e.getMessage(), e);
 					}
 				}
+
+				Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, identityInfo,
+						null);
+				if (faceEntityInfoMap != null && !faceEntityInfoMap.isEmpty()) {
+					String faceKey = faceEntityInfoMap.keySet().iterator().next();
+					String faceCbeff = faceEntityInfoMap.get(faceKey);
+
+					String face;
+					if (sendFaceAsCbeffXml) {
+						face = faceCbeff;
+					} else {
+						try {
+							face = getFaceBDB(faceCbeff);
+						} catch (Exception e) {
+							throw new IdAuthenticationBusinessException(
+									IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorCode(),
+									String.format(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorMessage(),
+											CbeffDocType.FACE.getName()),
+									e);
+						}
+					}
 					List<IdentityInfoDTO> bioValue = new ArrayList<>();
 					IdentityInfoDTO identityInfoDTO = new IdentityInfoDTO();
 					identityInfoDTO.setValue(face);
 					bioValue.add(identityInfoDTO);
 					identityInfo.put(faceAttribute.get(), bioValue);
 				}
-
-				if (allowedkycAttributes.contains("faceRawImage")) {
-
-					Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE,
-							identityInfo, null);
-
-					String faceCbeff = faceEntityInfoMap.get(CbeffDocType.FACE.getType().value());
-
-					String face;
-					try {
-						face = getFaceBDB(faceCbeff);
-					} catch (Exception e) {
-						throw new IdAuthenticationBusinessException(
-								IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorCode(),
-								String.format(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorMessage(),
-										CbeffDocType.FACE.getName()),
-								e);
-					}
-
-					IdentityInfoDTO dto = new IdentityInfoDTO();
-					dto.setValue(face);
-
-					identityInfo.put("faceRawImage", List.of(dto));
-				}
-
-				Map<String, List<IdentityInfoDTO>> filteredIdentityInfo = filterIdentityInfo(allowedkycAttributes,
-						identityInfo, langCodes);
-				if (Objects.nonNull(filteredIdentityInfo)) {
-					setKycInfo(allowedkycAttributes, kycResponseDTO, filteredIdentityInfo, langCodes);
-				}
+			}
+			Map<String, List<IdentityInfoDTO>> filteredIdentityInfo = filterIdentityInfo(allowedkycAttributes,
+					identityInfo, langCodes);
+			if (Objects.nonNull(filteredIdentityInfo)) {
+				setKycInfo(allowedkycAttributes, kycResponseDTO, filteredIdentityInfo, langCodes);
+			}
 		}
 		return kycResponseDTO;
+
 	}
 
 	/**
@@ -521,31 +531,36 @@ public class KycServiceImpl implements KycService {
 				Map<String, Object> respMap, String consentedAttribute, List<String> idSchemaAttributes) 
 				throws IdAuthenticationBusinessException {
 		
-		if (consentedAttribute.equals("faceRawImage")) {
-
-		    Map<String, String> faceEntityInfoMap =
-		        idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, idInfo, null);
-
-		    if (faceEntityInfoMap != null) {
-		        try {
-		            String face = convertJP2ToJpeg(
-		                getFaceBDB(faceEntityInfoMap.get(
-		                    CbeffDocType.FACE.getType().value()
-		                ))
-		            );
-
-		            if (face != null) {
-		                respMap.put("faceRawImage",
-		                    "data:image/jpeg;base64," + face);
-		            }
-
-		        } catch (Exception e) {
-		        }
-		    }
-
-		    return;
-		}
 		if (consentedAttribute.equals(consentedFaceAttributeName)) {
+			
+			if(!idInfo.keySet().contains(BioMatchType.FACE_RAW_IMAGE.getIdMapping().getIdname())) {
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						"Face Raw image Bio not found in DB. So not adding to response claims.");
+			} else {
+				Map<String, String> faceRawImageEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo,
+						null);
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+				        this.getClass().getSimpleName(),
+				        "addEntityForLangCodes",
+				        "faceEntityInfoMap: " + faceRawImageEntityInfoMap);
+
+				if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
+					try {
+						String faceRawKey = faceRawImageEntityInfoMap.keySet().iterator().next();
+						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageEntityInfoMap.get(faceRawKey), CbeffDocType.FACE_RAW_IMAGE.getName()));
+						if (face != null) {
+							respMap.put(IdAuthCommonConstants.FACE_RAW_IMAGE, consentedPictureAttributePrefix + face);
+						}
+
+					} catch (Exception e) {
+						// Not throwing any exception because others claims will be returned without
+						// photo.
+						mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
+								"Error Adding photo to the claims. " + e.getMessage(), e);
+					}
+				}
+			}
+			
 			if (!idInfo.keySet().contains(BioMatchType.FACE.getIdMapping().getIdname())) {
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 					"Face Bio not found in DB. So not adding to response claims.");
@@ -558,15 +573,17 @@ public class KycServiceImpl implements KycService {
 			        "faceEntityInfoMap: " + faceEntityInfoMap);
 			if (Objects.nonNull(faceEntityInfoMap)) {
 				try {
-					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
-					if (Objects.nonNull(face))
+					String faceKey = faceEntityInfoMap.keySet().iterator().next();
+					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(faceKey)));
+					if (face != null)
 						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 				} catch (Exception e) {
-					// Not throwing any exception because others claims will be returned without photo.
+					// Not throwing any exception because others claims will be returned without
+					// photo.
 					mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
 							"Error Adding photo to the claims. " + e.getMessage(), e);
 				}
-				
+
 			}
 			return;
 		}
@@ -845,4 +862,14 @@ public class KycServiceImpl implements KycService {
 		return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
 	}
 	
+	private String getFaceBDB(String faceCbeff, String cbeffDocTypeName) throws Exception {
+	    List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(
+	            faceCbeff.getBytes(), cbeffDocTypeName);
+	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	            "getFaceBDB", "birDataFromXMLType size: " + birDataFromXMLType.size());
+	    if (birDataFromXMLType.isEmpty()) {
+	        throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
+	    }
+	    return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
+	}
 }
