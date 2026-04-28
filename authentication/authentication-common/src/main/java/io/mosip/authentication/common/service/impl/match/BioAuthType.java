@@ -170,8 +170,8 @@ public enum BioAuthType implements AuthType {
 		}
 	},
 
-	FACE_RAW_IMG("FaceRawImage", AuthType.setOf(BioMatchType.FACE_RAW_IMAGE), getFaceName(), value -> value == 1,
-			"bio-FaceRawImage", "FaceRawImage") {
+	FACE_RAW_IMG("faceRawImage", AuthType.setOf(BioMatchType.FACE_RAW_IMAGE), getFaceName(), value -> value == 1,
+			"bio-faceRawImage", "faceRawImage") {
 
 		@Override
 		public Map<String, Object> getMatchProperties(AuthRequestDTO authRequestDTO, IdInfoFetcher idInfoFetcher,
