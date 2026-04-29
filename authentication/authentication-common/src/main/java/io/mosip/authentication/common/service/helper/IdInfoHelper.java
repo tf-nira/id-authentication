@@ -299,7 +299,7 @@ public class IdInfoHelper {
 		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
 				"Method called with matchType: " + matchType + ", language: " + language + ", idName: " + idName);
 
-		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
 				"identityInfos keys: " + (identityInfos != null ? identityInfos.keySet() : "null"));
 
 		List<String> propertyNames = getIdentityAttributesForMatchType(matchType, idName);
@@ -308,12 +308,12 @@ public class IdInfoHelper {
 
 		Map<String, String> identityValuesMapWithLang = getIdentityValuesMap(matchType, propertyNames, language,
 				identityInfos);
-		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
 				"Identity values map with language: " + identityValuesMapWithLang);
 
 		Map<String, String> identityValuesMapWithoutLang = getIdentityValuesMap(matchType, propertyNames, null,
 				identityInfos);
-		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
 				"Identity values map without language: " + identityValuesMapWithoutLang);
 
 		Map<String, String> mergedMap = mergeNonNullValues(identityValuesMapWithLang, identityValuesMapWithoutLang);
