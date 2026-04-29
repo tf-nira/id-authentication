@@ -433,11 +433,11 @@ public class KycFacadeImpl implements KycFacade {
 			mosipLogger.info("Policy allowed kyc attributes: {}", policyAllowedKycAttribs.toString());
 			mosipLogger.info("Filter attributes: {}", filterAttributes.toString());
 			
-			boolean isBioRequired = false;
+			boolean isBioRequired = true;
 			if (filterAttributes.contains(CbeffDocType.FACE.getType().value().toLowerCase()) || 
 						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase())) {
 				policyAllowedAttributes.add(CbeffDocType.FACE.getType().value().toLowerCase());
-				isBioRequired = true;
+				//isBioRequired = true;
 			}
 
 			Map<String, Object> idResDTO = idService.processIdType(idvIdType, idVid, isBioRequired,
