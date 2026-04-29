@@ -444,6 +444,9 @@ public class KycFacadeImpl implements KycFacade {
 					IdAuthCommonConstants.KYC_EXCHANGE_CONSUME_VID_DEFAULT, policyAllowedAttributes);
 			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);
 			
+			mosipLogger.info("idResDTO: {}", idResDTO.toString());
+			mosipLogger.info("idInfo: {}", idInfo.toString());
+			
 			String token = idService.getToken(idResDTO);
 			String psuToken = kycTokenData.getPsuToken();
 			List<String> locales = kycExchangeRequestDTO.getLocales();
