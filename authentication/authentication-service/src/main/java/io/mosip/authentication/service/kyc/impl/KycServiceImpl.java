@@ -157,7 +157,7 @@ public class KycServiceImpl implements KycService {
 						mosipLogger.info("faceRawImageEntityInfoMap Keys: {}", faceRawImageEntityInfoMap.keySet());
 						if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
 							String faceRawCbeff = faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value());
-							if (faceImages == null || faceImages.isEmpty()) {
+							if (faceRawCbeff == null || faceRawCbeff.isEmpty()) {
 								mosipLogger.info("No face raw images found for the specified type.");
 							}
 							String faceRaw;
@@ -172,40 +172,13 @@ public class KycServiceImpl implements KycService {
 								IdentityInfoDTO identityInfoDTO = new IdentityInfoDTO();
 								identityInfoDTO.setValue(faceRaw);
 								bioValue.add(identityInfoDTO);
-								identityInfo.put(IdAuthCommonConstants.FACE_RAW_IMAGE, bioValue);
+								identityInfo.put(faceAttribute.get(), bioValue);
 							}
 						}
 					} catch (Exception e) {
 						mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
 								"Error retrieving raw face image for KYC. " + e.getMessage(), e);
 					}
-				}
-
-				Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, identityInfo,
-						null);
-				if (faceEntityInfoMap != null && !faceEntityInfoMap.isEmpty()) {
-					String faceCbeff = Objects.nonNull(faceEntityInfoMap)
-							? faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())
-							: null;
-					String face;
-					if (sendFaceAsCbeffXml) {
-						face = faceCbeff;
-					} else {
-						try {
-							face = getFaceBDB(faceCbeff);
-						} catch (Exception e) {
-							throw new IdAuthenticationBusinessException(
-									IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorCode(),
-									String.format(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorMessage(),
-											CbeffDocType.FACE.getName()),
-									e);
-						}
-					}
-					List<IdentityInfoDTO> bioValue = new ArrayList<>();
-					IdentityInfoDTO identityInfoDTO = new IdentityInfoDTO();
-					identityInfoDTO.setValue(face);
-					bioValue.add(identityInfoDTO);
-					identityInfo.put(faceAttribute.get(), bioValue);
 				}
 			}
 			Map<String, List<IdentityInfoDTO>> filteredIdentityInfo = filterIdentityInfo(allowedkycAttributes,
