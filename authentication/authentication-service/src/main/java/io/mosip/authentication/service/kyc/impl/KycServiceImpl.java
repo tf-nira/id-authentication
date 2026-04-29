@@ -535,7 +535,7 @@ public class KycServiceImpl implements KycService {
 		                "faceRawImage key found in idInfo. Proceeding to extract face entity info directly.");
 
 		        String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
-
+		        mosipLogger.info("faceRawImageValue : {}", faceRawImageValue);
 				/*
 				 * Map<String, String> faceRawImageEntityInfoMap =
 				 * idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo, null);
@@ -548,7 +548,7 @@ public class KycServiceImpl implements KycService {
 						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 								"Attempting JP2 to JPEG conversion for face raw image.");
 
-						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageValue, CbeffDocType.FACE_RAW_IMAGE.getName()));
+						String face = convertJP2ToJpeg(faceRawImageValue);
 			            if (face != null) {
 			            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"Face raw image converted successfully. Adding to response claims.");
