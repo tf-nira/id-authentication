@@ -156,7 +156,6 @@ public class KycServiceImpl implements KycService {
 								.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, identityInfo, null);
 						mosipLogger.info("faceRawImageEntityInfoMap Keys: {}", faceRawImageEntityInfoMap.keySet());
 						if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
-							if(
 							String faceRawCbeff = faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value());
 							if (faceImages == null || faceImages.isEmpty()) {
 								mosipLogger.info("No face raw images found for the specified type.");
