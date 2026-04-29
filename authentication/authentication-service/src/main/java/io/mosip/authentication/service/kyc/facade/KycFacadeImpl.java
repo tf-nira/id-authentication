@@ -427,11 +427,8 @@ public class KycFacadeImpl implements KycFacade {
 			if (filterAttributes.contains(CbeffDocType.FACE.getType().value().toLowerCase()) || 
 						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase())) {
 				policyAllowedAttributes.add(CbeffDocType.FACE.getType().value().toLowerCase());
-				policyAllowedAttributes.add("faceRawImage");
 				isBioRequired = true;
 			}
-			mosipLogger.info("Filter attribute :: " + filterAttributes);
-			mosipLogger.info("Policy allowed attribute :: " + policyAllowedAttributes);
 
 			Map<String, Object> idResDTO = idService.processIdType(idvIdType, idVid, isBioRequired,
 					IdAuthCommonConstants.KYC_EXCHANGE_CONSUME_VID_DEFAULT, policyAllowedAttributes);
