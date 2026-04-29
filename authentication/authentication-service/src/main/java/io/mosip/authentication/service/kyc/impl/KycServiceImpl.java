@@ -530,22 +530,25 @@ public class KycServiceImpl implements KycService {
 						"Face Raw image Bio not found in DB. So not adding to response claims.");
 			} else {
 				
+				List<IdentityInfoDTO> faceRawImageInfoList = idInfo.get("faceRawImage");
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
-						"faceRawImage key found in idInfo. Proceeding to extract face entity info.");
-				
-				Map<String, String> faceRawImageEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo,
-						null);
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-				        this.getClass().getSimpleName(),
-				        "addEntityForLangCodes",
-				        "faceEntityInfoMap: " + faceRawImageEntityInfoMap);
+		                "faceRawImage key found in idInfo. Proceeding to extract face entity info directly.");
 
-				if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
+		        String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
+
+				/*
+				 * Map<String, String> faceRawImageEntityInfoMap =
+				 * idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo, null);
+				 * mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+				 * this.getClass().getSimpleName(), "addEntityForLangCodes",
+				 * "faceEntityInfoMap: " + faceRawImageEntityInfoMap);
+				 */
+				if (faceRawImageValue != null && !faceRawImageValue.isEmpty()) {
 					try {
 						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 								"Attempting JP2 to JPEG conversion for face raw image.");
 
-						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value()), CbeffDocType.FACE_RAW_IMAGE.getName()));
+						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageValue, CbeffDocType.FACE_RAW_IMAGE.getName()));
 			            if (face != null) {
 			            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"Face raw image converted successfully. Adding to response claims.");
