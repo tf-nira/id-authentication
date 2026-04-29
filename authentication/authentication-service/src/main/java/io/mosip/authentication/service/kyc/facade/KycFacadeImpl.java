@@ -403,6 +403,10 @@ public class KycFacadeImpl implements KycFacade {
 			String idvIdType = kycExchangeRequestDTO.getIndividualIdType();
 			Optional<PartnerPolicyResponseDTO> policyForPartner = partnerService.getPolicyForPartner(partnerId,	oidcClientId, metadata);
 			Optional<PolicyDTO> policyDtoOpt = policyForPartner.map(PartnerPolicyResponseDTO::getPolicy);
+			
+			mosipLogger.info("partnerId: {}", partnerId);
+			mosipLogger.info("oidcClientId: {}", oidcClientId);
+			mosipLogger.info("policyDtoOpt: {}", policyDtoOpt.toString());
 
 			if (!policyDtoOpt.isPresent()) {
 				mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "processKycExchange",
@@ -416,13 +420,19 @@ public class KycFacadeImpl implements KycFacade {
 			List<String> allowedConsentAttributes = exchangeDataAttributesUtil.filterAllowedUserClaims(oidcClientId, consentAttributes);
 
 			PolicyDTO policyDto = policyDtoOpt.get();
+			mosipLogger.info("policyDto : {}", policyDto.toString());
+			
 			List<String> policyAllowedKycAttribs = Optional.ofNullable(policyDto.getAllowedKycAttributes()).stream()
 						.flatMap(Collection::stream).map(KYCAttributes::getAttributeName).collect(Collectors.toList());
 
 			Set<String> filterAttributes = new HashSet<>();
 			exchangeDataAttributesUtil.mapConsentedAttributesToIdSchemaAttributes(allowedConsentAttributes, filterAttributes, policyAllowedKycAttribs);
 			Set<String> policyAllowedAttributes = exchangeDataAttributesUtil.filterByPolicyAllowedAttributes(filterAttributes, policyAllowedKycAttribs);
-
+			
+			mosipLogger.info("Policy allowed attributes: {}", policyAllowedAttributes.toString());
+			mosipLogger.info("Policy allowed kyc attributes: {}", policyAllowedKycAttribs.toString());
+			mosipLogger.info("Filter attributes: {}", filterAttributes.toString());
+			
 			boolean isBioRequired = false;
 			if (filterAttributes.contains(CbeffDocType.FACE.getType().value().toLowerCase()) || 
 						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase())) {
