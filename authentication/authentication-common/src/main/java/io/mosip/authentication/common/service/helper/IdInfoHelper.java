@@ -323,7 +323,14 @@ public class IdInfoHelper {
 		Map<String, Object> props = Map.of(IdInfoFetcher.class.getSimpleName(), idInfoFetcher);
 		Map<String, String> result = matchType.getEntityInfoMapper().apply(mergedMap, props);
 		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
-				"Final result map keys: " + (result != null ? result.keySet() : "null"));
+		        "Final result map: " + (result != null
+		                ? result.entrySet().stream()
+		                        .collect(java.util.stream.Collectors.toMap(
+		                                Map.Entry::getKey,
+		                                e -> e.getValue() != null && e.getValue().length() > 100
+		                                        ? e.getValue().substring(0, 100) + "...[truncated]"
+		                                        : e.getValue()))
+		                : "null"));
 
 		if (result == null || result.isEmpty()) {
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",

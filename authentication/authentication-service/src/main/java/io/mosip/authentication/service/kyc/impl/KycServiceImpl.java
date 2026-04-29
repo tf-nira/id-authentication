@@ -507,6 +507,17 @@ public class KycServiceImpl implements KycService {
 				Map<String, Object> respMap, String consentedAttribute, List<String> idSchemaAttributes) 
 				throws IdAuthenticationBusinessException {
 		
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+		        "idInfo full data: " + idInfo.entrySet().stream()
+		                .collect(java.util.stream.Collectors.toMap(
+		                        Map.Entry::getKey,
+		                        e -> e.getValue().stream()
+		                                .map(dto -> "lang=" + dto.getLanguage()
+		                                        + ",value=" + (dto.getValue() != null && dto.getValue().length() > 100
+		                                                ? dto.getValue().substring(0, 100) + "...[truncated]"
+		                                                : dto.getValue()))
+		                                .collect(java.util.stream.Collectors.toList()))));
+		
 		if (consentedAttribute.equals(consentedFaceAttributeName)) {
 			
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
