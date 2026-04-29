@@ -514,7 +514,12 @@ public class KycServiceImpl implements KycService {
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 					"idInfo keys: " + idInfo.keySet());
 			
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+			if(!idInfo.containsKey("faceRawImage")) {
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						"Face Raw image Bio not found in DB. So not adding to response claims.");
+			} else {
+				
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 						"faceRawImage key found in idInfo. Proceeding to extract face entity info.");
 				
 				Map<String, String> faceRawImageEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo,
@@ -550,6 +555,7 @@ public class KycServiceImpl implements KycService {
 					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 							"faceRawImageEntityInfoMap is null or empty. Skipping face raw image processing.");
 				}
+			}
 			
 			return;
 		}
