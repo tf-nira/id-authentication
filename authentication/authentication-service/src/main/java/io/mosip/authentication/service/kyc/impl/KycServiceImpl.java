@@ -509,10 +509,19 @@ public class KycServiceImpl implements KycService {
 		
 		if (consentedAttribute.equals(consentedFaceAttributeName)) {
 			
-			if(!idInfo.keySet().contains(BioMatchType.FACE_RAW_IMAGE.getIdMapping().getIdname())) {
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					"Processing face attribute. consentedAttribute: " + consentedAttribute);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					"idInfo keys: " + idInfo.keySet());
+			
+			if(!idInfo.containsKey("faceRawImage")) {
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 						"Face Raw image Bio not found in DB. So not adding to response claims.");
 			} else {
+				
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						"faceRawImage key found in idInfo. Proceeding to extract face entity info.");
+				
 				Map<String, String> faceRawImageEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo,
 						null);
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
@@ -522,9 +531,18 @@ public class KycServiceImpl implements KycService {
 
 				if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
 					try {
+						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+								"Attempting JP2 to JPEG conversion for face raw image.");
+
 						String face = convertJP2ToJpeg(getFaceBDB(faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value()), CbeffDocType.FACE_RAW_IMAGE.getName()));
 			            if (face != null) {
-							respMap.put(IdAuthCommonConstants.FACE_RAW_IMAGE, consentedPictureAttributePrefix + face);
+			            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+									"Face raw image converted successfully. Adding to response claims.");
+							
+							respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
+						} else {
+							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+									"convertJP2ToJpeg returned null. Face raw image not added to response claims.");
 						}
 
 					} catch (Exception e) {
@@ -533,32 +551,12 @@ public class KycServiceImpl implements KycService {
 						mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
 								"Error Adding photo to the claims. " + e.getMessage(), e);
 					}
+				} else {
+					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+							"faceRawImageEntityInfoMap is null or empty. Skipping face raw image processing.");
 				}
 			}
 			
-			if (!idInfo.keySet().contains(BioMatchType.FACE.getIdMapping().getIdname())) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
-					"Face Bio not found in DB. So not adding to response claims.");
-				return;
-			}
-			Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, idInfo, null);
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-			        this.getClass().getSimpleName(),
-			        "addEntityForLangCodes",
-			        "faceEntityInfoMap: " + faceEntityInfoMap);
-			if (Objects.nonNull(faceEntityInfoMap)) {
-				try {
-					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
-					if (Objects.nonNull(face))
-						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
-				} catch (Exception e) {
-					// Not throwing any exception because others claims will be returned without
-					// photo.
-					mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
-							"Error Adding photo to the claims. " + e.getMessage(), e);
-				}
-
-			}
 			return;
 		}
 
