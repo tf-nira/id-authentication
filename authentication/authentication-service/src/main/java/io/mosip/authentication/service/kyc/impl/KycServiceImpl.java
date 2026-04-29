@@ -149,13 +149,18 @@ public class KycServiceImpl implements KycService {
 			Optional<String> faceAttribute = IdInfoHelper.getKycAttributeHasPhoto(allowedkycAttributes);
 			if (faceAttribute.isPresent()) {
 				// --- Raw Face Image ---
+				mosipLogger.info("Identity Info Keys: {}", identityInfo.keySet());
 				if (identityInfo.containsKey(BioMatchType.FACE_RAW_IMAGE.getIdMapping().getIdname())) {
 					try {
 						Map<String, String> faceRawImageEntityInfoMap = idInfoHelper
 								.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, identityInfo, null);
+						mosipLogger.info("faceRawImageEntityInfoMap Keys: {}", faceRawImageEntityInfoMap.keySet());
 						if (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty()) {
+							if(
 							String faceRawCbeff = faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value());
-
+							if (faceImages == null || faceImages.isEmpty()) {
+								mosipLogger.info("No face raw images found for the specified type.");
+							}
 							String faceRaw;
 							if (sendFaceAsCbeffXml) {
 								faceRaw = faceRawCbeff;
