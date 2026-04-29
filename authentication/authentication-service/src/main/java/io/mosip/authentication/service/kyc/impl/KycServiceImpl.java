@@ -548,7 +548,10 @@ public class KycServiceImpl implements KycService {
 						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 								"Attempting JP2 to JPEG conversion for face raw image.");
 
-						String face = convertJP2ToJpeg(faceRawImageValue);
+						byte[] rawBdb = java.util.Base64.getUrlDecoder().decode(faceRawImageValue);
+						String standardBase64 = java.util.Base64.getEncoder().encodeToString(rawBdb);
+
+						String face = convertJP2ToJpeg(standardBase64);
 			            if (face != null) {
 			            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"Face raw image converted successfully. Adding to response claims.");
