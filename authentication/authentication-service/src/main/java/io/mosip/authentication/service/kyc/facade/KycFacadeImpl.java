@@ -435,7 +435,8 @@ public class KycFacadeImpl implements KycFacade {
 			
 			boolean isBioRequired = false;
 			if (filterAttributes.contains(CbeffDocType.FACE.getType().value().toLowerCase()) || 
-						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase())) {
+						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase()) ||
+						filterAttributes.contains(IdAuthCommonConstants.FACE_RAW_IMAGE)) {
 				policyAllowedAttributes.add(CbeffDocType.FACE.getType().value().toLowerCase());
 				isBioRequired = true;
 			}
@@ -443,6 +444,9 @@ public class KycFacadeImpl implements KycFacade {
 			Map<String, Object> idResDTO = idService.processIdType(idvIdType, idVid, isBioRequired,
 					IdAuthCommonConstants.KYC_EXCHANGE_CONSUME_VID_DEFAULT, policyAllowedAttributes);
 			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);
+			
+			mosipLogger.info("idResDTO: {}", idResDTO.toString());
+			mosipLogger.info("idInfo: {}", idInfo.toString());
 			
 			String token = idService.getToken(idResDTO);
 			String psuToken = kycTokenData.getPsuToken();
