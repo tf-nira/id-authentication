@@ -418,7 +418,8 @@ public class KycFacadeImpl implements KycFacade {
 
 			boolean isBioRequired = false;
 			if (filterAttributes.contains(CbeffDocType.FACE.getType().value().toLowerCase()) || 
-						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase())) {
+						filterAttributes.contains(IdAuthCommonConstants.PHOTO.toLowerCase()) ||
+						filterAttributes.contains(IdAuthCommonConstants.FACE_RAW_IMAGE)) {
 				policyAllowedAttributes.add(CbeffDocType.FACE.getType().value().toLowerCase());
 				isBioRequired = true;
 			}
