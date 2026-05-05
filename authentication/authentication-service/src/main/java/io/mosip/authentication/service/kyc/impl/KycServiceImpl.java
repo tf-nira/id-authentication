@@ -50,6 +50,7 @@ import io.mosip.authentication.core.spi.indauth.match.MatchType;
 import io.mosip.authentication.core.spi.indauth.service.KycService;
 import io.mosip.authentication.core.util.CryptoUtil;
 import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceBDIR;
 import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.spi.CbeffUtil;
@@ -270,6 +271,7 @@ public class KycServiceImpl implements KycService {
 		return kycResponseDTO;
 
 	}
+
 	/**
 	 * Set KYC info based on the ID Names (from ID Mapping). FACE is also included if required.
 	 *
@@ -582,39 +584,39 @@ public class KycServiceImpl implements KycService {
 		}
 	}
 
-	private void addEntityForLangCodes(Map<String, String> mappedConsentedLocales,
-			Map<String, List<IdentityInfoDTO>> idInfo, Map<String, Object> respMap, String consentedAttribute,
-			List<String> idSchemaAttributes) throws IdAuthenticationBusinessException {
-
+	private void addEntityForLangCodes(Map<String, String> mappedConsentedLocales, Map<String, List<IdentityInfoDTO>> idInfo, 
+				Map<String, Object> respMap, String consentedAttribute, List<String> idSchemaAttributes) 
+				throws IdAuthenticationBusinessException {
+		
 		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
-				"idInfo full data: " + idInfo.entrySet().stream()
-						.collect(java.util.stream.Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream()
-								.map(dto -> "lang=" + dto.getLanguage() + ",value="
-										+ (dto.getValue() != null && dto.getValue().length() > 100
-												? dto.getValue().substring(0, 100) + "...[truncated]"
-												: dto.getValue()))
-								.collect(java.util.stream.Collectors.toList()))));
-
+		        "idInfo full data: " + idInfo.entrySet().stream()
+		                .collect(java.util.stream.Collectors.toMap(
+		                        Map.Entry::getKey,
+		                        e -> e.getValue().stream()
+		                                .map(dto -> "lang=" + dto.getLanguage()
+		                                        + ",value=" + (dto.getValue() != null && dto.getValue().length() > 100
+		                                                ? dto.getValue().substring(0, 100) + "...[truncated]"
+		                                                : dto.getValue()))
+		                                .collect(java.util.stream.Collectors.toList()))));
+		
 		if (consentedAttribute.equals(consentedFaceAttributeName)) {
-
+			
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 					"Processing face attribute. consentedAttribute: " + consentedAttribute);
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 					"idInfo keys: " + idInfo.keySet());
-
-			if (!idInfo.containsKey("faceRawImage")) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-						"addEntityForLangCodes",
+			
+			if(!idInfo.containsKey("faceRawImage")) {
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 						"Face Raw image Bio not found in DB. So not adding to response claims.");
 			} else {
-
+				
 				List<IdentityInfoDTO> faceRawImageInfoList = idInfo.get("faceRawImage");
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-						"addEntityForLangCodes",
-						"faceRawImage key found in idInfo. Proceeding to extract face entity info directly.");
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+		                "faceRawImage key found in idInfo. Proceeding to extract face entity info directly.");
 
-				String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
-				mosipLogger.info("faceRawImageValue : {}", faceRawImageValue);
+		        String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
+		        mosipLogger.info("faceRawImageValue : {}", faceRawImageValue);
 				/*
 				 * Map<String, String> faceRawImageEntityInfoMap =
 				 * idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo, null);
@@ -624,22 +626,20 @@ public class KycServiceImpl implements KycService {
 				 */
 				if (faceRawImageValue != null && !faceRawImageValue.isEmpty()) {
 					try {
-						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-								"addEntityForLangCodes", "Attempting JP2 to JPEG conversion for face raw image.");
+						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+								"Attempting JP2 to JPEG conversion for face raw image.");
 
 						byte[] rawBdb = java.util.Base64.getUrlDecoder().decode(faceRawImageValue);
 						String standardBase64 = java.util.Base64.getEncoder().encodeToString(rawBdb);
 
 						String face = convertJP2ToJpeg(standardBase64);
-						if (face != null) {
-							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-									"addEntityForLangCodes",
+			            if (face != null) {
+			            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"Face raw image converted successfully. Adding to response claims.");
-
+							
 							respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 						} else {
-							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-									"addEntityForLangCodes",
+							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"convertJP2ToJpeg returned null. Face raw image not added to response claims.");
 						}
 
@@ -650,27 +650,24 @@ public class KycServiceImpl implements KycService {
 								"Error Adding photo to the claims. " + e.getMessage(), e);
 					}
 				} else {
-					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-							"addEntityForLangCodes",
+					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 							"faceRawImageEntityInfoMap is null or empty. Skipping face raw image processing.");
 				}
 			}
-
+			
 			return;
 		}
 
 		if (idSchemaAttributes.size() == 1) {
 			List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttributes.get(0));
 			if (Objects.isNull(idInfoList)) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-						"addEntityForLangCodes",
-						"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: "
-								+ idSchemaAttributes.get(0));
+				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttributes.get(0));
 				return;
 			}
 			Map<String, String> mappedLangCodes = langCodeMapping(idInfoList);
 			List<String> availableLangCodes = getAvailableLangCodes(mappedConsentedLocales, mappedLangCodes);
-			if (availableLangCodes.size() == 1) {
+			if (availableLangCodes.size() == 1){
 				for (IdentityInfoDTO identityInfo : idInfoList) {
 					String langCode = mappedLangCodes.get(availableLangCodes.get(0));
 					if (identityInfo.getLanguage().equalsIgnoreCase(langCode)) {
@@ -683,8 +680,8 @@ public class KycServiceImpl implements KycService {
 						for (String availableLangCode : availableLangCodes) {
 							String langCode = mappedLangCodes.get(availableLangCode);
 							if (identityInfo.getLanguage().equalsIgnoreCase(langCode)) {
-								respMap.put(consentedAttribute + IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR
-										+ availableLangCode, identityInfo.getValue());
+								respMap.put(consentedAttribute + IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR + availableLangCode, 
+										identityInfo.getValue());
 							}
 						}
 					}
@@ -698,30 +695,28 @@ public class KycServiceImpl implements KycService {
 			}
 			if (consentedAttribute.equals(consentedAddressAttributeName)) {
 				if (mappedConsentedLocales.size() > 1) {
-					for (String consentedLocale : mappedConsentedLocales.keySet()) {
+					for (String consentedLocale: mappedConsentedLocales.keySet()) {
 						String consentedLocaleValue = mappedConsentedLocales.get(consentedLocale);
 						if (addressSubsetAttributes.length == 0) {
-							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-									"addEntityForLangCodes",
+							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"No address subset attributes configured. Will return the address with formatted attribute.");
-							addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, true,
-									IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR + consentedLocaleValue);
+							addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, true, 
+								IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR + consentedLocaleValue);
 							continue;
 						}
-						addAddressClaim(addressSubsetAttributes, idInfo, consentedLocaleValue, respMap, true,
+						addAddressClaim(addressSubsetAttributes, idInfo, consentedLocaleValue, respMap, true, 
 								IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR + consentedLocaleValue);
 					}
 				} else {
 					String consentedLocale = mappedConsentedLocales.keySet().iterator().next();
 					String consentedLocaleValue = mappedConsentedLocales.get(consentedLocale);
 					if (addressSubsetAttributes.length == 0) {
-						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-								"addEntityForLangCodes",
+						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 								"No address subset attributes configured. Will return the address with formatted attribute.");
 						addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, false, "");
 						return;
 					}
-
+					
 					addAddressClaim(addressSubsetAttributes, idInfo, consentedLocaleValue, respMap, false, "");
 				}
 			}
@@ -874,17 +869,12 @@ public class KycServiceImpl implements KycService {
 		}
 	}
 
+	
 	private String convertJP2ToJpeg(String jp2Image) {
 		try {
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
-			        this.getClass().getSimpleName(),
-			        "convertJP2ToJpeg",
-			        "jp2Image: " + jp2Image);
 			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
 			convertRequestDto.setVersion(IdAuthCommonConstants.FACE_ISO_NUMBER);
 			convertRequestDto.setInputBytes(CryptoUtil.decodeBase64(jp2Image));
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "convertJP2ToJpeg",
-        			"convertRequestDto: " + convertRequestDto);
 			byte[] image = FaceDecoder.convertFaceISOToImageBytes(convertRequestDto);
 			return CryptoUtil.encodeBase64(image);
 		} catch(Exception exp) {
@@ -893,7 +883,7 @@ public class KycServiceImpl implements KycService {
 		}
 		return null;
 	}
-
+	
 	private Map<String, String> localesMapping(Set<String> locales) {
 
 		Map<String, String> mappedLocales = new HashMap<>();
@@ -940,5 +930,16 @@ public class KycServiceImpl implements KycService {
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
 		}
 		return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
+	}
+	
+	private String getFaceBDB(String faceCbeff, String cbeffDocTypeName) throws Exception {
+	    List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(
+	            faceCbeff.getBytes(), cbeffDocTypeName);
+	    mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	            "getFaceBDB", "birDataFromXMLType size: " + birDataFromXMLType.size());
+	    if (birDataFromXMLType.isEmpty()) {
+	        throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
+	    }
+	    return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
 	}
 }
