@@ -178,7 +178,7 @@ public enum IdaIdMapping implements IdMapping {
 	MULTI_MODAL_BIOMETRICS("biometrics", setOf(LEFTINDEX, LEFTLITTLE, LEFTMIDDLE, LEFTRING, LEFTTHUMB, 
 			RIGHTINDEX, RIGHTLITTLE, RIGHTMIDDLE, RIGHTRING, RIGHTTHUMB, UNKNOWN_FINGER,
 			RIGHTIRIS, LEFTIRIS, UNKNOWN_IRIS,
-			FACE,UNKNOWN_FACE), "DummyType"),
+			FACE,UNKNOWN_FACE,FACE_RAW_IMAGE), "DummyType"),
 
 	KEY_BINDED_TOKENS("keyBindedTokens"){
 		public BiFunction<MappingConfig, MatchType, List<String>> getMappingFunction() {

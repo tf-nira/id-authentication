@@ -237,6 +237,7 @@ public enum BioMatchType implements MatchType {
 			Optional<AuthType> authType = AuthType.getAuthTypeForMatchType(this, BioAuthType.values());
 			if (authType.isPresent() && bioId.getData() != null && bioId.getData().getBioType() != null && bioId.getData().getBioType().equalsIgnoreCase(authType.get().getType())) {
 				return authType.get() == BioAuthType.FACE_IMG || 
+						authType.get() == BioAuthType.FACE_RAW_IMG ||
 						(bioId.getData().getBioSubType() != null && 
 						bioId.getData().getBioSubType().equalsIgnoreCase(getIdMapping().getSubType()));
 			}
