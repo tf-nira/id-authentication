@@ -295,12 +295,50 @@ public class IdInfoHelper {
 	 */
 	public Map<String, String> getIdEntityInfoMap(MatchType matchType, Map<String, List<IdentityInfoDTO>> identityInfos,
 			String language, String idName) throws IdAuthenticationBusinessException {
+
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+				"Method called with matchType: " + matchType + ", language: " + language + ", idName: " + idName);
+
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+				"identityInfos keys: " + (identityInfos != null ? identityInfos.keySet() : "null"));
+
 		List<String> propertyNames = getIdentityAttributesForMatchType(matchType, idName);
-		Map<String, String> identityValuesMapWithLang = getIdentityValuesMap(matchType, propertyNames, language, identityInfos);
-		Map<String, String> identityValuesMapWithoutLang = getIdentityValuesMap(matchType, propertyNames, null, identityInfos);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+				"Property names retrieved: " + propertyNames);
+
+		Map<String, String> identityValuesMapWithLang = getIdentityValuesMap(matchType, propertyNames, language,
+				identityInfos);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+				"Identity values map with language: " + identityValuesMapWithLang);
+
+		Map<String, String> identityValuesMapWithoutLang = getIdentityValuesMap(matchType, propertyNames, null,
+				identityInfos);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+				"Identity values map without language: " + identityValuesMapWithoutLang);
+
 		Map<String, String> mergedMap = mergeNonNullValues(identityValuesMapWithLang, identityValuesMapWithoutLang);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+				"Merged map size: " + mergedMap.size());
+
 		Map<String, Object> props = Map.of(IdInfoFetcher.class.getSimpleName(), idInfoFetcher);
-		return matchType.getEntityInfoMapper().apply(mergedMap, props);
+		Map<String, String> result = matchType.getEntityInfoMapper().apply(mergedMap, props);
+		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+		        "Final result map: " + (result != null
+		                ? result.entrySet().stream()
+		                        .collect(java.util.stream.Collectors.toMap(
+		                                Map.Entry::getKey,
+		                                e -> e.getValue() != null && e.getValue().length() > 100
+		                                        ? e.getValue().substring(0, 100) + "...[truncated]"
+		                                        : e.getValue()))
+		                : "null"));
+
+		if (result == null || result.isEmpty()) {
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getIdEntityInfoMap",
+					"Empty or null result returned for matchType: " + matchType);
+		}
+
+		return result;
+
 	}
 
 	/**
@@ -887,7 +925,8 @@ public class IdInfoHelper {
 				.stream()
 				.flatMap(List::stream)
 				.filter(elem -> elem.equalsIgnoreCase(IdAuthCommonConstants.PHOTO.toLowerCase())
-						|| elem.equalsIgnoreCase(CbeffDocType.FACE.getType().value().toLowerCase()))
+						|| elem.equalsIgnoreCase(CbeffDocType.FACE.getType().value().toLowerCase())
+						|| elem.equalsIgnoreCase(IdAuthCommonConstants.FACE_RAW_IMAGE.toLowerCase()))
 				.findAny();
 	}
 }

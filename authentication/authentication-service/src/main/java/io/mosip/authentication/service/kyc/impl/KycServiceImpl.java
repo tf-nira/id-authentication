@@ -50,6 +50,7 @@ import io.mosip.authentication.core.spi.indauth.match.MatchType;
 import io.mosip.authentication.core.spi.indauth.service.KycService;
 import io.mosip.authentication.core.util.CryptoUtil;
 import io.mosip.biometrics.util.ConvertRequestDto;
+import io.mosip.biometrics.util.face.FaceBDIR;
 import io.mosip.biometrics.util.face.FaceDecoder;
 import io.mosip.kernel.biometrics.entities.BIR;
 import io.mosip.kernel.biometrics.spi.CbeffUtil;
@@ -143,41 +144,132 @@ public class KycServiceImpl implements KycService {
 	@Override
 	public EKycResponseDTO retrieveKycInfo(List<String> allowedkycAttributes, Set<String> langCodes,
 			Map<String, List<IdentityInfoDTO>> identityInfo) throws IdAuthenticationBusinessException {
+
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+				"Method called. allowedkycAttributes: " + allowedkycAttributes + ", langCodes: " + langCodes
+						+ ", identityInfo keys: " + (identityInfo != null ? identityInfo.keySet() : "null"));
+
 		EKycResponseDTO kycResponseDTO = new EKycResponseDTO();
 		if (Objects.nonNull(identityInfo) && Objects.nonNull(allowedkycAttributes) && !allowedkycAttributes.isEmpty()) {
 			Optional<String> faceAttribute = IdInfoHelper.getKycAttributeHasPhoto(allowedkycAttributes);
-			if(faceAttribute.isPresent()) {
-				Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, identityInfo,
-						null);
-				String faceCbeff = Objects.nonNull(faceEntityInfoMap)
-						? faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())
-						: null;
-				
-				String face;
-				if(sendFaceAsCbeffXml) {
-					face = faceCbeff;
-				} else {
+
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+					"faceAttribute present: " + faceAttribute.isPresent()
+							+ (faceAttribute.isPresent() ? ", value: " + faceAttribute.get() : ""));
+
+			if (faceAttribute.isPresent()) {
+				// --- Raw Face Image ---
+				mosipLogger.debug("Identity Info Keys: {}", identityInfo.keySet());
+
+				if (identityInfo.containsKey("faceRawImage")) {
+					mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+							"retrieveKycInfo",
+							"faceRawImage key found in identityInfo. sendFaceAsCbeffXml flag: " + sendFaceAsCbeffXml);
+
 					try {
-						face = getFaceBDB(faceCbeff);
+						String faceRaw;
+						if (sendFaceAsCbeffXml) {
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo",
+									"Using CBEFF XML branch. Calling idInfoHelper.getIdEntityInfoMap.");
+
+							// CBEFF XML branch unchanged - helper produces the XML wrapper
+							Map<String, String> faceRawImageEntityInfoMap = idInfoHelper
+									.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, identityInfo, null);
+
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo",
+									"faceRawImageEntityInfoMap is " + (faceRawImageEntityInfoMap == null ? "null"
+											: "size=" + faceRawImageEntityInfoMap.size() + ", keys="
+													+ faceRawImageEntityInfoMap.keySet()));
+
+							faceRaw = (faceRawImageEntityInfoMap != null && !faceRawImageEntityInfoMap.isEmpty())
+									? faceRawImageEntityInfoMap.get(CbeffDocType.FACE_RAW_IMAGE.getType().value())
+									: null;
+
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo", "CBEFF XML branch produced faceRaw: "
+											+ (faceRaw == null ? "null" : "length=" + faceRaw.length()));
+						} else {
+							// Direct path - read URL-safe BDB and re-encode standard
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo", "Using direct path. Reading URL-safe BDB from identityInfo.");
+
+							String faceRawImageValue = identityInfo.get("faceRawImage").get(0).getValue();
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo", "faceRawImageValue retrieved. length: "
+											+ (faceRawImageValue == null ? "null" : faceRawImageValue.length()));
+
+							if (faceRawImageValue != null && !faceRawImageValue.isEmpty()) {
+								byte[] rawBdb = java.util.Base64.getUrlDecoder().decode(faceRawImageValue);
+								mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+										"retrieveKycInfo",
+										"URL-safe Base64 decoded successfully. rawBdb length: " + rawBdb.length);
+
+								faceRaw = java.util.Base64.getEncoder().encodeToString(rawBdb);
+								mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+										"retrieveKycInfo",
+										"Re-encoded to standard Base64. faceRaw length: " + faceRaw.length());
+
+							} else {
+								mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+										"retrieveKycInfo",
+										"faceRawImageValue is null or empty. Setting faceRaw to null.");
+
+								faceRaw = null;
+							}
+						}
+
+						if (faceRaw != null) {
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo",
+									"faceRaw is non-null. Adding to identityInfo under key: " + faceAttribute.get());
+
+							List<IdentityInfoDTO> bioValue = new ArrayList<>();
+							IdentityInfoDTO identityInfoDTO = new IdentityInfoDTO();
+							identityInfoDTO.setValue(faceRaw);
+							bioValue.add(identityInfoDTO);
+							identityInfo.put(faceAttribute.get(), bioValue);
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo", "Face raw image added to identityInfo successfully.");
+
+						} else {
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"retrieveKycInfo", "faceRaw is null. Skipping addition to identityInfo.");
+						}
 					} catch (Exception e) {
-						throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorCode(),
-								String.format(IdAuthenticationErrorConstants.BIOMETRIC_MISSING.getErrorMessage(), CbeffDocType.FACE.getName()), e);
+						mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
+								"Error retrieving raw face image for KYC. " + e.getMessage(), e);
 					}
+				} else {
+					mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+							"retrieveKycInfo",
+							"faceRawImage key NOT found in identityInfo. Skipping face raw image processing.");
 				}
-					List<IdentityInfoDTO> bioValue = new ArrayList<>();
-					IdentityInfoDTO identityInfoDTO = new IdentityInfoDTO();
-					identityInfoDTO.setValue(face);
-					bioValue.add(identityInfoDTO);
-					identityInfo.put(faceAttribute.get(), bioValue);
+			} else {
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+						"No face attribute present in allowedkycAttributes. Skipping face raw image processing.");
 			}
 
 			Map<String, List<IdentityInfoDTO>> filteredIdentityInfo = filterIdentityInfo(allowedkycAttributes,
 					identityInfo, langCodes);
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+					"filteredIdentityInfo is " + (filteredIdentityInfo == null ? "null"
+							: "size=" + filteredIdentityInfo.size() + ", keys=" + filteredIdentityInfo.keySet()));
+
 			if (Objects.nonNull(filteredIdentityInfo)) {
 				setKycInfo(allowedkycAttributes, kycResponseDTO, filteredIdentityInfo, langCodes);
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+						"setKycInfo completed.");
 			}
+		} else {
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+					"Skipping KYC processing - identityInfo, allowedkycAttributes is null or allowedkycAttributes is empty.");
 		}
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "retrieveKycInfo",
+				"Returning kycResponseDTO.");
 		return kycResponseDTO;
+
 	}
 
 	/**
@@ -415,7 +507,7 @@ public class KycServiceImpl implements KycService {
 		kycTokenData.setCreatedBy(EnvUtil.getAppId());
 		kycTokenData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 		kycTokenDataRepo.saveAndFlush(kycTokenData);
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "generateAndSaveKycToken",
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "generateAndSaveKycToken",
 					"KYC Token Generated & Saved.");
 		return kycToken;
 	}
@@ -457,7 +549,7 @@ public class KycServiceImpl implements KycService {
 	public String buildKycExchangeResponse(String subject, Map<String, List<IdentityInfoDTO>> idInfo, 
 				List<String> consentedAttributes, List<String> consentedLocales, String idVid, KycExchangeRequestDTO kycExchangeRequestDTO) throws IdAuthenticationBusinessException {
 		
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
 					"Building claims response for PSU token: " + subject);
 					
 		Map<String, Object> respMap = new HashMap<>();
@@ -496,32 +588,80 @@ public class KycServiceImpl implements KycService {
 				Map<String, Object> respMap, String consentedAttribute, List<String> idSchemaAttributes) 
 				throws IdAuthenticationBusinessException {
 		
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+		        "idInfo full data: " + idInfo.entrySet().stream()
+		                .collect(java.util.stream.Collectors.toMap(
+		                        Map.Entry::getKey,
+		                        e -> e.getValue().stream()
+		                                .map(dto -> "lang=" + dto.getLanguage()
+		                                        + ",value=" + (dto.getValue() != null && dto.getValue().length() > 100
+		                                                ? dto.getValue().substring(0, 100) + "...[truncated]"
+		                                                : dto.getValue()))
+		                                .collect(java.util.stream.Collectors.toList()))));
+		
 		if (consentedAttribute.equals(consentedFaceAttributeName)) {
-			if (!idInfo.keySet().contains(BioMatchType.FACE.getIdMapping().getIdname())) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
-					"Face Bio not found in DB. So not adding to response claims.");
-				return;
-			}
-			Map<String, String> faceEntityInfoMap = idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE, idInfo, null);
-			if (Objects.nonNull(faceEntityInfoMap)) {
-				try {
-					String face = convertJP2ToJpeg(getFaceBDB(faceEntityInfoMap.get(CbeffDocType.FACE.getType().value())));
-					if (Objects.nonNull(face))
-						respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
-				} catch (Exception e) {
-					// Not throwing any exception because others claims will be returned without photo.
-					mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
-							"Error Adding photo to the claims. " + e.getMessage(), e);
-				}
+			
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					"Processing face attribute. consentedAttribute: " + consentedAttribute);
+			mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					"idInfo keys: " + idInfo.keySet());
+			
+			if(!idInfo.containsKey("faceRawImage")) {
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						"Face Raw image Bio not found in DB. So not adding to response claims.");
+			} else {
 				
+				List<IdentityInfoDTO> faceRawImageInfoList = idInfo.get("faceRawImage");
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+		                "faceRawImage key found in idInfo. Proceeding to extract face entity info directly.");
+
+		        String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
+		        mosipLogger.debug("faceRawImageValue : {}", faceRawImageValue);
+				/*
+				 * Map<String, String> faceRawImageEntityInfoMap =
+				 * idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo, null);
+				 * mosipLogger.debug(IdAuthCommonConstants.SESSION_ID,
+				 * this.getClass().getSimpleName(), "addEntityForLangCodes",
+				 * "faceEntityInfoMap: " + faceRawImageEntityInfoMap);
+				 */
+				if (faceRawImageValue != null && !faceRawImageValue.isEmpty()) {
+					try {
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+								"Attempting JP2 to JPEG conversion for face raw image.");
+
+						byte[] rawBdb = java.util.Base64.getUrlDecoder().decode(faceRawImageValue);
+						String standardBase64 = java.util.Base64.getEncoder().encodeToString(rawBdb);
+
+						String face = convertJP2ToJpeg(standardBase64);
+			            if (face != null) {
+			            	mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+									"Face raw image converted successfully. Adding to response claims.");
+							
+							respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
+						} else {
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+									"convertJP2ToJpeg returned null. Face raw image not added to response claims.");
+						}
+
+					} catch (Exception e) {
+						// Not throwing any exception because others claims will be returned without
+						// photo.
+						mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "",
+								"Error Adding photo to the claims. " + e.getMessage(), e);
+					}
+				} else {
+					mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+							"faceRawImageEntityInfoMap is null or empty. Skipping face raw image processing.");
+				}
 			}
+			
 			return;
 		}
 
 		if (idSchemaAttributes.size() == 1) {
 			List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttributes.get(0));
 			if (Objects.isNull(idInfoList)) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 					"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttributes.get(0));
 				return;
 			}
@@ -558,7 +698,7 @@ public class KycServiceImpl implements KycService {
 					for (String consentedLocale: mappedConsentedLocales.keySet()) {
 						String consentedLocaleValue = mappedConsentedLocales.get(consentedLocale);
 						if (addressSubsetAttributes.length == 0) {
-							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"No address subset attributes configured. Will return the address with formatted attribute.");
 							addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, true, 
 								IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR + consentedLocaleValue);
@@ -571,7 +711,7 @@ public class KycServiceImpl implements KycService {
 					String consentedLocale = mappedConsentedLocales.keySet().iterator().next();
 					String consentedLocaleValue = mappedConsentedLocales.get(consentedLocale);
 					if (addressSubsetAttributes.length == 0) {
-						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 								"No address subset attributes configured. Will return the address with formatted attribute.");
 						addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, false, "");
 						return;
@@ -678,7 +818,7 @@ public class KycServiceImpl implements KycService {
 					List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttribute);
 
 					if (Objects.isNull(idInfoList)) {
-						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 							"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttribute);
 						continue;
 					}
@@ -705,7 +845,7 @@ public class KycServiceImpl implements KycService {
 				List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttribute);
 
 				if (Objects.isNull(idInfoList)) {
-					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 						"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttribute);
 					continue;
 				}
@@ -729,6 +869,7 @@ public class KycServiceImpl implements KycService {
 		}
 	}
 
+	
 	private String convertJP2ToJpeg(String jp2Image) {
 		try {
 			ConvertRequestDto convertRequestDto = new ConvertRequestDto();
@@ -742,7 +883,7 @@ public class KycServiceImpl implements KycService {
 		}
 		return null;
 	}
-
+	
 	private Map<String, String> localesMapping(Set<String> locales) {
 
 		Map<String, String> mappedLocales = new HashMap<>();
@@ -780,10 +921,25 @@ public class KycServiceImpl implements KycService {
 	
 	private String getFaceBDB(String faceCbeff) throws Exception {
 		List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(faceCbeff.getBytes(), CbeffDocType.FACE.getName());
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID,
+		        this.getClass().getSimpleName(),
+		        "convertJP2ToJpeg",
+		        "birDataFromXMLType: " + birDataFromXMLType);
 		if(birDataFromXMLType.isEmpty()) {
 			//This is unlikely as if empty the exception would have been thrown already
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
 		}
 		return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
+	}
+	
+	private String getFaceBDB(String faceCbeff, String cbeffDocTypeName) throws Exception {
+	    List<BIR> birDataFromXMLType = cbeffUtil.getBIRDataFromXMLType(
+	            faceCbeff.getBytes(), cbeffDocTypeName);
+	    mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+	            "getFaceBDB", "birDataFromXMLType size: " + birDataFromXMLType.size());
+	    if (birDataFromXMLType.isEmpty()) {
+	        throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS);
+	    }
+	    return CryptoUtil.encodeBase64(birDataFromXMLType.get(0).getBdb());
 	}
 }
