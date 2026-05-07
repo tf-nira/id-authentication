@@ -208,11 +208,6 @@ public class AuthFacadeImpl implements AuthFacade {
 			properties.put(IdAuthCommonConstants.TOKEN, token);
 			authFiltersValidator.validateAuthFilters(authRequestDTO, idInfo, properties);
 
-			Double amount = (Double) properties.get("amount");
-			if (amount != null) {
-				authTxnBuilder.withAmount(amount);
-			}
-			
 			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
 			
 			if (deceased != null && !deceased.isEmpty()) {
