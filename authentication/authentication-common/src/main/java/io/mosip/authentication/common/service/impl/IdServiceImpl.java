@@ -13,9 +13,12 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
 import org.hibernate.exception.JDBCConnectionException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,8 @@ import io.mosip.authentication.core.spi.id.service.IdService;
 import io.mosip.kernel.core.exception.ExceptionUtils;
 import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.kernel.core.util.DateUtils;
+
+import javax.annotation.PostConstruct;
 
 /**
  * The class validates the UIN and VID.
@@ -77,11 +82,29 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 	@Autowired
 	private AuthTransactionEventPublisher authTransactionEventPublisher;
 
+	@Autowired
+	private PartnerDataRepository partnerDataRepo;
+
+	private final Map<String, PartnerData> partnerCache =
+			new ConcurrentHashMap<>();
+
 	@Value("${" + IDA_ZERO_KNOWLEDGE_UNENCRYPTED_CREDENTIAL_ATTRIBUTES + ":#{null}" + "}")
 	private String zkUnEncryptedCredAttribs;
 
 	@Value("${"+ IDA_AUTH_PARTNER_ID  +"}")
 	private String authPartherId;
+
+	@PostConstruct
+	public void loadPartnerCache() {
+		List<PartnerData> partners = partnerDataRepo.findAll();
+		for (PartnerData partner : partners) {
+			partnerCache.put(partner.getPartnerId(), partner);
+		}
+		logger.info(IdAuthCommonConstants.SESSION_ID,
+				this.getClass().getSimpleName(),
+				"loadPartnerCache",
+				"Partner cache loaded successfully");
+	}
 
 	/*
 	 * To get Identity data from IDRepo based on UIN
@@ -152,8 +175,17 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 		try {
 
 			AutnTxn savedTxn = autntxnrepository.saveAndFlush(authTxn);
-			authTransactionEventPublisher.publishEvent(savedTxn);
-
+			PartnerData partnerData = partnerCache.get(authTxn.getEntityId());
+			if (partnerData == null) {
+				Optional<PartnerData> partnerOptional = partnerDataRepo.findByPartnerId(authTxn.getEntityId());
+				if (partnerOptional.isPresent()) {
+					partnerData = partnerOptional.get();
+					partnerCache.put(authTxn.getEntityId(), partnerData);
+				}
+			}
+			if (partnerData != null && partnerData.getPartnerAuthType() != null && partnerData.getPartnerGroup() != null) {
+				authTransactionEventPublisher.publishEvent(savedTxn);
+			}
 		} catch (Exception e) {
 			throw new IdAuthenticationBusinessException(
 					"FAILED_TO_SAVE_TXN",

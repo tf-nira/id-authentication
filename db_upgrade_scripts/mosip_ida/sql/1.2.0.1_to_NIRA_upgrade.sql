@@ -13,6 +13,8 @@ GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA ida TO postgres;
 ----------------------------------------------Multiple table level changes on IDA db-------------------------------------------------------
 ALTER TABLE ida.partner_data ADD COLUMN requires_payment boolean NOT NULL DEFAULT false;
 --------------------------------------------------------------------------------------------------
+ALTER TABLE ida.partner_data ADD COLUMN IF NOT EXISTS partner_auth_type character varying(128), ADD COLUMN IF NOT EXISTS partner_group character varying(128);
+--------------------------------------------------------------------------------------------------
 ALTER TABLE ida.auth_transaction ADD COLUMN amount numeric;
 --------------------------------------------------------------------------------------------------
 CREATE TABLE ida.auth_types (
