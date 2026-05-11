@@ -1,5 +1,6 @@
 package io.mosip.authentication.otp.service;
 
+import io.mosip.authentication.common.service.websub.impl.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -50,14 +51,6 @@ import io.mosip.authentication.common.service.util.IdaRequestResponsConsumerUtil
 import io.mosip.authentication.common.service.util.KeyBindedTokenMatcherUtil;
 import io.mosip.authentication.common.service.validator.OTPRequestValidator;
 import io.mosip.authentication.common.service.websub.IdAuthWebSubInitializer;
-import io.mosip.authentication.common.service.websub.impl.AuthAnonymousEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.AuthTransactionStatusEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.IdAuthFraudAnalysisEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.MasterDataUpdateEventInitializer;
-import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.PartnerCACertEventInitializer;
-import io.mosip.authentication.common.service.websub.impl.PartnerPaymentStatusEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.PartnerServiceEventsInitializer;
 import io.mosip.authentication.core.util.IdTypeUtil;
 import io.mosip.authentication.core.util.IdValidationUtil;
 import io.mosip.kernel.cbeffutil.impl.CbeffImpl;
@@ -114,7 +107,7 @@ import io.mosip.kernel.zkcryptoservice.service.impl.ZKCryptoManagerServiceImpl;
 		IdAuthWebSubInitializer.class, AuthAnonymousEventPublisher.class, EnvUtil.class, KeyBindedTokenMatcherUtil.class, 
 		HSMHealthCheck.class, PrivateKeyDecryptorHelper.class,
 		PasswordAuthServiceImpl.class, PasswordComparator.class, OndemandTemplateEventPublisher.class,
-		PartnerPaymentStatusEventPublisher.class })
+		PartnerPaymentStatusEventPublisher.class, PartnerBalanceWebSubPublisher.class, AuthTransactionEventPublisher.class })
 @ComponentScan(basePackages = { "io.mosip.authentication.otp.service.*",
 		"io.mosip.kernel.core.logger.config", "${mosip.auth.adapter.impl.basepackage}" }, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
 				"io.mosip.idrepository.core.config.IdRepoDataSourceConfig.*" }))
