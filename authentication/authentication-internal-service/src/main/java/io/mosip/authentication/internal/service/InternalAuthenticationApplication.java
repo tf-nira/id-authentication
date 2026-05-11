@@ -1,5 +1,6 @@
 package io.mosip.authentication.internal.service;
 
+import io.mosip.authentication.common.service.websub.impl.*;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
@@ -55,17 +56,6 @@ import io.mosip.authentication.common.service.util.IdaRequestResponsConsumerUtil
 import io.mosip.authentication.common.service.util.KeyBindedTokenMatcherUtil;
 import io.mosip.authentication.common.service.validator.AuthFiltersValidator;
 import io.mosip.authentication.common.service.validator.OTPRequestValidator;
-import io.mosip.authentication.common.service.websub.impl.AuthTransactionStatusEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.AuthTypeStatusEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.AuthTypeStatusEventSubscriber;
-import io.mosip.authentication.common.service.websub.impl.CredentialStoreStatusEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.HotlistEventInitializer;
-import io.mosip.authentication.common.service.websub.impl.IdAuthFraudAnalysisEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.IdChangeEventsInitializer;
-import io.mosip.authentication.common.service.websub.impl.MasterDataUpdateEventInitializer;
-import io.mosip.authentication.common.service.websub.impl.PartnerCACertEventInitializer;
-import io.mosip.authentication.common.service.websub.impl.PartnerPaymentStatusEventPublisher;
-import io.mosip.authentication.common.service.websub.impl.PartnerServiceEventsInitializer;
 import io.mosip.authentication.core.util.DemoMatcherUtil;
 import io.mosip.authentication.core.util.DemoNormalizer;
 import io.mosip.authentication.core.util.IdTypeUtil;
@@ -139,7 +129,7 @@ import io.mosip.kernel.zkcryptoservice.service.impl.ZKCryptoManagerServiceImpl;
 		io.mosip.kernel.partnercertservice.dto.AuthorizedRolesDTO.class,
 		io.mosip.kernel.signature.dto.AuthorizedRolesDTO.class,
 		EnvUtil.class, KeyBindedTokenMatcherUtil.class, HSMHealthCheck.class, PrivateKeyDecryptorHelper.class,
-		PasswordAuthServiceImpl.class, PasswordComparator.class, PartnerPaymentStatusEventPublisher.class })
+		PasswordAuthServiceImpl.class, PasswordComparator.class, PartnerPaymentStatusEventPublisher.class, PartnerBalanceWebSubPublisher.class, AuthTransactionEventPublisher.class })
 @ComponentScan(basePackages = { "io.mosip.authentication.internal.service.*", "${mosip.auth.adapter.impl.basepackage}",
 		"io.mosip.kernel.core.logger.config",
 		"io.mosip.authentication.common.service.config" }, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
