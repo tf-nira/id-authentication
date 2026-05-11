@@ -11,6 +11,8 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
 import org.hibernate.exception.JDBCConnectionException;
 import org.junit.Assert;
@@ -50,6 +52,9 @@ public class IdServiceImplTest {
 
 	@Mock
 	private AutnTxnRepository autntxnrepository;
+
+	@Mock
+	private PartnerDataRepository partnerDataRepo;
 
 	@Mock
 	private AuthTransactionEventPublisher authTransactionEventPublisher;
@@ -270,15 +275,29 @@ public class IdServiceImplTest {
 	}
 
 	@Test
-	public void saveAutnTxnTest()
-			throws IdAuthenticationBusinessException {
+	public void saveAutnTxnTest() throws IdAuthenticationBusinessException {
 
 		AutnTxn autnTxn = new AutnTxn();
-		Mockito.when(autntxnrepository.saveAndFlush(Mockito.any(AutnTxn.class))).thenReturn(autnTxn);
-		idServiceImpl.saveAutnTxn(autnTxn);
-		Mockito.verify(autntxnrepository).saveAndFlush(Mockito.any(AutnTxn.class));
+		autnTxn.setEntityId("PARTNER1");
+		PartnerData partnerData = new PartnerData();
+		partnerData.setPartnerAuthType("AUTH");
+		partnerData.setPartnerGroup("GROUP");
+		Mockito.when(autntxnrepository.saveAndFlush(Mockito.any(AutnTxn.class)))
+				.thenReturn(autnTxn);
 
-		Mockito.verify(authTransactionEventPublisher).publishEvent(Mockito.any(AutnTxn.class));
+		Mockito.when(partnerDataRepo.findByPartnerId("PARTNER1"))
+				.thenReturn(Optional.of(partnerData));
+
+		idServiceImpl.saveAutnTxn(autnTxn);
+
+		Mockito.verify(autntxnrepository)
+				.saveAndFlush(Mockito.any(AutnTxn.class));
+
+		Mockito.verify(partnerDataRepo)
+				.findByPartnerId("PARTNER1");
+
+		Mockito.verify(authTransactionEventPublisher)
+				.publishEvent(Mockito.any(AutnTxn.class));
 	}
 
 	@Test

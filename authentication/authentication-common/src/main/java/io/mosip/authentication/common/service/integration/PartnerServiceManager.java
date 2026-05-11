@@ -457,6 +457,8 @@ public class PartnerServiceManager {
 			partnerData.setCertificateData(partnerEventData.getCertificateData());
 			partnerData.setPartnerStatus(partnerEventData.getPartnerStatus());
 			partnerData.setRequiresPayment(partnerEventData.getRequiresPayment());
+			partnerData.setPartnerAuthType(partnerEventData.getPartnerAuthType());
+			partnerData.setPartnerGroup(partnerEventData.getPartnerGroup());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerData);
