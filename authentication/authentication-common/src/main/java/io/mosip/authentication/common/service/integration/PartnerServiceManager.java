@@ -153,6 +153,10 @@ public class PartnerServiceManager {
 	 * @return the partner policy response DTO
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+			beforeInvocation = true)
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
@@ -163,6 +167,15 @@ public class PartnerServiceManager {
 		PartnerPolicyResponseDTO response = new PartnerPolicyResponseDTO();
 		PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 		PartnerData partnerData = partnerMapping.getPartnerData();
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"validateAndGetPolicy",
+				"PartnerId: " + partnerData.getPartnerId()
+						+ ", PartnerStatus: " + partnerData.getPartnerStatus()
+						+ ", ApiKey: " + partner_api_key
+						+ ", RequiresPayment: " + partnerData.getRequiresPayment()
+		);
 		PolicyData policyData = partnerMapping.getPolicyData();
 		ApiKeyData apiKeyData = partnerMapping.getApiKeyData();
 		MispLicenseData mispLicenseData = mispLicOptional.get();
@@ -419,6 +432,10 @@ public class PartnerServiceManager {
 	 * @throws JsonMappingException the json mapping exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+			beforeInvocation = true)
 	public void handleApiKeyUpdated(EventModel eventModel)
 			throws JsonParseException, JsonMappingException, IOException {
 		ApiKeyData apiKeyEventData = mapper.convertValue(eventModel.getEvent().getData().get(API_KEY_DATA),
@@ -450,9 +467,27 @@ public class PartnerServiceManager {
 		    beforeInvocation = true)
 	public void updatePartnerData(EventModel eventModel) {
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"updatePartnerData",
+				"Received Partner Update Event -> PartnerId: "
+						+ partnerEventData.getPartnerId()
+						+ ", Incoming Status: "
+						+ partnerEventData.getPartnerStatus()
+		);
 		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
 		if (partnerDataOptional.isPresent()) {
 			PartnerData partnerData = partnerDataOptional.get();
+			logger.info(
+					IdAuthCommonConstants.IDA,
+					this.getClass().getSimpleName(),
+					"updatePartnerData",
+					"DB Before Update -> PartnerId: "
+							+ partnerData.getPartnerId()
+							+ ", Existing Status: "
+							+ partnerData.getPartnerStatus()
+			);
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
 			partnerData.setCertificateData(partnerEventData.getCertificateData());
 			partnerData.setPartnerStatus(partnerEventData.getPartnerStatus());
@@ -462,7 +497,25 @@ public class PartnerServiceManager {
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerData);
+			logger.info(
+					IdAuthCommonConstants.IDA,
+					this.getClass().getSimpleName(),
+					"updatePartnerData",
+					"DB After Update -> PartnerId: "
+							+ partnerData.getPartnerId()
+							+ ", Updated Status: "
+							+ partnerData.getPartnerStatus()
+			);
 		} else {
+			logger.info(
+					IdAuthCommonConstants.IDA,
+					this.getClass().getSimpleName(),
+					"updatePartnerData",
+					"Creating New Partner -> PartnerId: "
+							+ partnerEventData.getPartnerId()
+							+ ", Status: "
+							+ partnerEventData.getPartnerStatus()
+			);
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerEventData);
