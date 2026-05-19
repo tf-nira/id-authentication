@@ -25,6 +25,7 @@ on:
       - Satyam_Devlop
       - updatevid
       - impl/face_raw_image
+      - Satyam
 
 jobs:
   build-maven-authentication:
