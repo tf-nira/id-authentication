@@ -153,6 +153,10 @@ public class PartnerServiceManager {
 	 * @return the partner policy response DTO
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+			beforeInvocation = true)
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
