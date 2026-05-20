@@ -211,34 +211,32 @@ public class PartnerServiceManager {
 	 * @param mispLicOptional the misp lic optional
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
-	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
-			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-			beforeInvocation = true)
 	private void validatePartnerMappingDetails(Optional<PartnerMapping> partnerMappingDataOptional,
 											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint, 
 											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
 		if (partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
 			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
-			if (partnerMapping.getPartnerData().isDeleted()) {
+			PartnerData partnerData = partnerMapping.getPartnerData();
+			if (partnerData.isDeleted()) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorMessage());
 			}
-			if (!partnerMapping.getPartnerData().getPartnerStatus().contentEquals("ACTIVE")) {
+			if (!partnerData.getPartnerStatus().contentEquals("ACTIVE")) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
 			}
-			if (partnerMapping.getPolicyData().isDeleted()) {
+			PolicyData policyData = partnerMapping.getPolicyData();
+			if (policyData.isDeleted()) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.INVALID_POLICY_ID.getErrorCode(),
 						IdAuthenticationErrorConstants.INVALID_POLICY_ID.getErrorMessage());
 			}
-			if (!partnerMapping.getPolicyData().getPolicyStatus().contentEquals("ACTIVE")) {
+			if (!policyData.getPolicyStatus().contentEquals("ACTIVE")) {
 				throw new IdAuthenticationBusinessException(
 						IdAuthenticationErrorConstants.PARTNER_POLICY_NOT_ACTIVE.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_POLICY_NOT_ACTIVE.getErrorMessage());
 			}
-			if (partnerMapping.getPolicyData().getPolicyCommenceOn().isAfter(DateUtils.getUTCCurrentDateTime())
-					|| partnerMapping.getPolicyData().getPolicyExpiresOn()
+			if (policyData.getPolicyCommenceOn().isAfter(DateUtils.getUTCCurrentDateTime())
+					|| policyData.getPolicyExpiresOn()
 					.isBefore(DateUtils.getUTCCurrentDateTime())) {
 				throw new IdAuthenticationBusinessException(
 						IdAuthenticationErrorConstants.PARTNER_POLICY_NOT_ACTIVE.getErrorCode(),
@@ -340,10 +338,6 @@ public class PartnerServiceManager {
 		}
 	}
 
-	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
-			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-			beforeInvocation = true)
 	private boolean isCertificateMatching(String headerCertificateThumbprint, String partnerId) {
 		Optional<PartnerData> partnerData = partnerDataRepo.findByPartnerId(partnerId);
 		if (partnerData.isPresent()) {

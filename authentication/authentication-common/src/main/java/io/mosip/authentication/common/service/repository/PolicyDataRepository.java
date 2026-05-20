@@ -16,5 +16,4 @@ public interface PolicyDataRepository extends JpaRepository<PolicyData, String> 
     @Cacheable(value = POLICY_DATA, unless ="#result == null")
     @Query("select pd from PolicyData pd where pd.policyId = :policyId")
     Optional<PolicyData> findByPolicyId(@Param("policyId") String policyId);
-
 }
