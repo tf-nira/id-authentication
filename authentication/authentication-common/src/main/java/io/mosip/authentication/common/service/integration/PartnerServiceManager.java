@@ -419,10 +419,6 @@ public class PartnerServiceManager {
 	 * @throws JsonMappingException the json mapping exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
-	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
-			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-			beforeInvocation = true)
 	public void handleApiKeyUpdated(EventModel eventModel)
 			throws JsonParseException, JsonMappingException, IOException {
 		ApiKeyData apiKeyEventData = mapper.convertValue(eventModel.getEvent().getData().get(API_KEY_DATA),
