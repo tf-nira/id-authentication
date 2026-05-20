@@ -153,6 +153,10 @@ public class PartnerServiceManager {
 	 * @return the partner policy response DTO
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+			beforeInvocation = true)
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
@@ -207,6 +211,10 @@ public class PartnerServiceManager {
 	 * @param mispLicOptional the misp lic optional
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+			beforeInvocation = true)
 	private void validatePartnerMappingDetails(Optional<PartnerMapping> partnerMappingDataOptional,
 											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint, 
 											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
@@ -332,6 +340,10 @@ public class PartnerServiceManager {
 		}
 	}
 
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
+			beforeInvocation = true)
 	private boolean isCertificateMatching(String headerCertificateThumbprint, String partnerId) {
 		Optional<PartnerData> partnerData = partnerDataRepo.findByPartnerId(partnerId);
 		if (partnerData.isPresent()) {
