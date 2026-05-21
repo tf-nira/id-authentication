@@ -16,7 +16,5 @@ public interface PartnerDataRepository extends JpaRepository<PartnerData, String
     @Cacheable(value = PARTNER_DATA, unless ="#result == null")
     @Query("select pd from PartnerData pd where pd.partnerId = :partnerId")
     Optional<PartnerData> findByPartnerId(@Param("partnerId") String partnerId);
-    
-    @Query("select pd from PartnerData pd where pd.partnerId = :partnerId")
-    Optional<PartnerData> findByPartnerIdFromDB(@Param("partnerId") String partnerId);
+
 }
