@@ -87,14 +87,14 @@ public class PartnerServiceManager {
 
 	/** The Constant PARTNER_PRN. */
 	private static final String PARTNER_PRN = "prnData";
-	
+
 	/** The Constant PARTNER_BALANCE_DATA. */
 	private static final String PARTNER_BALANCE_DATA = "updatedBalanceData";
-	
+
 	/** The auth transaction status event publisher. */
 	@Autowired
 	private PartnerPaymentStatusEventPublisher partnerPaymentStatusEventPublisher;
-	
+
 	/** The Constant MISP_LICENSE_DATA. */
 	private static final String MISP_LICENSE_DATA = "mispLicenseData";
 
@@ -108,15 +108,15 @@ public class PartnerServiceManager {
 	/** The partner data repo. */
 	@Autowired
 	private PartnerDataRepository partnerDataRepo;
-	
+
 	/** The partner data repo. */
 	@Autowired
 	private PartnerCurrentBalanceRepository partnerCurrentBalanceRepo;
-	
+
 	/** The partner data repo. */
 	@Autowired
 	private PartnerBalanceHistoryRepository partnerBalanceHistoryRepo;
-	
+
 	/** The policy data repo. */
 	@Autowired
 	private PolicyDataRepository policyDataRepo;
@@ -130,7 +130,7 @@ public class PartnerServiceManager {
 	private MispLicenseDataRepository mispLicDataRepo;
 
 	@Autowired
-	private OIDCClientDataRepository oidcClientDataRepo; 
+	private OIDCClientDataRepository oidcClientDataRepo;
 
 	/** The mapper. */
 	@Autowired
@@ -158,8 +158,8 @@ public class PartnerServiceManager {
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
-									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
-									throws IdAuthenticationBusinessException {
+														 boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded)
+			throws IdAuthenticationBusinessException {
 		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		Optional<MispLicenseData> mispLicOptional = mispLicDataRepo.findByLicenseKey(misp_license_key);
 		Optional<OIDCClientData> oidcClientData = oidcClientDataRepo.findByClientId(partner_api_key);
@@ -303,7 +303,7 @@ public class PartnerServiceManager {
 				 */
 				if (!partnerCertMatched && !mispPartnerCertMatched) {
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorCode(),
-							       IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorMessage());
+							IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorMessage());
 				}
 			}
 			if (mispLicOptional.isPresent()) {
@@ -342,12 +342,12 @@ public class PartnerServiceManager {
 			try {
 				CertificateFactory certFactory = CertificateFactory.getInstance("X.509");
 				X509Certificate x509Cert = (X509Certificate) certFactory.generateCertificate(
-										new ByteArrayInputStream(partnerData.get().getCertificateData().getBytes()));
+						new ByteArrayInputStream(partnerData.get().getCertificateData().getBytes()));
 				String dbPartnerCertThumbprint = DigestUtils.sha256Hex(x509Cert.getEncoded()).toUpperCase();
 				return headerCertificateThumbprint.equals(dbPartnerCertThumbprint);
 			} catch (CertificateException e) {
-				logger.warn(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "isCertificateMatching", 
-					"Warn - Comparing header certificate with DB Certificate.");
+				logger.warn(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "isCertificateMatching",
+						"Warn - Comparing header certificate with DB Certificate.");
 			}
 		}
 		return false;
@@ -364,7 +364,7 @@ public class PartnerServiceManager {
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
 			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-		    beforeInvocation = true)
+			beforeInvocation = true)
 	public void handleApiKeyApproved(EventModel eventModel) throws JsonParseException, JsonMappingException, IOException {
 		PartnerMapping mapping = new PartnerMapping();
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA),
@@ -389,7 +389,7 @@ public class PartnerServiceManager {
 		policyDataRepo.save(policyEventData);
 		partnerMappingRepo.save(mapping);
 	}
-	
+
 
 
 	/**
@@ -454,7 +454,13 @@ public class PartnerServiceManager {
 	 */
 	public void updatePartnerData(EventModel eventModel) {
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
-		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
+		String partnerId = partnerEventData.getPartnerId();
+
+		partnerDataCacheManager.logPartnerCacheState("BEFORE_UPDATE", partnerId);
+		partnerDataCacheManager.logPartnerDataSummary("EVENT", partnerEventData);
+
+		PartnerData savedPartnerData;
+		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerId);
 		if (partnerDataOptional.isPresent()) {
 			PartnerData partnerData = partnerDataOptional.get();
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
@@ -465,13 +471,21 @@ public class PartnerServiceManager {
 			partnerData.setPartnerGroup(partnerEventData.getPartnerGroup());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-			partnerDataRepo.save(partnerData);
+			savedPartnerData = partnerDataRepo.save(partnerData);
 		} else {
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-			partnerDataRepo.save(partnerEventData);
+			savedPartnerData = partnerDataRepo.save(partnerEventData);
 		}
+
+		partnerDataCacheManager.logPartnerDataSummary("DB_AFTER_SAVE", savedPartnerData);
 		partnerDataCacheManager.evictAllPartnerCaches();
+		partnerDataCacheManager.logPartnerCacheState("AFTER_EVICT", partnerId);
+
+		partnerDataRepo.findByPartnerId(partnerId);
+		partnerDataCacheManager.logPartnerCacheState("AFTER_RELOAD", partnerId);
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "updatePartnerData",
+				"Partner update completed for partnerId=" + partnerId + ", status=" + savedPartnerData.getPartnerStatus());
 	}
 
 	/**
@@ -482,7 +496,7 @@ public class PartnerServiceManager {
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
 			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-		    beforeInvocation = true)
+			beforeInvocation = true)
 	public void updatePolicyData(EventModel eventModel) {
 		PolicyData policyEventData = mapper.convertValue(eventModel.getEvent().getData().get(POLICY_DATA), PolicyData.class);
 		Optional<PolicyData> policyDataOptional = policyDataRepo.findById(policyEventData.getPolicyId());
@@ -511,42 +525,42 @@ public class PartnerServiceManager {
 	 * @param eventModel the event model
 	 */
 	public void updatePartnerAmount(EventModel eventModel) {
-	    Map<String, Object> eventData = eventModel.getEvent().getData();
+		Map<String, Object> eventData = eventModel.getEvent().getData();
 		Double creditedAmount= (Double) eventData.get(PARTNER_AMOUNT);
-	    PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
+		PartnerCurrentBalance partnerEventData = mapper.convertValue(eventData.get(PARTNER_BALANCE_DATA), PartnerCurrentBalance.class);
 		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
 				.findById(partnerEventData.getPartnerId());
 		String partnerPrn = mapper.convertValue(eventData.get(PARTNER_PRN), String.class);
-		
-	    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_AMOUNT", 
+
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_AMOUNT",
 				"Updating Partner Current Balance & History" + partnerEventData.getPartnerId() + ", Credited Amount : " + creditedAmount);
-	    
-	    if (partnerDataOptional.isPresent()) {
-	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
-			    Double currentBalance = Optional.ofNullable(partnerData.getBalance())
+
+		if (partnerDataOptional.isPresent()) {
+			PartnerCurrentBalance partnerData = partnerDataOptional.get();
+			Double currentBalance = Optional.ofNullable(partnerData.getBalance())
 					.orElse(0.0);
-			    currentBalance += creditedAmount;
-			    partnerData.setBalance(currentBalance);
-	        partnerData.setUpdBy(getCreatedBy(eventModel));
-	        partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-			    partnerCurrentBalanceRepo.save(partnerData);
-	    } else {
-	        PartnerCurrentBalance newPartner = new PartnerCurrentBalance();
-	        newPartner.setPartnerId(partnerEventData.getPartnerId());
-	        newPartner.setBalance(creditedAmount);
-	        newPartner.setCrBy(partnerEventData.getCrBy());
-	        newPartner.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-			    partnerCurrentBalanceRepo.save(newPartner);
-	    }
-	    
-	    PartnerBalanceHistory partnerBalance = new PartnerBalanceHistory();
-	    partnerBalance.setTransactionId(partnerPrn);
-	    partnerBalance.setPartnerId(partnerEventData.getPartnerId());
-	    partnerBalance.setBalance(creditedAmount);
-	    partnerBalance.setCrBy(partnerEventData.getCrBy());
-	    partnerBalance.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-      partnerBalanceHistoryRepo.save(partnerBalance);
-      partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED, partnerEventData.getPartnerId());
+			currentBalance += creditedAmount;
+			partnerData.setBalance(currentBalance);
+			partnerData.setUpdBy(getCreatedBy(eventModel));
+			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
+			partnerCurrentBalanceRepo.save(partnerData);
+		} else {
+			PartnerCurrentBalance newPartner = new PartnerCurrentBalance();
+			newPartner.setPartnerId(partnerEventData.getPartnerId());
+			newPartner.setBalance(creditedAmount);
+			newPartner.setCrBy(partnerEventData.getCrBy());
+			newPartner.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+			partnerCurrentBalanceRepo.save(newPartner);
+		}
+
+		PartnerBalanceHistory partnerBalance = new PartnerBalanceHistory();
+		partnerBalance.setTransactionId(partnerPrn);
+		partnerBalance.setPartnerId(partnerEventData.getPartnerId());
+		partnerBalance.setBalance(creditedAmount);
+		partnerBalance.setCrBy(partnerEventData.getCrBy());
+		partnerBalance.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+		partnerBalanceHistoryRepo.save(partnerBalance);
+		partnerPaymentStatusEventPublisher.publishEvent(partnerPrn, creditedAmount, AMOUNT_CREDITED, partnerEventData.getPartnerId());
 	}
 
 	/**
@@ -557,7 +571,7 @@ public class PartnerServiceManager {
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
 			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-		    beforeInvocation = true)
+			beforeInvocation = true)
 	public void updateMispLicenseData(EventModel eventModel) {
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
 		MispLicenseData mispLicenseEventData = mapper.convertValue(eventDataMap.get(MISP_LICENSE_DATA), MispLicenseData.class);
@@ -565,7 +579,7 @@ public class PartnerServiceManager {
 		if (eventDataMap.containsKey(POLICY_DATA)) {
 			// First Add/Update the Policy details
 			updatePolicyData(eventModel);
-			// Later adding the policy id for MISP partner. 
+			// Later adding the policy id for MISP partner.
 			policyEventData = mapper.convertValue(eventDataMap.get(POLICY_DATA), PolicyData.class);
 			mispLicenseEventData.setPolicyId(policyEventData.getPolicyId());
 		}
@@ -598,7 +612,7 @@ public class PartnerServiceManager {
 		// OIDC client handling is different from API key.
 		// For API key there is no update available, API key will always be created.
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
-		
+
 		// First Add/Update the Policy details
 		PolicyData policyData = null;
 		if (eventDataMap.containsKey(POLICY_DATA)) {
@@ -606,7 +620,7 @@ public class PartnerServiceManager {
 			policyData = mapper.convertValue(eventDataMap.get(POLICY_DATA), PolicyData.class);
 		} else {
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.POLICY_DATA_NOT_FOUND_EVENT_DATA.getErrorCode(),
-				IdAuthenticationErrorConstants.POLICY_DATA_NOT_FOUND_EVENT_DATA.getErrorMessage());
+					IdAuthenticationErrorConstants.POLICY_DATA_NOT_FOUND_EVENT_DATA.getErrorMessage());
 		}
 		// Second Add/Update the Partner details
 		PartnerData partnerData = null;
@@ -638,8 +652,8 @@ public class PartnerServiceManager {
 		String partnerId = partnerData.getPartnerId();
 		String policyId = policyData.getPolicyId();
 		String oidcClientId = oidcClientEventData.getClientId();
-		
-		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT", 
+
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT",
 				"Adding OIDC client mapping. Partner Id: " + partnerId + ", Policy Id: " + policyId + ", OIDC Clinet Id: " + oidcClientId);
 		Optional<PartnerMapping> partnerMappingOpt = partnerMappingRepo.findByPartnerIdAndApiKeyIdAndPolicyId(partnerId, oidcClientId, policyId);
 		if (!partnerMappingOpt.isPresent()) {
@@ -662,10 +676,10 @@ public class PartnerServiceManager {
 	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
 			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
 			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-		    beforeInvocation = true)
+			beforeInvocation = true)
 	public void updateOIDCClientData(EventModel eventModel) throws IdAuthenticationBusinessException {
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
-		
+
 		// Policy Data will not be allowed to update after creation of OIDC Client.
 		// Second Update the Partner details
 		String partnerId = "";
@@ -673,7 +687,7 @@ public class PartnerServiceManager {
 			updatePartnerData(eventModel);
 			PartnerData partnerData = mapper.convertValue(eventDataMap.get(PARTNER_DATA), PartnerData.class);
 			partnerId = partnerData.getPartnerId();
-		} 
+		}
 
 		if (!eventDataMap.containsKey(OIDC_CLIENT_DATA)) {
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.OIDC_CLIENT_DATA_NOT_FOUND_EVENT_DATA.getErrorCode(),
@@ -687,7 +701,7 @@ public class PartnerServiceManager {
 			String dbPartnerId = oidcClientData.getPartnerId();
 			if (partnerId.length() != 0 && !partnerId.equals(dbPartnerId)) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.OIDC_CLIENT_DATA_INVALID_PARTNER.getErrorCode(),
-					IdAuthenticationErrorConstants.OIDC_CLIENT_DATA_INVALID_PARTNER.getErrorMessage());
+						IdAuthenticationErrorConstants.OIDC_CLIENT_DATA_INVALID_PARTNER.getErrorMessage());
 			}
 			oidcClientData.setUpdatedBy(getCreatedBy(eventModel));
 			oidcClientData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
@@ -697,29 +711,29 @@ public class PartnerServiceManager {
 			oidcClientData.setAuthContextRefs(oidcClientEventData.getAuthContextRefs());
 			oidcClientData.setClientAuthMethods(oidcClientEventData.getClientAuthMethods());
 			oidcClientDataRepo.save(oidcClientData);
-		} 
+		}
 
-		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT", 
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT",
 				"Updated OIDC client. OIDC Clinet Id: " + oidcClientEventData.getClientId());
 	}
 
 	public void addPartnerPaymentTransaction(String partnerId, Double amount)
 			throws IdAuthenticationBusinessException {
 		try {
-		PartnerPaymentTransactions partnerPaymentTransactions = new PartnerPaymentTransactions();
-		partnerPaymentTransactions.setTransactionId(UUID.randomUUID().toString());
-		partnerPaymentTransactions.setPartnerId(partnerId);
-		partnerPaymentTransactions.setLogDTimes(LocalDateTime.now());
-		partnerPaymentTransactions.setAmount(amount);
-		partnerPaymentTransactions.setIsProcessed(false);
-		partnerPaymentTransactionsRepository.save(partnerPaymentTransactions);
-		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_PAYMENT",
-				"Adding new partner payment transaction" + partnerId + ",  Amount : " + amount);
-	} catch (Exception e) {
-		throw new IdAuthenticationBusinessException(
-				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorCode(),
-				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorMessage());
-	}
+			PartnerPaymentTransactions partnerPaymentTransactions = new PartnerPaymentTransactions();
+			partnerPaymentTransactions.setTransactionId(UUID.randomUUID().toString());
+			partnerPaymentTransactions.setPartnerId(partnerId);
+			partnerPaymentTransactions.setLogDTimes(LocalDateTime.now());
+			partnerPaymentTransactions.setAmount(amount);
+			partnerPaymentTransactions.setIsProcessed(false);
+			partnerPaymentTransactionsRepository.save(partnerPaymentTransactions);
+			logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "PARTNER_PAYMENT",
+					"Adding new partner payment transaction" + partnerId + ",  Amount : " + amount);
+		} catch (Exception e) {
+			throw new IdAuthenticationBusinessException(
+					IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorCode(),
+					IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorMessage());
+		}
 
 	}
 
@@ -727,8 +741,8 @@ public class PartnerServiceManager {
 		Optional<PartnerCurrentBalance> partnerDataOptional = partnerCurrentBalanceRepo
 				.findById(partnerId);
 		PartnerCurrentBalanceDTO partnerCurrentBalanceDTO = null;
-	    if (partnerDataOptional.isPresent()) {
-	        PartnerCurrentBalance partnerData = partnerDataOptional.get();
+		if (partnerDataOptional.isPresent()) {
+			PartnerCurrentBalance partnerData = partnerDataOptional.get();
 			partnerCurrentBalanceDTO = new PartnerCurrentBalanceDTO();
 			partnerCurrentBalanceDTO.setPartnerId(partnerId);
 			partnerCurrentBalanceDTO.setBalance(partnerData.getBalance());
