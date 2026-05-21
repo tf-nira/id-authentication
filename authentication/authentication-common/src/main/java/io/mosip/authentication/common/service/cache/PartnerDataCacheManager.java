@@ -45,8 +45,5 @@ public class PartnerDataCacheManager {
 				cache.clear();
 			}
 		}
-		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "evictAllPartnerCaches",
-				"Evicted partner caches: " + String.join(", ", PARTNER_CACHE_NAMES));
 	}
-
 }
