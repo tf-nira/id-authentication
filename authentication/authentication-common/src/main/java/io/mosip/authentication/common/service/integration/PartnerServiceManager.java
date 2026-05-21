@@ -212,31 +212,29 @@ public class PartnerServiceManager {
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
 	private void validatePartnerMappingDetails(Optional<PartnerMapping> partnerMappingDataOptional,
-											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint, 
+											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint,
 											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
 		if (partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
 			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
-			PartnerData partnerData = partnerMapping.getPartnerData();
-			if (partnerData.isDeleted()) {
+			if (partnerMapping.getPartnerData().isDeleted()) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorMessage());
 			}
-			if (!partnerData.getPartnerStatus().contentEquals("ACTIVE")) {
+			if (!partnerMapping.getPartnerData().getPartnerStatus().contentEquals("ACTIVE")) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
 			}
-			PolicyData policyData = partnerMapping.getPolicyData();
-			if (policyData.isDeleted()) {
+			if (partnerMapping.getPolicyData().isDeleted()) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.INVALID_POLICY_ID.getErrorCode(),
 						IdAuthenticationErrorConstants.INVALID_POLICY_ID.getErrorMessage());
 			}
-			if (!policyData.getPolicyStatus().contentEquals("ACTIVE")) {
+			if (!partnerMapping.getPolicyData().getPolicyStatus().contentEquals("ACTIVE")) {
 				throw new IdAuthenticationBusinessException(
 						IdAuthenticationErrorConstants.PARTNER_POLICY_NOT_ACTIVE.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_POLICY_NOT_ACTIVE.getErrorMessage());
 			}
-			if (policyData.getPolicyCommenceOn().isAfter(DateUtils.getUTCCurrentDateTime())
-					|| policyData.getPolicyExpiresOn()
+			if (partnerMapping.getPolicyData().getPolicyCommenceOn().isAfter(DateUtils.getUTCCurrentDateTime())
+					|| partnerMapping.getPolicyData().getPolicyExpiresOn()
 					.isBefore(DateUtils.getUTCCurrentDateTime())) {
 				throw new IdAuthenticationBusinessException(
 						IdAuthenticationErrorConstants.PARTNER_POLICY_NOT_ACTIVE.getErrorCode(),
@@ -259,11 +257,11 @@ public class PartnerServiceManager {
 							IdAuthenticationErrorConstants.PARTNER_API_EXPIRED.getErrorMessage());
 				}
 			} else {
-				logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_client_validation", 
-					"Checking for OIDC client exists or not");
+				logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_client_validation",
+						"Checking for OIDC client exists or not");
 				if (!oidcClientData.isPresent()){
-					logger.error(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_client_validation", 
-						"OIDC client mapping not found in DB: " + partnerMapping.getApiKeyData());
+					logger.error(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_client_validation",
+							"OIDC client mapping not found in DB: " + partnerMapping.getApiKeyData());
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.OIDC_CLIENT_NOT_FOUND.getErrorCode(),
 							IdAuthenticationErrorConstants.OIDC_CLIENT_NOT_FOUND.getErrorMessage());
 				}
@@ -278,11 +276,11 @@ public class PartnerServiceManager {
 			}
 			if (certValidationNeeded && Objects.nonNull(headerCertificateThumbprint)) {
 
-				logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "signature-header-certificate", 
-					"Header Certificate: " + headerCertificateThumbprint);
+				logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "signature-header-certificate",
+						"Header Certificate: " + headerCertificateThumbprint);
 				boolean partnerCertMatched = isCertificateMatching(headerCertificateThumbprint, partnerMapping.getPartnerId());
 				// Setting default value to true because mispPartner cert matching will be done after partner certificate match.
-				// if partner certificate matches, not required to match misp certificate/idp certificate 
+				// if partner certificate matches, not required to match misp certificate/idp certificate
 				boolean mispPartnerCertMatched = true;
 				// check signature header certificate is matching with IdP service partner certificate before throwing error.
 				if (!partnerCertMatched) {
@@ -290,7 +288,7 @@ public class PartnerServiceManager {
 						MispLicenseData mispLicenseData = mispLicOptional.get();
 						mispPartnerCertMatched = isCertificateMatching(headerCertificateThumbprint, mispLicenseData.getMispId());
 					} else {
-						// misp not present. throw partner cert not matched exception because first matching partner certificate and  
+						// misp not present. throw partner cert not matched exception because first matching partner certificate and
 						// then validating misp details/idp service.
 						// misp partner not found so setting mispPartnerCertMatched value to false.
 						mispPartnerCertMatched = false;
@@ -298,14 +296,14 @@ public class PartnerServiceManager {
 				}
 				/*
 				 Test Scenario's: (values for partnerCertMatched & mispPartnerCertMatched)
-				 1 - partner certificate matches -> true & true => below if condition will not be satisfied. No Exception 
+				 1 - partner certificate matches -> true & true => below if condition will not be satisfied. No Exception
 				 2 - partner certificate not matched and misp not found -> false & false => below if condition will be satisfied, throws exception
 				 3 - partner certificate not matched and misp cert found and matched -> false & true => below if condition will not be satisfied. No Exception
 				 4 - partner certificate not matched and misp cert found and not matched -> false & false => below if condition will be satisfied, throws exception
 				 */
 				if (!partnerCertMatched && !mispPartnerCertMatched) {
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorCode(),
-										IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorMessage());
+							IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorMessage());
 				}
 			}
 			if (mispLicOptional.isPresent()) {
