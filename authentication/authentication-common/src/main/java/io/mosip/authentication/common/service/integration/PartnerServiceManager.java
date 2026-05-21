@@ -488,8 +488,9 @@ public class PartnerServiceManager {
 
 			partnerDataRepo.save(partnerEventData);
 		}
-
-		evictPartnerCaches();
+		if (Objects.nonNull(cacheManager)) {
+			evictPartnerCaches();
+		}
 	}
 
 	private void evictPartnerCaches() {
