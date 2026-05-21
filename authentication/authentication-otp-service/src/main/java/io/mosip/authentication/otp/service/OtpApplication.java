@@ -12,8 +12,6 @@ import io.mosip.authentication.common.manager.IdAuthFraudAnalysisEventManager;
 import io.mosip.authentication.common.service.builder.MatchInputBuilder;
 import io.mosip.authentication.common.service.cache.MasterDataCache;
 import io.mosip.authentication.common.service.cache.MasterDataCacheInitializer;
-import io.mosip.authentication.common.service.cache.PartnerDataCacheManager;
-import io.mosip.authentication.common.service.controller.PartnerCacheEvictController;
 import io.mosip.authentication.common.service.config.IDAMappingConfig;
 import io.mosip.authentication.common.service.config.LangComparatorConfig;
 import io.mosip.authentication.common.service.config.OpenApiProperties;
@@ -109,8 +107,7 @@ import io.mosip.kernel.zkcryptoservice.service.impl.ZKCryptoManagerServiceImpl;
 		IdAuthWebSubInitializer.class, AuthAnonymousEventPublisher.class, EnvUtil.class, KeyBindedTokenMatcherUtil.class, 
 		HSMHealthCheck.class, PrivateKeyDecryptorHelper.class,
 		PasswordAuthServiceImpl.class, PasswordComparator.class, OndemandTemplateEventPublisher.class,
-		PartnerPaymentStatusEventPublisher.class, PartnerBalanceWebSubPublisher.class, AuthTransactionEventPublisher.class,
-		PartnerDataCacheManager.class, PartnerCacheEvictController.class })
+		PartnerPaymentStatusEventPublisher.class, PartnerBalanceWebSubPublisher.class, AuthTransactionEventPublisher.class })
 @ComponentScan(basePackages = { "io.mosip.authentication.otp.service.*",
 		"io.mosip.kernel.core.logger.config", "${mosip.auth.adapter.impl.basepackage}" }, excludeFilters = @ComponentScan.Filter(type = FilterType.REGEX, pattern = {
 				"io.mosip.idrepository.core.config.IdRepoDataSourceConfig.*" }))

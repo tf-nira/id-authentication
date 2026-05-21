@@ -15,6 +15,7 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -32,7 +33,6 @@ import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 import io.mosip.authentication.common.service.entity.PolicyData;
 import io.mosip.authentication.common.service.repository.ApiKeyDataRepository;
 import io.mosip.authentication.common.service.repository.MispLicenseDataRepository;
-import io.mosip.authentication.common.service.cache.PartnerDataCacheManager;
 import io.mosip.authentication.common.service.repository.OIDCClientDataRepository;
 import io.mosip.authentication.common.service.repository.PartnerBalanceHistoryRepository;
 import io.mosip.authentication.common.service.repository.PartnerCurrentBalanceRepository;
@@ -141,9 +141,6 @@ public class PartnerServiceManager {
 
 	@Autowired
 	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
-
-	@Autowired(required = false)
-	private PartnerDataCacheManager partnerDataCacheManager;
 
 
 	/**
@@ -360,6 +357,10 @@ public class PartnerServiceManager {
 	 * @throws JsonMappingException the json mapping exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void handleApiKeyApproved(EventModel eventModel) throws JsonParseException, JsonMappingException, IOException {
 		PartnerMapping mapping = new PartnerMapping();
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA),
@@ -383,7 +384,6 @@ public class PartnerServiceManager {
 		apiKeyRepo.save(apiKeyEventData);
 		policyDataRepo.save(policyEventData);
 		partnerMappingRepo.save(mapping);
-		evictPartnerCaches();
 	}
 	
 
@@ -419,6 +419,10 @@ public class PartnerServiceManager {
 	 * @throws JsonMappingException the json mapping exception
 	 * @throws IOException Signals that an I/O exception has occurred.
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void handleApiKeyUpdated(EventModel eventModel)
 			throws JsonParseException, JsonMappingException, IOException {
 		ApiKeyData apiKeyEventData = mapper.convertValue(eventModel.getEvent().getData().get(API_KEY_DATA),
@@ -437,7 +441,6 @@ public class PartnerServiceManager {
 			apiKeyEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			apiKeyRepo.save(apiKeyEventData);
 		}
-		evictPartnerCaches();
 	}
 
 	/**
@@ -445,6 +448,10 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void updatePartnerData(EventModel eventModel) {
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
 		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
@@ -464,7 +471,6 @@ public class PartnerServiceManager {
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerEventData);
 		}
-		evictPartnerCaches();
 	}
 
 	/**
@@ -472,6 +478,10 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void updatePolicyData(EventModel eventModel) {
 		PolicyData policyEventData = mapper.convertValue(eventModel.getEvent().getData().get(POLICY_DATA), PolicyData.class);
 		Optional<PolicyData> policyDataOptional = policyDataRepo.findById(policyEventData.getPolicyId());
@@ -492,7 +502,6 @@ public class PartnerServiceManager {
 			policyEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			policyDataRepo.save(policyEventData);
 		}
-		evictPartnerCaches();
 	}
 
 	/**
@@ -544,6 +553,10 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void updateMispLicenseData(EventModel eventModel) {
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
 		MispLicenseData mispLicenseEventData = mapper.convertValue(eventDataMap.get(MISP_LICENSE_DATA), MispLicenseData.class);
@@ -573,7 +586,6 @@ public class PartnerServiceManager {
 			mispLicenseEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			mispLicDataRepo.save(mispLicenseEventData);
 		}
-		evictPartnerCaches();
 	}
 
 	/**
@@ -581,6 +593,10 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void createOIDCClientData(EventModel eventModel) throws IdAuthenticationBusinessException {
 		// OIDC client handling is different from API key.
 		// For API key there is no update available, API key will always be created.
@@ -646,6 +662,10 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
+	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
+			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
+			allEntries = true)
 	public void updateOIDCClientData(EventModel eventModel) throws IdAuthenticationBusinessException {
 		Map<String, Object> eventDataMap = eventModel.getEvent().getData();
 		
@@ -681,7 +701,6 @@ public class PartnerServiceManager {
 			oidcClientData.setClientAuthMethods(oidcClientEventData.getClientAuthMethods());
 			oidcClientDataRepo.save(oidcClientData);
 		}
-		evictPartnerCaches();
 
 		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT", 
 				"Updated OIDC client. OIDC Clinet Id: " + oidcClientEventData.getClientId());
@@ -705,12 +724,6 @@ public class PartnerServiceManager {
 				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorMessage());
 	}
 
-	}
-
-	private void evictPartnerCaches() {
-		if (partnerDataCacheManager != null) {
-			partnerDataCacheManager.evictAllPartnerCaches();
-		}
 	}
 
 	public PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId) {
