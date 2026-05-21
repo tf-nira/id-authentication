@@ -15,6 +15,7 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 
@@ -141,6 +142,9 @@ public class PartnerServiceManager {
 
 	@Autowired
 	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
+
+	@Autowired
+	private CacheManager cacheManager;
 
 
 	/**
@@ -453,10 +457,19 @@ public class PartnerServiceManager {
 			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA },
 			allEntries = true)
 	public void updatePartnerData(EventModel eventModel) {
-		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
-		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
+
+		PartnerData partnerEventData =
+				mapper.convertValue(
+						eventModel.getEvent().getData().get(PARTNER_DATA),
+						PartnerData.class);
+
+		Optional<PartnerData> partnerDataOptional =
+				partnerDataRepo.findById(partnerEventData.getPartnerId());
+
 		if (partnerDataOptional.isPresent()) {
+
 			PartnerData partnerData = partnerDataOptional.get();
+
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
 			partnerData.setCertificateData(partnerEventData.getCertificateData());
 			partnerData.setPartnerStatus(partnerEventData.getPartnerStatus());
@@ -465,12 +478,43 @@ public class PartnerServiceManager {
 			partnerData.setPartnerGroup(partnerEventData.getPartnerGroup());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
+
 			partnerDataRepo.save(partnerData);
+
 		} else {
+
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+
 			partnerDataRepo.save(partnerEventData);
 		}
+
+		evictPartnerCaches();
+	}
+
+	private void evictPartnerCaches() {
+
+		String[] caches = {
+				IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+				IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA,
+				IdAuthCommonConstants.POLICY_DATA,
+				IdAuthCommonConstants.PARTNER_DATA,
+				IdAuthCommonConstants.MISP_LIC_DATA,
+				IdAuthCommonConstants.OIDC_CLIENT_DATA
+		};
+
+		for (String cacheName : caches) {
+			if (cacheManager.getCache(cacheName) != null) {
+				Objects.requireNonNull(cacheManager.getCache(cacheName)).clear();
+			}
+		}
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"CACHE_EVICT",
+				"Partner caches evicted successfully"
+		);
 	}
 
 	/**
