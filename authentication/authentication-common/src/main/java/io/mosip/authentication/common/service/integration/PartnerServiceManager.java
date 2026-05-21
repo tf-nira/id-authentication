@@ -142,7 +142,7 @@ public class PartnerServiceManager {
 	@Autowired
 	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
 
-	@Autowired
+	@Autowired(required = false)
 	private PartnerDataCacheManager partnerDataCacheManager;
 
 
@@ -383,7 +383,7 @@ public class PartnerServiceManager {
 		apiKeyRepo.save(apiKeyEventData);
 		policyDataRepo.save(policyEventData);
 		partnerMappingRepo.save(mapping);
-		partnerDataCacheManager.evictAllPartnerCaches();
+		evictPartnerCaches();
 	}
 	
 
@@ -437,7 +437,7 @@ public class PartnerServiceManager {
 			apiKeyEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			apiKeyRepo.save(apiKeyEventData);
 		}
-		partnerDataCacheManager.evictAllPartnerCaches();
+		evictPartnerCaches();
 	}
 
 	/**
@@ -464,7 +464,7 @@ public class PartnerServiceManager {
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerEventData);
 		}
-		partnerDataCacheManager.evictAllPartnerCaches();
+		evictPartnerCaches();
 	}
 
 	/**
@@ -492,7 +492,7 @@ public class PartnerServiceManager {
 			policyEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			policyDataRepo.save(policyEventData);
 		}
-		partnerDataCacheManager.evictAllPartnerCaches();
+		evictPartnerCaches();
 	}
 
 	/**
@@ -573,7 +573,7 @@ public class PartnerServiceManager {
 			mispLicenseEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 			mispLicDataRepo.save(mispLicenseEventData);
 		}
-		partnerDataCacheManager.evictAllPartnerCaches();
+		evictPartnerCaches();
 	}
 
 	/**
@@ -681,7 +681,7 @@ public class PartnerServiceManager {
 			oidcClientData.setClientAuthMethods(oidcClientEventData.getClientAuthMethods());
 			oidcClientDataRepo.save(oidcClientData);
 		}
-		partnerDataCacheManager.evictAllPartnerCaches();
+		evictPartnerCaches();
 
 		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "OIDC_CLIENT_EVENT", 
 				"Updated OIDC client. OIDC Clinet Id: " + oidcClientEventData.getClientId());
@@ -705,6 +705,12 @@ public class PartnerServiceManager {
 				IdAuthenticationErrorConstants.DATABASE_ERROR.getErrorMessage());
 	}
 
+	}
+
+	private void evictPartnerCaches() {
+		if (partnerDataCacheManager != null) {
+			partnerDataCacheManager.evictAllPartnerCaches();
+		}
 	}
 
 	public PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId) {

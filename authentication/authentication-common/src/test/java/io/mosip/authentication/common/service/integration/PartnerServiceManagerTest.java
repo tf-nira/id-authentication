@@ -26,6 +26,7 @@ import org.springframework.web.context.WebApplicationContext;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.mosip.authentication.common.service.cache.PartnerDataCacheManager;
 import io.mosip.authentication.common.service.entity.ApiKeyData;
 import io.mosip.authentication.common.service.entity.MispLicenseData;
 import io.mosip.authentication.common.service.entity.PartnerData;
@@ -85,7 +86,10 @@ public class PartnerServiceManagerTest {
 	private IdAuthSecurityManager securityManager;
 
 	@Mock
-	private OIDCClientDataRepository oidcClientDataRepo; 
+	private OIDCClientDataRepository oidcClientDataRepo;
+
+	@Mock
+	private PartnerDataCacheManager partnerDataCacheManager;
 
 	@InjectMocks
 	private PartnerServiceManager partnerServiceManager;
