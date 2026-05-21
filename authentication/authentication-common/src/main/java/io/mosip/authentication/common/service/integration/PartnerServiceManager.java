@@ -303,7 +303,7 @@ public class PartnerServiceManager {
 				 */
 				if (!partnerCertMatched && !mispPartnerCertMatched) {
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorCode(),
-							IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorMessage());
+							       IdAuthenticationErrorConstants.PARTNER_CERTIFICATE_NOT_MATCHED.getErrorMessage());
 				}
 			}
 			if (mispLicOptional.isPresent()) {
@@ -454,13 +454,7 @@ public class PartnerServiceManager {
 	 */
 	public void updatePartnerData(EventModel eventModel) {
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
-		String partnerId = partnerEventData.getPartnerId();
-
-		partnerDataCacheManager.logPartnerCacheState("BEFORE_UPDATE", partnerId);
-		partnerDataCacheManager.logPartnerDataSummary("EVENT", partnerEventData);
-
-		PartnerData savedPartnerData;
-		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerId);
+		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
 		if (partnerDataOptional.isPresent()) {
 			PartnerData partnerData = partnerDataOptional.get();
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
@@ -471,21 +465,13 @@ public class PartnerServiceManager {
 			partnerData.setPartnerGroup(partnerEventData.getPartnerGroup());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-			savedPartnerData = partnerDataRepo.save(partnerData);
+			partnerDataRepo.save(partnerData);
 		} else {
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-			savedPartnerData = partnerDataRepo.save(partnerEventData);
+			partnerDataRepo.save(partnerEventData);
 		}
-
-		partnerDataCacheManager.logPartnerDataSummary("DB_AFTER_SAVE", savedPartnerData);
 		partnerDataCacheManager.evictAllPartnerCaches();
-		partnerDataCacheManager.logPartnerCacheState("AFTER_EVICT", partnerId);
-
-		partnerDataRepo.findByPartnerId(partnerId);
-		partnerDataCacheManager.logPartnerCacheState("AFTER_RELOAD", partnerId);
-		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "updatePartnerData",
-				"Partner update completed for partnerId=" + partnerId + ", status=" + savedPartnerData.getPartnerStatus());
 	}
 
 	/**
