@@ -31,6 +31,7 @@ import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.entity.PartnerMapping;
 import io.mosip.authentication.common.service.entity.PartnerPaymentTransactions;
 import io.mosip.authentication.common.service.entity.PolicyData;
+import io.mosip.authentication.common.service.cache.PartnerDataCacheManager;
 import io.mosip.authentication.common.service.repository.ApiKeyDataRepository;
 import io.mosip.authentication.common.service.repository.MispLicenseDataRepository;
 import io.mosip.authentication.common.service.repository.OIDCClientDataRepository;
@@ -142,6 +143,9 @@ public class PartnerServiceManager {
 	@Autowired
 	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
 
+	@Autowired
+	private PartnerDataCacheManager partnerDataCacheManager;
+
 
 	/**
 	 * Validate and get policy.
@@ -153,10 +157,6 @@ public class PartnerServiceManager {
 	 * @return the partner policy response DTO
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
-	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
-			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-			beforeInvocation = true)
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
@@ -454,13 +454,15 @@ public class PartnerServiceManager {
 	 *
 	 * @param eventModel the event model
 	 */
-	@CacheEvict(value = { IdAuthCommonConstants.PARTNER_API_KEY_DATA,
-			IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA, IdAuthCommonConstants.POLICY_DATA,
-			IdAuthCommonConstants.PARTNER_DATA, IdAuthCommonConstants.MISP_LIC_DATA, IdAuthCommonConstants.OIDC_CLIENT_DATA }, allEntries = true,
-		    beforeInvocation = true)
 	public void updatePartnerData(EventModel eventModel) {
 		PartnerData partnerEventData = mapper.convertValue(eventModel.getEvent().getData().get(PARTNER_DATA), PartnerData.class);
-		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
+		String partnerId = partnerEventData.getPartnerId();
+
+		partnerDataCacheManager.logPartnerCacheState("BEFORE_UPDATE", partnerId);
+		partnerDataCacheManager.logPartnerDataSummary("EVENT", partnerEventData);
+
+		PartnerData savedPartnerData;
+		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerId);
 		if (partnerDataOptional.isPresent()) {
 			PartnerData partnerData = partnerDataOptional.get();
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
@@ -471,12 +473,21 @@ public class PartnerServiceManager {
 			partnerData.setPartnerGroup(partnerEventData.getPartnerGroup());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
-			partnerDataRepo.save(partnerData);
+			savedPartnerData = partnerDataRepo.save(partnerData);
 		} else {
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
-			partnerDataRepo.save(partnerEventData);
+			savedPartnerData = partnerDataRepo.save(partnerEventData);
 		}
+
+		partnerDataCacheManager.logPartnerDataSummary("DB_AFTER_SAVE", savedPartnerData);
+		partnerDataCacheManager.evictAllPartnerCaches();
+		partnerDataCacheManager.logPartnerCacheState("AFTER_EVICT", partnerId);
+
+		partnerDataRepo.findByPartnerId(partnerId);
+		partnerDataCacheManager.logPartnerCacheState("AFTER_RELOAD", partnerId);
+		logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(), "updatePartnerData",
+				"Partner update completed for partnerId=" + partnerId + ", status=" + savedPartnerData.getPartnerStatus());
 	}
 
 	/**
