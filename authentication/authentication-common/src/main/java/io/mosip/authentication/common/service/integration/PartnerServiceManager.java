@@ -466,6 +466,16 @@ public class PartnerServiceManager {
 		Optional<PartnerData> partnerDataOptional =
 				partnerDataRepo.findById(partnerEventData.getPartnerId());
 
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"updatePartnerData",
+				"Updating Partner Status -> PartnerId: "
+						+ partnerEventData.getPartnerId()
+						+ ", Incoming Status: "
+						+ partnerEventData.getPartnerStatus()
+		);
+
 		if (partnerDataOptional.isPresent()) {
 
 			PartnerData partnerData = partnerDataOptional.get();
@@ -491,6 +501,17 @@ public class PartnerServiceManager {
 		if (Objects.nonNull(cacheManager)) {
 			evictPartnerCaches();
 		}
+		PartnerData partnerData = partnerDataOptional.get();
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"updatePartnerData",
+				"Partner Updated Successfully -> PartnerId: "
+						+ partnerData.getPartnerId()
+						+ ", Updated Status: "
+						+ partnerData.getPartnerStatus()
+		);
 	}
 
 	private void evictPartnerCaches() {
