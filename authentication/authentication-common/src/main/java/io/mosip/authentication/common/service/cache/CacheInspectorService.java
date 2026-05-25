@@ -21,9 +21,7 @@ public class CacheInspectorService {
                 // For ConcurrentMapCache (Default)
                 if (cache instanceof ConcurrentMapCache) {
                     Map<Object, Object> nativeCache = ((ConcurrentMapCache) cache).getNativeCache();
-                    nativeCache.forEach((key, value) -> {
-                        System.out.println("  Key: " + key + " | Value: " + value);
-                    });
+                    nativeCache.forEach((key, value) -> System.out.println("  Key: " + key + " | Value: " + value));
                 } else {
                     // For other providers (Redis, Caffeine), you may need to
                     // cast to their specific native implementations.

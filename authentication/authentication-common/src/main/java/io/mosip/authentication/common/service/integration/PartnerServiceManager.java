@@ -482,7 +482,7 @@ public class PartnerServiceManager {
 						+ ", Incoming Status: "
 						+ partnerData1.getPartnerStatus()
 		);
-		};
+		}
 
 		if (partnerDataOptional.isPresent()) {
 
