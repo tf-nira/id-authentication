@@ -3,14 +3,7 @@ package io.mosip.authentication.common.service.entity;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-import javax.persistence.CascadeType;
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.IdClass;
-import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.annotations.NotFound;
@@ -61,15 +54,15 @@ public class PartnerMapping {
 	@Column(name = "del_dtimes")
 	private LocalDateTime delDTimes;
 
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "partner_id", referencedColumnName = "partner_id", insertable = false, updatable = false)
 	private PartnerData partnerData;
 
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "policy_id", referencedColumnName = "policy_id", insertable = false, updatable = false)
 	private PolicyData policyData;
 
-	@OneToOne(cascade = CascadeType.ALL)
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinColumn(name = "api_key_id", referencedColumnName = "api_key_id", insertable = false, updatable = false)
 	@NotFound(action = NotFoundAction.IGNORE)
 	private ApiKeyData apiKeyData;
