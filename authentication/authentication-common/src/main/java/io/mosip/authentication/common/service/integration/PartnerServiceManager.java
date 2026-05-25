@@ -466,14 +466,16 @@ public class PartnerServiceManager {
 		Optional<PartnerData> partnerDataOptional =
 				partnerDataRepo.findById(partnerEventData.getPartnerId());
 
+		PartnerData partnerData1 = partnerDataOptional.get();
+
 		logger.info(
 				IdAuthCommonConstants.IDA,
 				this.getClass().getSimpleName(),
 				"updatePartnerData",
 				"Updating Partner Status -> PartnerId: "
-						+ partnerEventData.getPartnerId()
+						+ partnerData1.getPartnerId()
 						+ ", Incoming Status: "
-						+ partnerEventData.getPartnerStatus()
+						+ partnerData1.getPartnerStatus()
 		);
 
 		if (partnerDataOptional.isPresent()) {
