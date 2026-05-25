@@ -145,6 +145,7 @@ public class PartnerServiceManager {
 
 	@Autowired
 	private CacheManager cacheManager;
+	private Object partnerDataOptional;
 
 
 	/**
@@ -160,10 +161,11 @@ public class PartnerServiceManager {
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
+		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerId);
 		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		Optional<MispLicenseData> mispLicOptional = mispLicDataRepo.findByLicenseKey(misp_license_key);
 		Optional<OIDCClientData> oidcClientData = oidcClientDataRepo.findByClientId(partner_api_key);
-		validatePartnerMappingDetails(partnerMappingDataOptional, mispLicOptional, headerCertificateThumbprint, certValidationNeeded, oidcClientData);
+		validatePartnerMappingDetails(partnerDataOptional, partnerMappingDataOptional, mispLicOptional, headerCertificateThumbprint, certValidationNeeded, oidcClientData);
 		PartnerPolicyResponseDTO response = new PartnerPolicyResponseDTO();
 		PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 		PartnerData partnerData = partnerMapping.getPartnerData();
@@ -211,16 +213,17 @@ public class PartnerServiceManager {
 	 * @param mispLicOptional the misp lic optional
 	 * @throws IdAuthenticationBusinessException the id authentication business exception
 	 */
-	private void validatePartnerMappingDetails(Optional<PartnerMapping> partnerMappingDataOptional,
+	private void validatePartnerMappingDetails(Optional<PartnerData> partnerDataOptional,Optional<PartnerMapping> partnerMappingDataOptional,
 											   Optional<MispLicenseData> mispLicOptional, String headerCertificateThumbprint, 
 											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
-		if (partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
+		if (partnerDataOptional.isPresent() && partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
+			PartnerData partnerData = partnerDataOptional.get();
 			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
 			if (partnerMapping.getPartnerData().isDeleted()) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorMessage());
 			}
-			if (!partnerMapping.getPartnerData().getPartnerStatus().contentEquals("ACTIVE")) {
+			if (!partnerData.getPartnerStatus().contentEquals("ACTIVE")) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
 			}
