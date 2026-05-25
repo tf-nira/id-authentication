@@ -13,7 +13,6 @@ import java.util.UUID;
 
 import javax.transaction.Transactional;
 
-import io.mosip.authentication.common.service.cache.CacheInspectorService;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
@@ -147,8 +146,6 @@ public class PartnerServiceManager {
 	@Autowired
 	private CacheManager cacheManager;
 
-	@Autowired
-	private CacheInspectorService cacheInspectorService;
 
 
 	/**
@@ -535,7 +532,6 @@ public class PartnerServiceManager {
 					"CACHE_EVICT",
 					"Printing cache contents after eviction"
 			);
-			cacheInspectorService.printAllCacheData();
 		}
 	}
 
