@@ -15,8 +15,10 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.concurrent.ConcurrentMapCache;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -533,6 +535,7 @@ public class PartnerServiceManager {
 					"Printing cache contents after eviction"
 			);
 		}
+		printAllCacheData();
 	}
 
 	private void evictPartnerCaches() {
@@ -557,6 +560,87 @@ public class PartnerServiceManager {
 				this.getClass().getSimpleName(),
 				"CACHE_EVICT",
 				"Partner caches evicted successfully"
+		);
+	}
+
+	private void printAllCacheData() {
+
+		if (cacheManager == null) {
+
+			logger.warn(
+					IdAuthCommonConstants.IDA,
+					this.getClass().getSimpleName(),
+					"CACHE_DUMP",
+					"CacheManager not available"
+			);
+
+			return;
+		}
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"CACHE_DUMP",
+				"Starting Cache Dump"
+		);
+
+		for (String cacheName : cacheManager.getCacheNames()) {
+
+			Cache cache = cacheManager.getCache(cacheName);
+
+			if (cache == null) {
+				continue;
+			}
+
+			logger.info(
+					IdAuthCommonConstants.IDA,
+					this.getClass().getSimpleName(),
+					"CACHE_DUMP",
+					"Cache Name : " + cacheName
+			);
+
+			if (cache instanceof ConcurrentMapCache) {
+
+				Map<Object, Object> nativeCache =
+						((ConcurrentMapCache) cache).getNativeCache();
+
+				if (nativeCache.isEmpty()) {
+
+					logger.info(
+							IdAuthCommonConstants.IDA,
+							this.getClass().getSimpleName(),
+							"CACHE_DUMP",
+							"Cache is empty"
+					);
+
+				} else {
+
+					nativeCache.forEach((key, value) ->
+							logger.info(
+									IdAuthCommonConstants.IDA,
+									this.getClass().getSimpleName(),
+									"CACHE_ENTRY",
+									key + " -> " + value
+							)
+					);
+				}
+
+			} else {
+
+				logger.info(
+						IdAuthCommonConstants.IDA,
+						this.getClass().getSimpleName(),
+						"CACHE_DUMP",
+						"Provider : " + cache.getClass().getName()
+				);
+			}
+		}
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				this.getClass().getSimpleName(),
+				"CACHE_DUMP",
+				"End Cache Dump"
 		);
 	}
 
