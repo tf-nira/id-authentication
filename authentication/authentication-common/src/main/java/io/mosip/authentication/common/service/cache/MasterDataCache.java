@@ -10,6 +10,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 import io.mosip.authentication.common.service.factory.RestRequestFactory;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
@@ -39,6 +41,9 @@ public class MasterDataCache {
 	@Qualifier("withSelfTokenWebclient")
 	private RestHelper restHelper;
 
+	@Autowired(required = false)
+	private CacheManager cacheManager;
+
 	@Value("${ida-cache-ttl-in-days:1}")
 	private int cacheTtlInMinutes;
 
@@ -47,31 +52,49 @@ public class MasterDataCache {
 
 	private void validateCacheTTL() {
 
-		if (cacheTtlInMinutes <= 0) {
+		if (cacheManager == null || cacheTtlInMinutes <= 0) {
 			return;
 		}
 
-		long elapsedMinutes =
+		long elapsed =
 				ChronoUnit.MINUTES.between(
 						lastCacheClearTime,
 						LocalDateTime.now()
 				);
 
-		if (elapsedMinutes >= cacheTtlInMinutes) {
+		if (elapsed < cacheTtlInMinutes) {
+			return;
+		}
 
-			clearMasterDataTitlesCache();
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				getClass().getSimpleName(),
+				"CACHE_TTL",
+				"TTL expired. Clearing caches"
+		);
+
+		clearCache(MASTERDATA_TITLES);
+		clearCache(MASTERDATA_TEMPLATES);
+
+		lastCacheClearTime =
+				LocalDateTime.now();
+	}
+
+	private void clearCache(String cacheName) {
+
+		Cache cache =
+				cacheManager.getCache(cacheName);
+
+		if (cache != null) {
+
+			cache.clear();
 
 			logger.info(
 					IdAuthCommonConstants.IDA,
 					getClass().getSimpleName(),
-					"CACHE_TTL",
-					"TTL reached after "
-							+ cacheTtlInMinutes
-							+ " minute(s). Cache cleared."
+					"CACHE_EVICT",
+					"Cleared cache -> " + cacheName
 			);
-
-			lastCacheClearTime =
-					LocalDateTime.now();
 		}
 	}
 
