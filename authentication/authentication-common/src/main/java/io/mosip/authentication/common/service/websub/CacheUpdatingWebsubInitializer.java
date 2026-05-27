@@ -19,10 +19,6 @@ public abstract class CacheUpdatingWebsubInitializer extends BaseIDAWebSubInitia
 	@Value("${spring.cache.type:simple}")
 	public String cacheType;
 
-	/** Cache TTL in days */
-	@Value("${ida-cache-ttl-in-days:1}")
-	private int cacheTtlInDays;
-
 
     /**
 	 * Checks if is cache enabled.
@@ -31,18 +27,5 @@ public abstract class CacheUpdatingWebsubInitializer extends BaseIDAWebSubInitia
 	 */
 	protected boolean isCacheEnabled() {
 		return !StringUtils.equalsIgnoreCase(cacheType, "none");
-	}
-
-	/**
-	 * Checks whether scheduled cache eviction should run.
-	 *
-	 * value <= 0 → disabled
-	 */
-    public boolean isCacheTtlEnabled() {
-		return isCacheEnabled() && cacheTtlInDays > 0;
-	}
-
-	protected int getCacheTtlInDays() {
-		return cacheTtlInDays;
 	}
 }
