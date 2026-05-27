@@ -47,42 +47,42 @@ public abstract class CacheUpdatingWebsubInitializer extends BaseIDAWebSubInitia
 		return isCacheEnabled() && cacheTtlInDays > 0;
 	}
 
-	/**
-	 * Returns configured cache TTL.
-	 */
-	protected int getCacheTtlInDays() {
-		return cacheTtlInDays;
-	}
+//	/**
+//	 * Returns configured cache TTL.
+//	 */
+//	protected int getCacheTtlInDays() {
+//		return cacheTtlInDays;
+//	}
 
-	@Scheduled(
-			//fixedDelayString = "#{${ida-cache-ttl-in-days:1} * 24 * 60 * 60 * 1000}" below in minutes.
-			fixedDelayString = "#{${ida-cache-ttl-in-days:1} * 1000}"
-	)
-	public void clearCachesByTTL() {
-
-		if (!isCacheTtlEnabled() || cacheManager == null) {
-			return;
-		}
-
-		logger.info(
-				IdAuthCommonConstants.IDA,
-				getClass().getSimpleName(),
-				"CACHE_TTL",
-				"Starting scheduled cache eviction"
-		);
-
-		for (String cacheName : cacheManager.getCacheNames()) {
-
-			if (cacheManager.getCache(cacheName) != null) {
-				Objects.requireNonNull(cacheManager.getCache(cacheName)).clear();
-
-				logger.info(
-						IdAuthCommonConstants.IDA,
-						getClass().getSimpleName(),
-						"CACHE_EVICT",
-						"Cleared cache: " + cacheName
-				);
-			}
-		}
-	}
+//	@Scheduled(
+//			//fixedDelayString = "#{${ida-cache-ttl-in-days:1} * 24 * 60 * 60 * 1000}" below in minutes.
+//			fixedDelayString = "#{${ida-cache-ttl-in-days:1} * 1000}"
+//	)
+//	public void clearCachesByTTL() {
+//
+//		if (!isCacheTtlEnabled() || cacheManager == null) {
+//			return;
+//		}
+//
+//		logger.info(
+//				IdAuthCommonConstants.IDA,
+//				getClass().getSimpleName(),
+//				"CACHE_TTL",
+//				"Starting scheduled cache eviction"
+//		);
+//
+//		for (String cacheName : cacheManager.getCacheNames()) {
+//
+//			if (cacheManager.getCache(cacheName) != null) {
+//				Objects.requireNonNull(cacheManager.getCache(cacheName)).clear();
+//
+//				logger.info(
+//						IdAuthCommonConstants.IDA,
+//						getClass().getSimpleName(),
+//						"CACHE_EVICT",
+//						"Cleared cache: " + cacheName
+//				);
+//			}
+//		}
+//	}
 }
