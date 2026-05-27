@@ -37,7 +37,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 public abstract class BaseIDAWebSubInitializer implements ApplicationListener<ApplicationReadyEvent>{
 	
 	/** The logger. */
-	private static Logger logger = IdaLogger.getLogger(BaseIDAWebSubInitializer.class);
+	public static Logger logger = IdaLogger.getLogger(BaseIDAWebSubInitializer.class);
 
 	/**
 	 * Default is Zero which will disable the scheduling.
