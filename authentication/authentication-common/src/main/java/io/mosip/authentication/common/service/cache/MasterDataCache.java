@@ -60,7 +60,6 @@ public class MasterDataCache {
 		if (elapsedMinutes >= cacheTtlInMinutes) {
 
 			clearMasterDataTitlesCache();
-			clearMasterDataTemplateCache();
 
 			logger.info(
 					IdAuthCommonConstants.IDA,
@@ -112,13 +111,13 @@ public class MasterDataCache {
 	@CacheEvict(
 			value = MASTERDATA_TEMPLATES
 	)
-	public void clearMasterDataTemplateCache() {
+	public void clearMasterDataTemplateCache(String template) {
 
 		logger.info(
-				IdAuthCommonConstants.IDA,
-				getClass().getSimpleName(),
-				"CACHE_CLEAR",
-				"Template cache cleared"
+				IdAuthCommonConstants.SESSION_ID,
+				this.getClass().getSimpleName(),
+				"clearMasterDataTemplateCache",
+				"masterdata cache cleared for template code: " + template
 		);
 	}
 
