@@ -6,6 +6,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -69,6 +71,12 @@ import io.mosip.kernel.core.websub.model.EventModel;
 @Component
 @Transactional
 public class PartnerServiceManager {
+
+	@Value("${ida-cache-ttl-in-days:1}")
+	private int cacheTtlInMinutes;
+
+	private LocalDateTime lastCacheClearTime =
+			LocalDateTime.now();
 
 	private static final Logger logger = IdaLogger.getLogger(PartnerServiceManager.class);
 
@@ -163,6 +171,7 @@ public class PartnerServiceManager {
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
+		validateCacheTTL();
 		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		Optional<MispLicenseData> mispLicOptional = mispLicDataRepo.findByLicenseKey(misp_license_key);
 		Optional<OIDCClientData> oidcClientData = oidcClientDataRepo.findByClientId(partner_api_key);
@@ -212,6 +221,34 @@ public class PartnerServiceManager {
 		}
 		response.setRequiresPayment(partnerData.getRequiresPayment());
 		return response;
+	}
+
+	private void validateCacheTTL() {
+
+		if (cacheManager == null || cacheTtlInMinutes <= 0) {
+			return;
+		}
+
+		long elapsedMinutes =
+				ChronoUnit.MINUTES.between(
+						lastCacheClearTime,
+						LocalDateTime.now());
+
+		if (elapsedMinutes < cacheTtlInMinutes) {
+			return;
+		}
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				getClass().getSimpleName(),
+				"CACHE_TTL",
+				"TTL reached. Clearing partner caches"
+		);
+
+		evictPartnerCaches();
+
+		lastCacheClearTime =
+				LocalDateTime.now();
 	}
 
 	/**
