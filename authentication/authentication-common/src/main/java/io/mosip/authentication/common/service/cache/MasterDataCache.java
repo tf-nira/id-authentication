@@ -1,9 +1,12 @@
 package io.mosip.authentication.common.service.cache;
 
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
@@ -20,38 +23,59 @@ import io.mosip.idrepository.core.exception.RestServiceException;
 import io.mosip.idrepository.core.helper.RestHelper;
 import io.mosip.kernel.core.logger.spi.Logger;
 
-/**
- * The Class MasterDataCache.
- *
- * @author Manoj SP
- */
 @Component
 public class MasterDataCache {
 
-	/** The Constant MASTERDATA_TITLES. */
 	private static final String MASTERDATA_TITLES = "masterdata/titles";
-
-	/** The Constant MASTERDATA_TEMPLATES. */
 	private static final String MASTERDATA_TEMPLATES = "masterdata/templates";
 
-	/** The logger. */
-	private static Logger logger = IdaLogger.getLogger(MasterDataCache.class);
+	private static Logger logger =
+			IdaLogger.getLogger(MasterDataCache.class);
 
-	/** The Rest request factory. */
 	@Autowired
 	private RestRequestFactory restFactory;
 
-	/** The Rest Helper. */
 	@Autowired
 	@Qualifier("withSelfTokenWebclient")
 	private RestHelper restHelper;
 
-	/**
-	 * Gets the master data titles.
-	 *
-	 * @return the master data titles
-	 * @throws IdAuthenticationBusinessException the id authentication business exception
-	 */
+	@Value("${ida-cache-ttl-in-days:1}")
+	private int cacheTtlInMinutes;
+
+	private LocalDateTime lastCacheClearTime =
+			LocalDateTime.now();
+
+	private void validateCacheTTL() {
+
+		if (cacheTtlInMinutes <= 0) {
+			return;
+		}
+
+		long elapsedMinutes =
+				ChronoUnit.MINUTES.between(
+						lastCacheClearTime,
+						LocalDateTime.now()
+				);
+
+		if (elapsedMinutes >= cacheTtlInMinutes) {
+
+			clearMasterDataTitlesCache();
+			clearMasterDataTemplateCache();
+
+			logger.info(
+					IdAuthCommonConstants.IDA,
+					getClass().getSimpleName(),
+					"CACHE_TTL",
+					"TTL reached after "
+							+ cacheTtlInMinutes
+							+ " minute(s). Cache cleared."
+			);
+
+			lastCacheClearTime =
+					LocalDateTime.now();
+		}
+	}
+
 	@Cacheable(cacheNames = MASTERDATA_TITLES)
 	public Map<String, Object> getMasterDataTitles() throws IdAuthenticationBusinessException {
 		try {
@@ -84,25 +108,31 @@ public class MasterDataCache {
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
 		}
 	}
-	
-	/**
-	 * Clear master data template cache.
-	 *
-	 * @param template the template
-	 */
-	@CacheEvict(value=MASTERDATA_TEMPLATES, key = "#template")
-	public void clearMasterDataTemplateCache(String template) {
-		logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "clearMasterDataTemplateCache",
-				"masterdata cache cleared for template code: " + template);
-	}
-	
-	/**
-	 * Clear master data titles cache.
-	 */
-	@CacheEvict(value=MASTERDATA_TITLES)
-	public void clearMasterDataTitlesCache() {
-		logger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "clearMasterDataTitlesCache",
-				"masterdata cache cleared for titles");
+
+	@CacheEvict(
+			value = MASTERDATA_TEMPLATES
+	)
+	public void clearMasterDataTemplateCache() {
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				getClass().getSimpleName(),
+				"CACHE_CLEAR",
+				"Template cache cleared"
+		);
 	}
 
+	@CacheEvict(
+			value = MASTERDATA_TITLES,
+			allEntries = true
+	)
+	public void clearMasterDataTitlesCache() {
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				getClass().getSimpleName(),
+				"CACHE_CLEAR",
+				"Titles cache cleared"
+		);
+	}
 }
