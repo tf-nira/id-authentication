@@ -3,6 +3,7 @@ package io.mosip.authentication.common.service.cache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.CacheManager;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,7 @@ import io.mosip.kernel.core.logger.spi.Logger;
 import java.util.Objects;
 
 @Component
+@Profile("!test")
 public class CacheTtlScheduler {
 
     /** Cache TTL in days */
