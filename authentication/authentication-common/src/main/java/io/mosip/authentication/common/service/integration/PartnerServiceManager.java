@@ -6,6 +6,7 @@ import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -15,8 +16,11 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -142,6 +146,15 @@ public class PartnerServiceManager {
 	@Autowired
 	private PartnerPaymentTransactionsRepository partnerPaymentTransactionsRepository;
 
+	@Autowired
+	private CacheManager cacheManager;
+
+	@Value("${ida-cache-ttl-in-minutes}")
+	private int cacheTtlInMinutes;
+
+	private LocalDateTime lastCacheClearTime =
+			LocalDateTime.now();
+
 
 	/**
 	 * Validate and get policy.
@@ -156,6 +169,7 @@ public class PartnerServiceManager {
 	public PartnerPolicyResponseDTO validateAndGetPolicy(String partnerId, String partner_api_key, String misp_license_key,
 									boolean certificateNeeded, String headerCertificateThumbprint, boolean certValidationNeeded) 
 									throws IdAuthenticationBusinessException {
+		validateCacheTTL();
 		Optional<PartnerMapping> partnerMappingDataOptional = partnerMappingRepo.findByPartnerIdAndApiKeyId(partnerId, partner_api_key);
 		Optional<MispLicenseData> mispLicOptional = mispLicDataRepo.findByLicenseKey(misp_license_key);
 		Optional<OIDCClientData> oidcClientData = oidcClientDataRepo.findByClientId(partner_api_key);
@@ -198,6 +212,63 @@ public class PartnerServiceManager {
 		}
 		response.setRequiresPayment(partnerData.getRequiresPayment());
 		return response;
+	}
+
+	private void validateCacheTTL() {
+
+		if (cacheManager == null || cacheTtlInMinutes <= 0) {
+			return;
+		}
+
+		long elapsedMinutes =
+				ChronoUnit.MINUTES.between(
+						lastCacheClearTime,
+						LocalDateTime.now());
+
+		if (elapsedMinutes < cacheTtlInMinutes) {
+			return;
+		}
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				getClass().getSimpleName(),
+				"CACHE_TTL",
+				"TTL reached. Clearing partner caches"
+		);
+
+		evictPartnerCaches();
+
+		lastCacheClearTime =
+				LocalDateTime.now();
+	}
+
+	private void evictPartnerCaches() {
+
+		String[] caches = {
+				IdAuthCommonConstants.PARTNER_API_KEY_DATA,
+				IdAuthCommonConstants.PARTNER_API_KEY_POLICY_ID_DATA,
+				IdAuthCommonConstants.POLICY_DATA,
+				IdAuthCommonConstants.PARTNER_DATA,
+				IdAuthCommonConstants.MISP_LIC_DATA,
+				IdAuthCommonConstants.OIDC_CLIENT_DATA
+		};
+
+		for (String cacheName : caches) {
+
+			Cache cache =
+					cacheManager.getCache(cacheName);
+
+			if (cache != null) {
+				cache.clear();
+			}
+		}
+
+		logger.info(
+				IdAuthCommonConstants.IDA,
+				getClass().getSimpleName(),
+				"CACHE_EVICT",
+				"Partner caches cleared"
+		);
 	}
 
 	/**
