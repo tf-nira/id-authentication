@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import com.github.benmanes.caffeine.cache.Caffeine;
 
 @Configuration
-public class CaffeineCacheConfig {
+public class ServiceCaffeineCacheConfig {
 
     @Value("${ida-cache-ttl-in-minutes:5}")
     private long cacheTtlInMinutes;
