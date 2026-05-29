@@ -13,7 +13,7 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @Configuration
 public class CaffeineCacheConfig {
 
-    @Value("${ida-cache-ttl-in-minutes}")
+    @Value("${ida-cache-ttl-in-minutes:5}")
     private long cacheTtlInMinutes;
 
     @Bean
