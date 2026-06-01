@@ -13,13 +13,41 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 @Configuration
 public class OTPCaffeineCacheConfig {
     @Value("${ida-cache-ttl:5m}")
-    private Duration cacheTtl;
+    private String cacheTtl;
+
+
+    private Duration getDuration() {
+
+        String ttl = cacheTtl.trim().toLowerCase();
+
+        if (ttl.endsWith("s")) {
+            return Duration.ofSeconds(
+                    Long.parseLong(ttl.replace("s", ""))
+            );
+        }
+
+        if (ttl.endsWith("m")) {
+            return Duration.ofMinutes(
+                    Long.parseLong(ttl.replace("m", ""))
+            );
+        }
+
+        if (ttl.endsWith("h")) {
+            return Duration.ofHours(
+                    Long.parseLong(ttl.replace("h", ""))
+            );
+        }
+
+        throw new IllegalArgumentException(
+                "Invalid TTL format : " + ttl
+        );
+    }
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
         cacheManager.setCaffeine(
                 Caffeine.newBuilder()
-                        .expireAfterWrite(cacheTtl)
+                        .expireAfterWrite(getDuration())
                         .maximumSize(10000)
         );
         return cacheManager;
