@@ -1,7 +1,5 @@
 package io.mosip.authentication.service.config;
 
-import java.time.Duration;
-
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.convert.DurationStyle;
 import org.springframework.cache.CacheManager;
@@ -15,16 +13,16 @@ import com.github.benmanes.caffeine.cache.Caffeine;
 public class ServiceCaffeineCacheConfig {
     @Value("${ida-cache-ttl:5m}")
     private String cacheTtl;
+    @Value("${ida-cache-maxsize:10000}")
+    private int maxSize;
     @Bean
     public CacheManager cacheManager() {
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
-        Duration ttl = DurationStyle.detectAndParse(cacheTtl);
         cacheManager.setCaffeine(
                 Caffeine.newBuilder()
-                        .expireAfterWrite(ttl)
-                        .maximumSize(10000)
+                        .expireAfterWrite(DurationStyle.detectAndParse(cacheTtl))
+                        .maximumSize(maxSize)
         );
         return cacheManager;
     }
 }
-
