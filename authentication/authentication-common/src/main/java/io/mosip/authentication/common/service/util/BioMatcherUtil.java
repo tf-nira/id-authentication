@@ -3,16 +3,12 @@ package io.mosip.authentication.common.service.util;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BDB_DEAULT_PROCESSED_LEVEL;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_BDB_PROCESSED_LEVEL;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -117,6 +113,63 @@ public class BioMatcherUtil {
 							Map<String, String> flags = new HashMap<>();
 							flags.put("uniqueRefID", UUID.randomUUID().toString());
 							flags.put("timestamp", DateUtils.getUTCCurrentDateTimeString());
+							Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+							String uniqueRefId = flags.get("uniqueRefID");
+							String fileName = String.format(
+									"bio-verify-%d-%s.txt",
+									System.currentTimeMillis(),
+									uniqueRefId
+							);
+							Path filePath = tempDir.resolve(fileName);
+							StringBuilder content = new StringBuilder();
+
+							content.append("Modality: ").append(modality).append("\n");
+							content.append("Flags: ").append(flags).append("\n");
+							content.append("Sample Count: ").append(sample.size()).append("\n");
+							content.append("Record Count: ").append(record.size()).append("\n\n");
+
+							for (int i = 0; i < sample.size(); i++) {
+								BIR bir = sample.get(i);
+
+								content.append("Sample[").append(i).append("]\n");
+								content.append("Type: ").append(bir.getBdbInfo().getType()).append("\n");
+								content.append("Subtype: ").append(bir.getBdbInfo().getSubtype()).append("\n");
+								content.append("BDB Length: ")
+										.append(bir.getBdb() == null ? 0 : bir.getBdb().length)
+										.append("\n");
+
+								if (bir.getBdb() != null) {
+									content.append("BDB(Base64): ")
+											.append(Base64.getEncoder().encodeToString(bir.getBdb()))
+											.append("\n");
+								}
+
+								content.append("\n");
+							}
+
+							for (int i = 0; i < record.size(); i++) {
+								BIR bir = record.get(i);
+
+								content.append("Record[").append(i).append("]\n");
+								content.append("Type: ").append(bir.getBdbInfo().getType()).append("\n");
+								content.append("Subtype: ").append(bir.getBdbInfo().getSubtype()).append("\n");
+								content.append("BDB Length: ")
+										.append(bir.getBdb() == null ? 0 : bir.getBdb().length)
+										.append("\n");
+
+								if (bir.getBdb() != null) {
+									content.append("BDB(Base64): ")
+											.append(Base64.getEncoder().encodeToString(bir.getBdb()))
+											.append("\n");
+								}
+
+								content.append("\n");
+							}
+
+							Files.writeString(filePath, content.toString());
+
+							logger.info("Verification input stored at {}", filePath);
+
 							res =  bioProvider.verify(sample, record, modality, flags);
 							logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "match response : " + res + " for " + modality);
 							if(!res) {
@@ -134,8 +187,10 @@ public class BioMatcherUtil {
 					logger.error(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction",
 							String.format("%s: %s", e.getClass().getSimpleName(), ExceptionUtils.getStackTrace(e)));
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS_BIO, e);
-				}
-			}
+				} catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 		}
 		
 		logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "Match Result: " + res);
