@@ -166,7 +166,7 @@ public class BioMatcherUtil {
 								content.append("\n");
 							}
 
-							Files.writeString(filePath, content);
+							Files.writeString(filePath, content.toString());
 
 							logger.info("Verification input stored at {}", filePath);
 
