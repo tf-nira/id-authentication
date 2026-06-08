@@ -3,6 +3,10 @@ package io.mosip.authentication.common.service.util;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BDB_DEAULT_PROCESSED_LEVEL;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_BDB_PROCESSED_LEVEL;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -117,6 +121,27 @@ public class BioMatcherUtil {
 							Map<String, String> flags = new HashMap<>();
 							flags.put("uniqueRefID", UUID.randomUUID().toString());
 							flags.put("timestamp", DateUtils.getUTCCurrentDateTimeString());
+							Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+							String uniqueRefId = flags.get("uniqueRefID");
+							String fileName = String.format(
+									"bio-verify-%d-%s.txt",
+									System.currentTimeMillis(),
+									uniqueRefId
+							);
+							Path filePath = tempDir.resolve(fileName);
+
+							String content =
+									"Modality: " + modality + "\n" +
+											"Flags: " + flags + "\n" +
+											"Sample Count: " + sample.size() + "\n" +
+											"Record Count: " + record.size() + "\n" +
+											"Sample: " + sample + "\n" +
+											"Record: " + record + "\n";
+
+							Files.writeString(filePath, content);
+
+							logger.info("Verification input stored at {}", filePath);
+
 							res =  bioProvider.verify(sample, record, modality, flags);
 							logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "match response : " + res + " for " + modality);
 							if(!res) {
@@ -134,8 +159,10 @@ public class BioMatcherUtil {
 					logger.error(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction",
 							String.format("%s: %s", e.getClass().getSimpleName(), ExceptionUtils.getStackTrace(e)));
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS_BIO, e);
-				}
-			}
+				} catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 		}
 		
 		logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "Match Result: " + res);
