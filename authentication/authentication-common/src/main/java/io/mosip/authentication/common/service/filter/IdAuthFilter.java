@@ -1331,21 +1331,14 @@ public abstract class IdAuthFilter extends BaseAuthFilter {
 						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_INSUFFICIENT_BALANCE.getErrorMessage());
 			}
-			// create new payment transaction
-			partnerService.addPartnerPaymentTransaction(partnerServiceResponse.getPartnerId(), amountToBeCharged);
-			mosipLogger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
-					"checkPaymentChargesForAuth",
-					"created new partner transaction successfully");
 			return amountToBeCharged;
 		}
 
 
 	} catch (IOException e) {
 			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
-		} catch (IdAuthenticationBusinessException e) {
-			throw new IdAuthenticationAppException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
 		}
-		return null;
+        return null;
 	}
 
 	private String[] getTypeAndSubType(AuthRequestDTO authRequestDTO, boolean isKyc)

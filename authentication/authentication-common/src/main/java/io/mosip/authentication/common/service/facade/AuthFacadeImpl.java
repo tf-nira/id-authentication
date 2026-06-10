@@ -210,6 +210,10 @@ public class AuthFacadeImpl implements AuthFacade {
 			Double amount = (Double) properties.get("amount");
 			if (amount != null) {
 				authTxnBuilder.withAmount(amount);
+				partnerService.addPartnerPaymentTransaction(partnerId, amount);
+				logger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+						"checkPaymentChargesForAuth",
+						"created new partner transaction successfully");
 			}
 			
 			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
