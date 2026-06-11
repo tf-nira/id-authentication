@@ -7,12 +7,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -113,63 +116,37 @@ public class BioMatcherUtil {
 							Map<String, String> flags = new HashMap<>();
 							flags.put("uniqueRefID", UUID.randomUUID().toString());
 							flags.put("timestamp", DateUtils.getUTCCurrentDateTimeString());
+
+							BiometricRecord sampleRecord = new BiometricRecord();
+							sampleRecord.setSegments(sample);
+
+							BiometricRecord recordGallery = new BiometricRecord();
+							recordGallery.setSegments(record);
+
+							Map<String, Object> payload = new LinkedHashMap<>();
+							payload.put("sample", sampleRecord);
+							payload.put("record", recordGallery);
+							payload.put("modality", modality);
+							payload.put("flags", flags);
+
+							ObjectMapper mapper = new ObjectMapper();
+
+							String json = mapper.writerWithDefaultPrettyPrinter()
+									.writeValueAsString(payload);
 							Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
-							String uniqueRefId = flags.get("uniqueRefID");
-							String fileName = String.format(
-									"bio-verify-%d-%s.txt",
-									System.currentTimeMillis(),
-									uniqueRefId
+
+							String uniqueRefId = flags.getOrDefault("uniqueRefID", UUID.randomUUID().toString());
+
+							Path filePath = tempDir.resolve(
+									"bio-verify-" + uniqueRefId + ".json");
+
+							Files.writeString(
+									filePath,
+									json,
+									StandardOpenOption.CREATE,
+									StandardOpenOption.TRUNCATE_EXISTING
 							);
-							Path filePath = tempDir.resolve(fileName);
-							StringBuilder content = new StringBuilder();
-
-							content.append("Modality: ").append(modality).append("\n");
-							content.append("Flags: ").append(flags).append("\n");
-							content.append("Sample Count: ").append(sample.size()).append("\n");
-							content.append("Record Count: ").append(record.size()).append("\n\n");
-
-							for (int i = 0; i < sample.size(); i++) {
-								BIR bir = sample.get(i);
-
-								content.append("Sample[").append(i).append("]\n");
-								content.append("Type: ").append(bir.getBdbInfo().getType()).append("\n");
-								content.append("Subtype: ").append(bir.getBdbInfo().getSubtype()).append("\n");
-								content.append("BDB Length: ")
-										.append(bir.getBdb() == null ? 0 : bir.getBdb().length)
-										.append("\n");
-
-								if (bir.getBdb() != null) {
-									content.append("BDB(Base64): ")
-											.append(Base64.getEncoder().encodeToString(bir.getBdb()))
-											.append("\n");
-								}
-
-								content.append("\n");
-							}
-
-							for (int i = 0; i < record.size(); i++) {
-								BIR bir = record.get(i);
-
-								content.append("Record[").append(i).append("]\n");
-								content.append("Type: ").append(bir.getBdbInfo().getType()).append("\n");
-								content.append("Subtype: ").append(bir.getBdbInfo().getSubtype()).append("\n");
-								content.append("BDB Length: ")
-										.append(bir.getBdb() == null ? 0 : bir.getBdb().length)
-										.append("\n");
-
-								if (bir.getBdb() != null) {
-									content.append("BDB(Base64): ")
-											.append(Base64.getEncoder().encodeToString(bir.getBdb()))
-											.append("\n");
-								}
-
-								content.append("\n");
-							}
-
-							Files.writeString(filePath, content.toString());
-
 							logger.info("Verification input stored at {}", filePath);
-
 							res =  bioProvider.verify(sample, record, modality, flags);
 							logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "match response : " + res + " for " + modality);
 							if(!res) {
