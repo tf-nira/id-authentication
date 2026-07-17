@@ -120,7 +120,7 @@ public class NotificationServiceImpl implements NotificationService {
 				.map(authType -> authType.getDisplayName(authRequestDTO, idInfoFetcher)).distinct().collect(Collectors.joining(","));
 		values.put(AUTH_TYPE, authTypeStr);
 		if (authResponseDTO.getResponse().isAuthStatus()) {
-			values.put(IdAuthCommonConstants.STATUS, "Passed");
+			values.put(IdAuthCommonConstants.STATUS, "Successful");
 		} else {
 			values.put(IdAuthCommonConstants.STATUS, "Failed");
 		}
