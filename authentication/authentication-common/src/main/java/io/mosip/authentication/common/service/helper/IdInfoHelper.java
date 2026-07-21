@@ -506,10 +506,19 @@ public class IdInfoHelper {
 
 					if ("gender".equalsIgnoreCase(idName)) {
 						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-								"matchGender", "Entering gender matching block");
-						MatchOutput genderOutput = matchGender(reqInfo, entityInfo, input, matchType);
-						if (genderOutput != null) {
-							return genderOutput;
+								"matchGender", "Before Normalization -> reqInfo: " + reqInfo + ", entityInfo: " + entityInfo);
+						String reqGender = reqInfo.get("gender");
+						String dbGender = entityInfo.get("gender");
+						if (reqGender != null && !reqGender.isEmpty()) {
+							String normalizedReq = normalizeGender(reqGender);
+							String normalizedDb = normalizeGender(dbGender);
+							reqInfo.put("gender", normalizedReq);
+							entityInfo.put("gender", normalizedDb);
+							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"matchGender", "After Normalization -> reqInfo: " + reqInfo + ", entityInfo: " + entityInfo);
+						} else {
+							mosipLogger.warn(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"matchGender", "Request gender is null or empty, skipping normalization");
 						}
 					}
 					
@@ -526,25 +535,6 @@ public class IdInfoHelper {
 
 		}
 		return null;
-	}
-
-	private MatchOutput matchGender(Map<String, String> reqInfo, Map<String, String> entityInfo,
-							MatchInput input, MatchType matchType) {
-		String reqGender = reqInfo.get("gender");
-		String dbGender = entityInfo.get("gender");
-		if (reqGender != null && !reqGender.isEmpty()) {
-			String normalizedReq = normalizeGender(reqGender);
-			String normalizedDb = normalizeGender(dbGender);
-			boolean isMatched = normalizedReq.equalsIgnoreCase(normalizedDb);
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-					"matchGender", "Gender Match Result: " + isMatched);
-			return new MatchOutput(isMatched ? 100 : 0, isMatched, input.getMatchStrategyType(),
-					matchType, input.getLanguage(), input.getIdName());
-		} else {
-			mosipLogger.warn(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
-					"matchGender", "Gender value is null, skipping custom match");
-			return null;
-		}
 	}
 
 	private String normalizeGender(String gender) {
