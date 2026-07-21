@@ -17,7 +17,7 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
-
+import org.springframework.cache.annotation.CacheEvict;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -212,6 +212,20 @@ public class PartnerServiceManager {
 											   boolean certValidationNeeded, Optional<OIDCClientData> oidcClientData) throws IdAuthenticationBusinessException {
 		if (partnerMappingDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()) {
 			PartnerMapping partnerMapping = partnerMappingDataOptional.get();
+			Optional<PartnerData> partnerDataOptional = partnerDataRepo.findByPartnerIdFromDB(partnerMapping.getPartnerData().getPartnerId());
+			if(partnerDataOptional.isPresent() && !partnerMappingDataOptional.get().isDeleted()){
+				PartnerData partnerData = partnerDataOptional.get();
+				if (partnerDataOptional.isPresent()) {
+					logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
+					        "partner_data_validation", "Partner Id: " + partnerData.getPartnerId() + " | Partner Status in DB: " + partnerData.getPartnerStatus());
+				    logger.info(IdAuthCommonConstants.IDA, this.getClass().getSimpleName(),
+					        "partner_mapping_data_validation", "partner mapping data value in DB: " + partnerMapping.getPartnerData().getPartnerStatus());
+				    if (!"ACTIVE".equalsIgnoreCase(partnerData.getPartnerStatus())) {
+				    	throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorCode(),
+								IdAuthenticationErrorConstants.PARTNER_DEACTIVATED.getErrorMessage());
+				    }
+				}
+			}
 			if (partnerMapping.getPartnerData().isDeleted()) {
 				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorCode(),
 						IdAuthenticationErrorConstants.PARTNER_NOT_REGISTERED.getErrorMessage());
