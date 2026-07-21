@@ -513,7 +513,7 @@ public class IdInfoHelper {
 							String normalizedReq = normalizeGender(reqGender);
 							String normalizedDb = normalizeGender(dbGender);
 							reqInfo.put("gender", normalizedReq);
-							entityInfo.put("gender", normalizedDb);
+							entityInfo.put("gender_eng", normalizedDb);
 							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
 									"matchGender", "After Normalization -> reqInfo: " + reqInfo + ", entityInfo: " + entityInfo);
 						} else {
