@@ -7,6 +7,7 @@ import static io.mosip.authentication.core.constant.AuthTokenType.PARTNER;
 import static io.mosip.authentication.core.constant.AuthTokenType.POLICY;
 import static io.mosip.authentication.core.constant.AuthTokenType.POLICY_GROUP;
 import static io.mosip.authentication.core.constant.AuthTokenType.RANDOM;
+import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_DECEASED_ATTRIBUTE;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +21,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import io.mosip.authentication.common.service.builder.AuthResponseBuilder;
@@ -38,6 +40,7 @@ import io.mosip.authentication.common.service.validator.AuthFiltersValidator;
 import io.mosip.authentication.core.constant.AuditEvents;
 import io.mosip.authentication.core.constant.AuditModules;
 import io.mosip.authentication.core.constant.IdAuthCommonConstants;
+import io.mosip.authentication.core.constant.IdAuthenticationErrorConstants;
 import io.mosip.authentication.core.constant.RequestType;
 import io.mosip.authentication.core.dto.ObjectWithMetadata;
 import io.mosip.authentication.core.exception.IdAuthUncheckedException;
@@ -135,6 +138,9 @@ public class AuthFacadeImpl implements AuthFacade {
 
 	@Autowired
 	private PasswordAuthService passwordAuthService;
+	
+	@Value("${" + IDA_DECEASED_ATTRIBUTE + ":declaredAsDeceased}")
+	private String deceasedAttribute;
 
 	/*
 	 * (non-Javadoc)
@@ -204,7 +210,21 @@ public class AuthFacadeImpl implements AuthFacade {
 			Double amount = (Double) properties.get("amount");
 			if (amount != null) {
 				authTxnBuilder.withAmount(amount);
+				partnerService.addPartnerPaymentTransaction(partnerId, amount);
+				logger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getCanonicalName(),
+						"checkPaymentChargesForAuth",
+						"created new partner transaction successfully");
 			}
+			
+			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
+			
+			if (deceased != null && !deceased.isEmpty()) {
+				if ("Y".equals(deceased.get(0).getValue())) {
+					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorCode(),
+							IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorMessage());
+				}
+			}
+			
 			List<AuthStatusInfo> authStatusList = processAuthType(authRequestDTO, idInfo, token, isExternalAuth, authTokenId,
 					partnerId, authTxnBuilder, idvidHash);
 			authStatusList.stream().filter(Objects::nonNull).forEach(authResponseBuilder::addAuthStatusInfo);
@@ -241,6 +261,10 @@ public class AuthFacadeImpl implements AuthFacade {
 
 		if (idInfo != null && idvid != null) {
 			notificationService.sendAuthNotification(authRequestDTO, idvid, authResponseDTO, idInfo, isExternalAuth);
+		}
+
+		if(markVidConsumed) {
+			idService.updateVIDstatus(idvid);
 		}
 
 		return authResponseDTO;

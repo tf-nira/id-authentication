@@ -15,6 +15,7 @@ import javax.transaction.Transactional;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Component;
 import org.springframework.cache.annotation.CacheEvict;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -466,11 +467,12 @@ public class PartnerServiceManager {
 		Optional<PartnerData> partnerDataOptional = partnerDataRepo.findById(partnerEventData.getPartnerId());
 		if (partnerDataOptional.isPresent()) {
 			PartnerData partnerData = partnerDataOptional.get();
-			partnerData.setPartnerId(partnerEventData.getPartnerId());
 			partnerData.setPartnerName(partnerEventData.getPartnerName());
 			partnerData.setCertificateData(partnerEventData.getCertificateData());
 			partnerData.setPartnerStatus(partnerEventData.getPartnerStatus());
 			partnerData.setRequiresPayment(partnerEventData.getRequiresPayment());
+			partnerData.setPartnerAuthType(partnerEventData.getPartnerAuthType());
+			partnerData.setPartnerGroup(partnerEventData.getPartnerGroup());
 			partnerData.setUpdatedBy(getCreatedBy(eventModel));
 			partnerData.setUpdDTimes(DateUtils.getUTCCurrentDateTime());
 			partnerDataRepo.save(partnerData);

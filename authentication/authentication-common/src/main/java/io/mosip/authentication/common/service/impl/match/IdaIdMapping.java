@@ -34,8 +34,6 @@ public enum IdaIdMapping implements IdMapping {
 //PI
 	NAME("name", MappingConfig::getName),
 	
-	GIVEN_NAME("givenName", MappingConfig::getName),
-	
 	/** The dob. */
 	DOB("dob", MappingConfig::getDob),
 	
@@ -161,6 +159,9 @@ public enum IdaIdMapping implements IdMapping {
 	//BIO - Face - Single
 	FACE( BiometricType.FACE.value(), BiometricType.FACE.value()),
 	
+	//BIO - Raw - Face - Image
+		FACE_RAW_IMAGE("faceRawImage", "faceRawImage"),
+	
 	/** The unknown face. */
 	//BIO - Face - Unknown
 	UNKNOWN_FACE(
@@ -177,7 +178,7 @@ public enum IdaIdMapping implements IdMapping {
 	MULTI_MODAL_BIOMETRICS("biometrics", setOf(LEFTINDEX, LEFTLITTLE, LEFTMIDDLE, LEFTRING, LEFTTHUMB, 
 			RIGHTINDEX, RIGHTLITTLE, RIGHTMIDDLE, RIGHTRING, RIGHTTHUMB, UNKNOWN_FINGER,
 			RIGHTIRIS, LEFTIRIS, UNKNOWN_IRIS,
-			FACE,UNKNOWN_FACE), "DummyType"),
+			FACE,UNKNOWN_FACE,FACE_RAW_IMAGE), "DummyType"),
 
 	KEY_BINDED_TOKENS("keyBindedTokens"){
 		public BiFunction<MappingConfig, MatchType, List<String>> getMappingFunction() {

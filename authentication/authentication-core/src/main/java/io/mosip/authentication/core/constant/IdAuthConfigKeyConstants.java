@@ -129,6 +129,7 @@ public final class IdAuthConfigKeyConstants {
 	public static final String CREDENTIAL_STORE_RETRY_BACKOFF_EXPONENTIAL_MAX_INTERVAL_MILLISECS = "ida.credential.store.retry.backoff.exponential.max.interval.millisecs";
 	
 	public static final String IDA_DEFAULT_IDENTITY_FILTER_ATTRIBUTES = "ida-default-identity-filter-attributes";
+	public static final String IDA_DECEASED_ATTRIBUTE = "ida-deceased-attribute";
 
 	public static final String CREDENTIAL_STATUS_UPDATE_TOPIC = "ida-topic-credential-status-update";
 	public static final String AUTH_TYPE_STATUS_ACK_TOPIC = "ida-topic-auth-type-status-update-acknowledge";
@@ -138,6 +139,7 @@ public final class IdAuthConfigKeyConstants {
 	public static final String ON_DEMAND_TEMPLATE_EXTRACTION_TOPIC = "ida-topic-on-demand-template-extraction";
 	public static final String PARTNERS_PAYMENT_STATUS_ACK = "ida-topic-partners-amount-ack";
 	public static final String PARTNERS_BALANCE_UPDATE_TOPIC= "ida-topic-partners-balance-update";
+	public static final String AUTH_TRANSACTION_TOPIC= "ida-topic-auth-transaction";
 
 	public static final String IDA_MAX_CREDENTIAL_PULL_WINDOW_DAYS = "ida-max-credential-pull-window-days";
 	public static final String IDA_MAX_WEBSUB_MSG_PULL_WINDOW_DAYS = "ida-max-websub-messages-pull-window-days";

@@ -106,6 +106,8 @@ public class NotificationServiceImpl implements NotificationService {
 		values.put("idvid", maskedUin);
 		String idvidType = authRequestDTO.getIndividualIdType();
 		values.put("idvidType", idvidType);
+		String partnerName = authRequestDTO.getPartnerName();
+		values.put("partnerName",partnerName);
 
 		// TODO add for all auth types
 		String authTypeStr = Stream

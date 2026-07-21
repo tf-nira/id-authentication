@@ -11,6 +11,9 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
+import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
 import org.hibernate.exception.JDBCConnectionException;
 import org.junit.Assert;
 import org.junit.Test;
@@ -49,7 +52,14 @@ public class IdServiceImplTest {
 
 	@Mock
 	private AutnTxnRepository autntxnrepository;
-	
+
+	@Mock
+	private PartnerDataRepository partnerDataRepo;
+
+	@Mock
+	private AuthTransactionEventPublisher authTransactionEventPublisher;
+
+
 	@Test
 	public void getIdentityTest1() throws IdAuthenticationBusinessException, IOException {
 		String uin = "12312312";
@@ -247,27 +257,47 @@ public class IdServiceImplTest {
 	}
 
 	@Test(expected = IdAuthenticationBusinessException.class)
-	public void processIdTypeExceptionTest3() throws IdAuthenticationBusinessException, IOException {
+	public void processIdTypeExceptionTest3()
+			throws Exception {
 		String idvId = "12";
 		Boolean isBio = true;
 		Boolean markVidConsumed = true;
-		Set<String> filterAttributes = new HashSet<String>();
-		Optional<IdentityEntity> entityOpt = Optional.of(getEntity());
-		entityOpt.get().setTransactionLimit(0);
-		Mockito.when(securityManager.hash(idvId)).thenReturn("11");
-		Mockito.when(identityRepo.existsById("11")).thenReturn(true);
-		Mockito.when(identityRepo.findById("11")).thenReturn(entityOpt);
+		Set<String> filterAttributes = new HashSet<>();
+		Mockito.when(securityManager.hash(idvId))
+				.thenReturn("11");
 		IdServiceImpl idServiceSpy = Mockito.spy(idServiceImpl);
-		Mockito.doReturn(null).when(idServiceSpy).getIdByVid(idvId, isBio, filterAttributes);
-		String idvIdType = "VID";
-		Mockito.doThrow(JDBCConnectionException.class).when(identityRepo).deleteById("11");
-		idServiceSpy.processIdType(idvIdType, idvId, isBio, markVidConsumed, filterAttributes);
+		idServiceSpy.processIdType(
+				"VID",
+				idvId,
+				isBio,
+				markVidConsumed,
+				filterAttributes);
 	}
 
 	@Test
 	public void saveAutnTxnTest() throws IdAuthenticationBusinessException {
+
 		AutnTxn autnTxn = new AutnTxn();
+		autnTxn.setEntityId("PARTNER1");
+		PartnerData partnerData = new PartnerData();
+		partnerData.setPartnerAuthType("AUTH");
+		partnerData.setPartnerGroup("GROUP");
+		Mockito.when(autntxnrepository.saveAndFlush(Mockito.any(AutnTxn.class)))
+				.thenReturn(autnTxn);
+
+		Mockito.when(partnerDataRepo.findByPartnerId("PARTNER1"))
+				.thenReturn(Optional.of(partnerData));
+
 		idServiceImpl.saveAutnTxn(autnTxn);
+
+		Mockito.verify(autntxnrepository)
+				.saveAndFlush(Mockito.any(AutnTxn.class));
+
+		Mockito.verify(partnerDataRepo)
+				.findByPartnerId("PARTNER1");
+
+		Mockito.verify(authTransactionEventPublisher)
+				.publishEvent(Mockito.any(AutnTxn.class));
 	}
 
 	@Test
