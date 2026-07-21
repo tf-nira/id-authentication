@@ -508,7 +508,7 @@ public class IdInfoHelper {
 						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
 								"matchGender", "Before Normalization -> reqInfo: " + reqInfo + ", entityInfo: " + entityInfo);
 						String reqGender = reqInfo.get("gender");
-						String dbGender = entityInfo.get("gender");
+						String dbGender = entityInfo.get("gender_eng");
 						if (reqGender != null && !reqGender.isEmpty()) {
 							String normalizedReq = normalizeGender(reqGender);
 							String normalizedDb = normalizeGender(dbGender);
