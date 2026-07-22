@@ -503,6 +503,24 @@ public class IdInfoHelper {
 
 					Map<String, String> entityInfo = getEntityInfo(idEntity, uin, authRequestDTO, input,
 							entityValueFetcher, matchType, strategy, idName, partnerId);
+
+					if ("gender".equalsIgnoreCase(idName)) {
+						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+								"matchGender", "Before Normalization -> reqInfo: " + reqInfo + ", entityInfo: " + entityInfo);
+						String reqGender = reqInfo.get("gender");
+						String dbGender = entityInfo.get("gender_eng");
+						if (reqGender != null && !reqGender.isEmpty()) {
+							String normalizedReq = normalizeGender(reqGender);
+							String normalizedDb = normalizeGender(dbGender);
+							reqInfo.put("gender", normalizedReq);
+							entityInfo.put("gender_eng", normalizedDb);
+							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"matchGender", "After Normalization -> reqInfo: " + reqInfo + ", entityInfo: " + entityInfo);
+						} else {
+							mosipLogger.warn(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(),
+									"matchGender", "Request gender is null or empty, skipping normalization");
+						}
+					}
 					
 					int mtOut = strategy.match(reqInfo, entityInfo, matchProperties);
 					boolean matchOutput = mtOut >= input.getMatchValue();
@@ -517,6 +535,22 @@ public class IdInfoHelper {
 
 		}
 		return null;
+	}
+
+	private String normalizeGender(String gender) {
+		if (gender == null)
+			return null;
+		gender = gender.trim().toLowerCase();
+		switch (gender) {
+			case "male":
+			case "m":
+				return "M";
+			case "female":
+			case "f":
+				return "F";
+			default:
+				return gender.toUpperCase();
+		}
 	}
 
 	/**
