@@ -472,8 +472,6 @@ public final class IdAuthCommonConstants {
 	public static final String MISP_LIC_DATA = "misp_lic_data";
 	
 	public static final String FACE_RAW_IMAGE = "faceRawImage";
-
-	public static final String FACE_RAW_IMAGE = "faceRawImage";
 	
 	private IdAuthCommonConstants() {
 	}
