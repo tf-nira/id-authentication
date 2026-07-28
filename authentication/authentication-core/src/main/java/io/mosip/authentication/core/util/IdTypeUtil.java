@@ -70,7 +70,7 @@ public class IdTypeUtil {
 				String handleType = handle.substring(index);
 				if(!handleTypesRegex.containsKey(handleType))
 					return false;
-
+				mosipLogger.info("handleType : {} ", handleType);
 				return handle.matches(handleTypesRegex.get(handleType));
 			}
 		} catch (BaseUncheckedException e) {
@@ -81,6 +81,7 @@ public class IdTypeUtil {
 	}
 
 	public IdType getIdType(String id) throws IdAuthenticationBusinessException {
+		mosipLogger.info("Individual_Id : {}", id);
 		if (this.validateUin(id))
 			return IdType.UIN;
 		if (this.validateVid(id))

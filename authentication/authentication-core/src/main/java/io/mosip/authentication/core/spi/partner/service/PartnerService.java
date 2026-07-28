@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
+import io.mosip.authentication.core.partner.dto.PartnerCurrentBalanceDTO;
 import io.mosip.authentication.core.partner.dto.PartnerDTO;
 import io.mosip.authentication.core.partner.dto.PartnerPolicyResponseDTO;
 
@@ -25,4 +26,8 @@ public interface PartnerService {
 
 	Optional<PartnerPolicyResponseDTO> getPolicyForPartner(String partnerId, String partnerApiKey, Map<String, Object> metadata)
 			throws IdAuthenticationBusinessException;
+
+	PartnerCurrentBalanceDTO getPartnerCurrentBalance(String partnerId);
+
+	void addPartnerPaymentTransaction(String partnerId, Double amount) throws IdAuthenticationBusinessException;
 }

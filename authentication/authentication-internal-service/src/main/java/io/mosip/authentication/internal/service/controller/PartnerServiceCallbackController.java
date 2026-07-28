@@ -6,6 +6,7 @@ import static io.mosip.authentication.core.constant.IdAuthCommonConstants.MISP_L
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_API_KEY_UPDATED_EVENT_NAME;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_UPDATED_EVENT_NAME;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.POLICY_UPDATED_EVENT_NAME;
+import static io.mosip.authentication.core.constant.IdAuthCommonConstants.PARTNER_AMOUNT_UPDATED_EVENT_NAME;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.OIDC_CLIENT_CREATED;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.OIDC_CLIENT_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_PARTNER_SERVICE_CALLBACK_SECRET;
@@ -13,6 +14,7 @@ import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_MISP_LICENSE_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_OIDC_CLIENT_CREATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_OIDC_CLIENT_UPDATED;
+import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_APPROVED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_API_KEY_UPDATED;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_WEBSUB_TOPIC_PMP_PARTNER_UPDATED;
@@ -227,6 +229,27 @@ public class PartnerServiceCallbackController {
 			partnerManager.updateOIDCClientData(eventModel);
 		} catch (Exception e) {
 			logger.error(securityManager.getUser(), "PartnerServiceCallbackController", "handleMispUpdatedEvent",
+					ExceptionUtils.getFullStackTrace(e));
+		}
+	}
+	
+	@PostMapping(value = "/callback/partnermanagement/" + PARTNER_AMOUNT_UPDATED_EVENT_NAME, consumes = "application/json")
+	@Operation(summary = "handlePartnerAmountUpdated", description = "handlePartnerAmountUpdated", tags = { "partner-service-callback-controller" })
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "200", description = "OK"),
+			@ApiResponse(responseCode = "201", description = "Created" ,content = @Content(schema = @Schema(hidden = true))),
+			@ApiResponse(responseCode = "401", description = "Unauthorized" ,content = @Content(schema = @Schema(hidden = true))),
+			@ApiResponse(responseCode = "403", description = "Forbidden" ,content = @Content(schema = @Schema(hidden = true))),
+			@ApiResponse(responseCode = "404", description = "Not Found" ,content = @Content(schema = @Schema(hidden = true)))})
+	@PreAuthenticateContentAndVerifyIntent(secret = "${" + IDA_WEBSUB_PARTNER_SERVICE_CALLBACK_SECRET
+			+ "}", callback = "${ida-websub-partner-service-partner-amount-updated-callback-relative-url}", topic = "${" + IDA_WEBSUB_TOPIC_PMP_PARTNER_AMOUNT_UPDATED + "}")
+	public void handlePartnerAmountUpdated(@RequestBody EventModel eventModel) {
+		try {
+			logger.info(securityManager.getUser(), "PartnerServiceCallbackController", "handlePartnerAmountUpdated",
+					PARTNER_AMOUNT_UPDATED_EVENT_NAME + " EVENT RECEIVED");
+			partnerManager.updatePartnerAmount(eventModel);
+		} catch (Exception e) {
+			logger.error(securityManager.getUser(), "PartnerServiceCallbackController", "handlePartnerAmountUpdated",
 					ExceptionUtils.getFullStackTrace(e));
 		}
 	}

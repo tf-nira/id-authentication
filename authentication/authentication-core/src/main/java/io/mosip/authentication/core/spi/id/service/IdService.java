@@ -49,6 +49,8 @@ public interface IdService<T> {
 	public Map<String, Object> processIdType(String idvIdType, String idvId, boolean isBio, boolean markVidConsumed, Set<String> filterAttributes)
 			throws IdAuthenticationBusinessException;
 
+	public void updateVIDstatus(String vid) throws IdAuthenticationBusinessException;
+
 	/**
 	 * Store entry in Auth_txn table for all authentications.
 	 *

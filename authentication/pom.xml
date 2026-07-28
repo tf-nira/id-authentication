@@ -85,11 +85,11 @@
 
 	<properties>
 		<authentication.parent.version>${project.version}</authentication.parent.version>
-		<authentication-core.version>${authentication.parent.version}</authentication-core.version>
-		<authentication-filter-api.version>${authentication.parent.version}</authentication-filter-api.version>
-		<authentication-common.version>${authentication.parent.version}</authentication-common.version>
-		<authentication-authtypelockfilter-impl.version>${authentication.parent.version}</authentication-authtypelockfilter-impl.version>
-		<authentication-hotlistfilter-impl.version>${authentication.parent.version}</authentication-hotlistfilter-impl.version>
+		<authentication-core.version>1.2.0.1-SNAPSHOT</authentication-core.version>
+		<authentication-filter-api.version>1.2.0.1-SNAPSHOT</authentication-filter-api.version>
+		<authentication-common.version>1.2.0.1-SNAPSHOT</authentication-common.version>
+		<authentication-authtypelockfilter-impl.version>1.2.0.1-SNAPSHOT</authentication-authtypelockfilter-impl.version>
+		<authentication-hotlistfilter-impl.version>1.2.0.1-SNAPSHOT</authentication-hotlistfilter-impl.version>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
 		<!-- Kernel components -->

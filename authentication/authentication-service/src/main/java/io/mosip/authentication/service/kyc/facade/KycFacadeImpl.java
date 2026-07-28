@@ -385,6 +385,13 @@ public class KycFacadeImpl implements KycFacade {
 		try {
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "processKycExchange",
 					"Processing Kyc Exchange request.");
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "processKycExchange",
+			        "KYC Exchange request received. Consents: " 
+			        + kycExchangeRequestDTO.getConsentObtained() 
+			        + ", Locales: " + kycExchangeRequestDTO.getLocales()
+			        + ", RespType: " + kycExchangeRequestDTO.getRespType());
 			
 			String vciAuthToken = kycExchangeRequestDTO.getKycToken();
 			String idVid = kycExchangeRequestDTO.getIndividualId();
@@ -423,10 +430,27 @@ public class KycFacadeImpl implements KycFacade {
 				policyAllowedAttributes.add(CbeffDocType.FACE.getType().value().toLowerCase());
 				isBioRequired = true;
 			}
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "processKycExchange",
+			        "idvIdType: " + idvIdType + ", idVid: " + idVid + ", isBioRequired: " + isBioRequired);
+			
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "policyAllowedAttributes: " + policyAllowedAttributes );
 
 			Map<String, Object> idResDTO = idService.processIdType(idvIdType, idVid, isBioRequired,
 					IdAuthCommonConstants.KYC_EXCHANGE_CONSUME_VID_DEFAULT, policyAllowedAttributes);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "idResDTO: " + idResDTO);
 			Map<String, List<IdentityInfoDTO>> idInfo = IdInfoFetcher.getIdInfo(idResDTO);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+			        this.getClass().getSimpleName(),
+			        "convertJP2ToJpeg",
+			        "idInfo: " + idInfo);
 			
 			String token = idService.getToken(idResDTO);
 			String psuToken = kycTokenData.getPsuToken();
