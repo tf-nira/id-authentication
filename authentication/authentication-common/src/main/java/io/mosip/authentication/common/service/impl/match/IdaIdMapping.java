@@ -161,7 +161,6 @@ public enum IdaIdMapping implements IdMapping {
 	
 	//BIO - Raw - Face - Image
 	FACE_RAW_IMAGE("faceRawImage", "faceRawImage"),
-		
 	
 	/** The unknown face. */
 	//BIO - Face - Unknown

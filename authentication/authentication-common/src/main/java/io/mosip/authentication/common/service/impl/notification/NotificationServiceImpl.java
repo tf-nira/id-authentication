@@ -89,8 +89,12 @@ public class NotificationServiceImpl implements NotificationService {
 		List<String> templateLanguages = getTemplateLanguages(idInfo);
 		
 		for (String lang : templateLanguages) {
-			values.put(NAME + "_" + lang, infoHelper.getEntityInfoAsString(DemoMatchType.NAME, lang, idInfo));
+			Map<String, String> nameMap = infoHelper.getIdEntityInfoMap(DemoMatchType.NAME, idInfo, lang);
+			values.putAll(nameMap);
+			String nameStr = nameMap.values().stream().collect(Collectors.joining(" "));
+			values.put(NAME + "_" + lang, nameStr);
 		}
+		values.put("identity", idInfo);
 		Tuple2<String, String> dateAndTime = getDateAndTime(DateUtils.parseToLocalDateTime(authResponseDTO.getResponseTime()));
 		values.put(DATE, dateAndTime.getT1());
 		values.put(TIME, dateAndTime.getT2());
@@ -102,6 +106,8 @@ public class NotificationServiceImpl implements NotificationService {
 		values.put("idvid", maskedUin);
 		String idvidType = authRequestDTO.getIndividualIdType();
 		values.put("idvidType", idvidType);
+		String partnerName = authRequestDTO.getPartnerName();
+		values.put("partnerName",partnerName);
 
 		// TODO add for all auth types
 		String authTypeStr = Stream
@@ -114,7 +120,7 @@ public class NotificationServiceImpl implements NotificationService {
 				.map(authType -> authType.getDisplayName(authRequestDTO, idInfoFetcher)).distinct().collect(Collectors.joining(","));
 		values.put(AUTH_TYPE, authTypeStr);
 		if (authResponseDTO.getResponse().isAuthStatus()) {
-			values.put(IdAuthCommonConstants.STATUS, "Passed");
+			values.put(IdAuthCommonConstants.STATUS, "Successful");
 		} else {
 			values.put(IdAuthCommonConstants.STATUS, "Failed");
 		}

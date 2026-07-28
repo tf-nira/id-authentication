@@ -29,7 +29,7 @@ public enum CbeffDocType {
 	FACE(BiometricType.FACE.name(), BiometricType.FACE, CbeffConstant.FORMAT_TYPE_FACE),
 	
 	FACE_RAW_IMAGE("faceRawImage", BiometricType.FACE, CbeffConstant.FORMAT_TYPE_FACE);
-	
+
 	private String name;
 	private BiometricType type;
 	private long value;

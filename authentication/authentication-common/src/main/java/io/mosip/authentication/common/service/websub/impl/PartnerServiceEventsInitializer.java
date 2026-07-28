@@ -63,8 +63,16 @@ public class PartnerServiceEventsInitializer extends BaseWebSubEventsInitializer
 	 * Subscribe for partner service events.
 	 */
 	private void subscribeForPartnerServiceEvents() {
+		logger.info(IdAuthCommonConstants.SESSION_ID, "subscribeForPartnerServiceEvents", "",
+	            "All PartnerEventTypes: " + Arrays.toString(PartnerEventTypes.values()));
 		Stream.of(PartnerEventTypes.values()).forEach(partnerEventType -> {
 			String topic = env.getProperty(partnerEventType.getTopicPropertyName());
+			logger.info(IdAuthCommonConstants.SESSION_ID,
+	                "subscribeForPartnerServiceEvents",
+	                "",
+	                "PartnerEventType: " + partnerEventType.name() +
+	                ", TopicPropertyName: " + partnerEventType.getTopicPropertyName() +
+	                ", Resolved Topic: " + topic);
 			try {
 				SubscriptionChangeRequest subscriptionRequest = new SubscriptionChangeRequest();
 				String callbackURL = partnerServiceCallbackURL.replace(EVENT_TYPE_PLACEHOLDER, partnerEventType.getName());
@@ -93,3 +101,4 @@ public class PartnerServiceEventsInitializer extends BaseWebSubEventsInitializer
 	}
 
 }
+

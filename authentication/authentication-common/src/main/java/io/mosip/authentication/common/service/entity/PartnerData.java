@@ -48,6 +48,16 @@ public class PartnerData {
 	private String partnerStatus;
 	
 	@NotNull
+	@Column(name = "requires_payment")
+	private Boolean requiresPayment;
+
+	@Column(name = "partner_auth_type")
+	private String partnerAuthType;
+
+	@Column(name = "partner_group")
+	private String partnerGroup;
+	
+	@NotNull
 	@Column(name = "cr_by")
 	private String createdBy;
 

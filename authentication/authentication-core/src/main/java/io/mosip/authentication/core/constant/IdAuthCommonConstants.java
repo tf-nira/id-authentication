@@ -308,6 +308,8 @@ public final class IdAuthCommonConstants {
 	public static final String PARTNER_API_KEY_UPDATED_EVENT_NAME = "partner_api_key_updated";
 
 	public static final String POLICY_UPDATED_EVENT_NAME = "policy_updated";
+	
+	public static final String PARTNER_AMOUNT_UPDATED_EVENT_NAME = "partners_amount";
 
 	public static final String CA_CERT_EVENT = "ca_certificate";
 
@@ -470,7 +472,7 @@ public final class IdAuthCommonConstants {
 	public static final String MISP_LIC_DATA = "misp_lic_data";
 	
 	public static final String FACE_RAW_IMAGE = "faceRawImage";
-
+	
 	private IdAuthCommonConstants() {
 	}
 }

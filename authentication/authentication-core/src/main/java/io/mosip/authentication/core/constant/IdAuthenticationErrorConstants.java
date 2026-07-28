@@ -55,7 +55,7 @@ public enum IdAuthenticationErrorConstants {
 	INVALID_TXNID_BIO("IDA-MLC-016", "Transaction ID parameters in the request does not match"),
 	INVALID_USERID( "IDA-MLC-017","Invalid UserID"),
 	ID_NOT_AVAILABLE("IDA-MLC-018", "%s not available in database"),
-	AUTH_TYPE_LOCKED("IDA-MLC-019", "%s Auth Type is Locked for the UIN"),
+	AUTH_TYPE_LOCKED("IDA-MLC-019", "%s Auth Type is Locked for the NIN/AIN"),
 	FAILED_TO_ENCRYPT("IDA-MLC-020", "Unable to encrypt data"),
 	FAILED_TO_FETCH_KEY("IDA-MLC-021", "Failed to fetch key from HSM"),
 	UIN_DEACTIVATED_BLOCKED("IDA-MLC-022", "UIN is deactivated/blocked"),
@@ -67,7 +67,7 @@ public enum IdAuthenticationErrorConstants {
 			"Please capture biometrics within %s seconds of previous biometric capture"),
 	INVALID_BIO_DIGITALID_TIMESTAMP("IDA-MLC-031", "DigitalId of Biometrics not captured within %s seconds of previous biometrics",
 			"Please capture DigitalId of biometrics within %s seconds of previous biometric capture"),
-	DECLARED_DECEASED("IDA-MLC-032", "The person has been declared deceased."),
+	DECLARED_DECEASED("IDA-MLC-032", "NIN/ AIN is inactive (Deactivated/Deceased)."),
 	
 	DEMOGRAPHIC_DATA_MISMATCH_LANG("IDA-DEA-001", "Demographic data %s in %s did not match",
 				"Please re-enter your %s in %s"),
@@ -154,7 +154,9 @@ public enum IdAuthenticationErrorConstants {
 	URI_PATH_PARAMS_MISSING("IDA-MPA-038", "Required Number of Path parameters are missing in URI",
 			"Please try adding all the required path parameters."),
 	PARTNER_API_EXPIRED("IDA-MPA-039", "Partner API is expired or using before Commence Start Date."),
-
+	AUTH_CHARGES_NOT_AVAILABLE("IDA-MPA-040", "Auth charges not available for auth type and sub type."),
+	PARTNER_CURRENT_BALANCE_AVAILABLE("IDA-MPA-041", "Current  Balance not available for partner."),
+	PARTNER_INSUFFICIENT_BALANCE("IDA-MPA-041", "Partner balance is less than required authentication charge."),
 
 	DATA_VALIDATION_FAILED("IDA-IDV-001", "Input Data Validation Failed"),
 
@@ -188,6 +190,7 @@ public enum IdAuthenticationErrorConstants {
 	OIDC_CLIENT_DATA_NOT_FOUND_EVENT_DATA("PMS_PMP_028","OIDC Client Data is not available in Event data."),
 	OIDC_CLIENT_DATA_ALREADY_EXIST("PMS_PMP_029","OIDC Client ID already exist in DB."),
 	OIDC_CLIENT_DATA_INVALID_PARTNER("PMS_PMP_030","Not Allowed to change the Partner mapping of OIDC Client."),
+	DATABASE_ERROR("PMS_PMP_031", "Error while adding the partner payment transaction."),
 
 	
 	// UIN and VID validations

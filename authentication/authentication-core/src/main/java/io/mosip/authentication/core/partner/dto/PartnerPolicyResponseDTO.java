@@ -40,4 +40,6 @@ public class PartnerPolicyResponseDTO {
 
 	private OIDCClientDTO oidcClientDto;
 
+	private boolean requiresPayment;
+
 }
