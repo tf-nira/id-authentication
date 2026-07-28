@@ -207,7 +207,7 @@ public class AuthFacadeImpl implements AuthFacade {
 			LinkedHashMap<String, Object> properties = new LinkedHashMap<>(authRequestDTO.getMetadata());
 			properties.put(IdAuthCommonConstants.TOKEN, token);
 			authFiltersValidator.validateAuthFilters(authRequestDTO, idInfo, properties);
-			Double amount = (Double) properties.get("amount");
+      Double amount = (Double) properties.get("amount");
 			if (amount != null) {
 				authTxnBuilder.withAmount(amount);
 				partnerService.addPartnerPaymentTransaction(partnerId, amount);
@@ -215,7 +215,6 @@ public class AuthFacadeImpl implements AuthFacade {
 						"checkPaymentChargesForAuth",
 						"created new partner transaction successfully");
 			}
-			
 			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
 			
 			if (deceased != null && !deceased.isEmpty()) {

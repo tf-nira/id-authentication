@@ -3,20 +3,19 @@ package io.mosip.authentication.common.service.util;
 import static io.mosip.authentication.core.constant.IdAuthCommonConstants.BDB_DEAULT_PROCESSED_LEVEL;
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.IDA_BDB_PROCESSED_LEVEL;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Optional;
-import java.util.Set;
-import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.mosip.kernel.biometrics.entities.BiometricRecord;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -117,6 +116,36 @@ public class BioMatcherUtil {
 							Map<String, String> flags = new HashMap<>();
 							flags.put("uniqueRefID", UUID.randomUUID().toString());
 							flags.put("timestamp", DateUtils.getUTCCurrentDateTimeString());
+							BiometricRecord sampleRecord = new BiometricRecord();
+							sampleRecord.setSegments(sample);
+
+							BiometricRecord recordGallery = new BiometricRecord();
+							recordGallery.setSegments(record);
+
+							Map<String, Object> payload = new LinkedHashMap<>();
+							payload.put("sample", sampleRecord);
+							payload.put("record", recordGallery);
+							payload.put("modality", modality);
+							payload.put("flags", flags);
+
+							ObjectMapper mapper = new ObjectMapper();
+
+							String json = mapper.writerWithDefaultPrettyPrinter()
+									.writeValueAsString(payload);
+							Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+
+							String uniqueRefId = flags.getOrDefault("uniqueRefID", UUID.randomUUID().toString());
+
+							Path filePath = tempDir.resolve(
+									"bio-verify-" + uniqueRefId + ".json");
+
+							Files.writeString(
+									filePath,
+									json,
+									StandardOpenOption.CREATE,
+									StandardOpenOption.TRUNCATE_EXISTING
+							);
+							logger.info("Verification input stored at {}", filePath);
 							res =  bioProvider.verify(sample, record, modality, flags);
 							logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "match response : " + res + " for " + modality);
 							if(!res) {
@@ -134,8 +163,10 @@ public class BioMatcherUtil {
 					logger.error(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction",
 							String.format("%s: %s", e.getClass().getSimpleName(), ExceptionUtils.getStackTrace(e)));
 					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS_BIO, e);
-				}
-			}
+				} catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
 		}
 		
 		logger.debug(IdAuthCommonConstants.SESSION_ID, "IDA", "matchFunction", "Match Result: " + res);

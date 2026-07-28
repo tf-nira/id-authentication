@@ -507,7 +507,7 @@ public class KycServiceImpl implements KycService {
 		kycTokenData.setCreatedBy(EnvUtil.getAppId());
 		kycTokenData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
 		kycTokenDataRepo.saveAndFlush(kycTokenData);
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "generateAndSaveKycToken",
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "generateAndSaveKycToken",
 					"KYC Token Generated & Saved.");
 		return kycToken;
 	}
@@ -549,7 +549,7 @@ public class KycServiceImpl implements KycService {
 	public String buildKycExchangeResponse(String subject, Map<String, List<IdentityInfoDTO>> idInfo, 
 				List<String> consentedAttributes, List<String> consentedLocales, String idVid, KycExchangeRequestDTO kycExchangeRequestDTO) throws IdAuthenticationBusinessException {
 		
-		mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
+		mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "buildKycExchangeResponse",
 					"Building claims response for PSU token: " + subject);
 					
 		Map<String, Object> respMap = new HashMap<>();
@@ -607,7 +607,7 @@ public class KycServiceImpl implements KycService {
 					"idInfo keys: " + idInfo.keySet());
 			
 			if(!idInfo.containsKey("faceRawImage")) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 						"Face Raw image Bio not found in DB. So not adding to response claims.");
 			} else {
 				
@@ -615,12 +615,12 @@ public class KycServiceImpl implements KycService {
 				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 		                "faceRawImage key found in idInfo. Proceeding to extract face entity info directly.");
 
-		        String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
-		        mosipLogger.info("faceRawImageValue : {}", faceRawImageValue);
+		    String faceRawImageValue = faceRawImageInfoList.get(0).getValue();
+		    mosipLogger.debug("faceRawImageValue : {}", faceRawImageValue);
 				/*
 				 * Map<String, String> faceRawImageEntityInfoMap =
 				 * idInfoHelper.getIdEntityInfoMap(BioMatchType.FACE_RAW_IMAGE, idInfo, null);
-				 * mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+				 * mosipLogger.debug(IdAuthCommonConstants.SESSION_ID,
 				 * this.getClass().getSimpleName(), "addEntityForLangCodes",
 				 * "faceEntityInfoMap: " + faceRawImageEntityInfoMap);
 				 */
@@ -633,11 +633,11 @@ public class KycServiceImpl implements KycService {
 						String standardBase64 = java.util.Base64.getEncoder().encodeToString(rawBdb);
 
 						String face = convertJP2ToJpeg(standardBase64);
-			            if (face != null) {
-			            	mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+			      if (face != null) {
+			          mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"Face raw image converted successfully. Adding to response claims.");
 							
-							respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
+							  respMap.put(consentedAttribute, consentedPictureAttributePrefix + face);
 						} else {
 							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"convertJP2ToJpeg returned null. Face raw image not added to response claims.");
@@ -661,7 +661,7 @@ public class KycServiceImpl implements KycService {
 		if (idSchemaAttributes.size() == 1) {
 			List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttributes.get(0));
 			if (Objects.isNull(idInfoList)) {
-				mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+				mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 					"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttributes.get(0));
 				return;
 			}
@@ -698,7 +698,7 @@ public class KycServiceImpl implements KycService {
 					for (String consentedLocale: mappedConsentedLocales.keySet()) {
 						String consentedLocaleValue = mappedConsentedLocales.get(consentedLocale);
 						if (addressSubsetAttributes.length == 0) {
-							mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+							mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 									"No address subset attributes configured. Will return the address with formatted attribute.");
 							addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, true, 
 								IdAuthCommonConstants.CLAIMS_LANG_SEPERATOR + consentedLocaleValue);
@@ -711,7 +711,7 @@ public class KycServiceImpl implements KycService {
 					String consentedLocale = mappedConsentedLocales.keySet().iterator().next();
 					String consentedLocaleValue = mappedConsentedLocales.get(consentedLocale);
 					if (addressSubsetAttributes.length == 0) {
-						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 								"No address subset attributes configured. Will return the address with formatted attribute.");
 						addFormattedAddress(idSchemaAttributes, idInfo, consentedLocaleValue, respMap, false, "");
 						return;
@@ -818,7 +818,7 @@ public class KycServiceImpl implements KycService {
 					List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttribute);
 
 					if (Objects.isNull(idInfoList)) {
-						mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+						mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 							"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttribute);
 						continue;
 					}
@@ -845,7 +845,7 @@ public class KycServiceImpl implements KycService {
 				List<IdentityInfoDTO> idInfoList = idInfo.get(idSchemaAttribute);
 
 				if (Objects.isNull(idInfoList)) {
-					mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
+					mosipLogger.debug(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "addEntityForLangCodes",
 						"Data not available in Identity Info for the claim. So not adding to response claims. Claim Name: " + idSchemaAttribute);
 					continue;
 				}
