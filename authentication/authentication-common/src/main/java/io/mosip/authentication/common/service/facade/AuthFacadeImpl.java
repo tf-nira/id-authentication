@@ -216,15 +216,6 @@ public class AuthFacadeImpl implements AuthFacade {
 						"created new partner transaction successfully");
 			}
 			
-			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
-			
-			if (deceased != null && !deceased.isEmpty()) {
-				if ("Y".equals(deceased.get(0).getValue())) {
-					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorCode(),
-							IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorMessage());
-				}
-			}
-			
 			List<AuthStatusInfo> authStatusList = processAuthType(authRequestDTO, idInfo, token, isExternalAuth, authTokenId,
 					partnerId, authTxnBuilder, idvidHash);
 			authStatusList.stream().filter(Objects::nonNull).forEach(authResponseBuilder::addAuthStatusInfo);
@@ -343,6 +334,7 @@ public class AuthFacadeImpl implements AuthFacade {
 		}
 
 		if (!isMatchFailed(authStatusList)) {
+			checkDeceased(idInfo);
 			processBioAuth(authRequestDTO, idInfo, token, isAuth, authStatusList, idType, authTokenId, partnerId,
 					authTxnBuilder, idvidHash);
 		}
@@ -362,6 +354,16 @@ public class AuthFacadeImpl implements AuthFacade {
 
 	private boolean isMatchFailed(List<AuthStatusInfo> authStatusList) {
 		return authStatusList.stream().anyMatch(st -> st != null && !st.isStatus());
+	}
+	
+	private void checkDeceased(Map<String, List<IdentityInfoDTO>> idInfo) throws IdAuthenticationBusinessException {
+		List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
+		if (deceased != null && !deceased.isEmpty()) {
+			if ("Y".equals(deceased.get(0).getValue())) {
+				throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorCode(),
+						IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorMessage());
+			}
+		}
 	}
 
 	/**
