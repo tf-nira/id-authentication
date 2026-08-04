@@ -45,6 +45,7 @@ import io.mosip.authentication.core.constant.RequestType;
 import io.mosip.authentication.core.dto.ObjectWithMetadata;
 import io.mosip.authentication.core.exception.IdAuthUncheckedException;
 import io.mosip.authentication.core.exception.IdAuthenticationBusinessException;
+import io.mosip.authentication.core.indauth.dto.AuthError;
 import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import io.mosip.authentication.core.indauth.dto.AuthResponseDTO;
 import io.mosip.authentication.core.indauth.dto.AuthStatusInfo;
@@ -216,17 +217,18 @@ public class AuthFacadeImpl implements AuthFacade {
 						"created new partner transaction successfully");
 			}
 			
-			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
-			
-			if (deceased != null && !deceased.isEmpty()) {
-				if ("Y".equals(deceased.get(0).getValue())) {
-					throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorCode(),
-							IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorMessage());
-				}
-			}
-			
 			List<AuthStatusInfo> authStatusList = processAuthType(authRequestDTO, idInfo, token, isExternalAuth, authTokenId,
 					partnerId, authTxnBuilder, idvidHash);
+			List<IdentityInfoDTO> deceased = idInfo.get(deceasedAttribute);
+			if (deceased != null && !deceased.isEmpty()) {
+				if ("Y".equals(deceased.get(0).getValue())) {
+					AuthStatusInfo deceasedStatusInfo = new AuthStatusInfo();
+					deceasedStatusInfo.setStatus(false);
+					deceasedStatusInfo.setErr(Collections.singletonList(new AuthError(IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorCode(),
+							IdAuthenticationErrorConstants.DECLARED_DECEASED.getErrorMessage())));
+					authStatusList.add(deceasedStatusInfo);
+				}
+			}
 			authStatusList.stream().filter(Objects::nonNull).forEach(authResponseBuilder::addAuthStatusInfo);
 		} catch (IdAuthenticationBusinessException e) {
 			throw e;
