@@ -280,14 +280,16 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 		Map<String, Entry<String, List<IdentityInfoDTO>>> cbeffValuesForTypes = new HashMap<>();
 		for (CbeffDocType type : types) {
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getCbeffValues",
-					"Method called with Type: " + type + ", matchType: " + matchType + ", idName: " + idEntity);
+					"Method called with Type: {}, matchType: {}", type, matchType);
 			if (CbeffDocType.FACE_RAW_IMAGE.equals(type)) {
 				continue;
 			}
 			List<String> identityBioAttributes = getBioAttributeNames(type, matchType, idEntity);
-			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getCbeffValues",
-					"Method called with Type: " + type + ", matchType: " + matchType + ", identityBioAttributes: " + identityBioAttributes);
-			
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+					this.getClass().getSimpleName(),
+					"getCbeffValues",
+					"identityBioAttributes resolved for type: {}, matchType: {}, attributes: {}",
+					type, matchType, identityBioAttributes);
 			for (String bioAttribute : identityBioAttributes) {
 				Optional<String> identityValue = getIdentityValue(bioAttribute, null, idEntity).findAny();
 				if (identityValue.isPresent()) {
