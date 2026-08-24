@@ -308,6 +308,10 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 			return idEntity.keySet().stream().filter(bio -> bio.startsWith(BiometricType.IRIS.value().toString()))
 					.collect(Collectors.toList());
 		}
+		if (matchType.toString().equals(BioMatchType.FACE_RAW_IMAGE.toString())) {
+			// FACE_RAW_IMAGE is not used for authentication, only for KYC
+			return Collections.emptyList();
+		}
 		if (matchType.toString().equals(BioMatchType.FACE.toString())) {
 			return List.of(BiometricType.FACE.value());
 		}
