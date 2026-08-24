@@ -281,9 +281,9 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 		for (CbeffDocType type : types) {
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getCbeffValues",
 					"Method called with Type: {}, matchType: {}", type, matchType);
-//			if (CbeffDocType.FACE_RAW_IMAGE.equals(type)) {
-//				continue;
-//			}
+			if (CbeffDocType.FACE_RAW_IMAGE.equals(type)) {
+				continue;
+			}
 			List<String> identityBioAttributes = getBioAttributeNames(type, matchType, idEntity);
 			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
 					this.getClass().getSimpleName(),
@@ -322,9 +322,6 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 				matchType.toString().equals(BioMatchType.IRIS_UNKNOWN.toString())) {
 			return idEntity.keySet().stream().filter(bio -> bio.startsWith(BiometricType.IRIS.value().toString()))
 					.collect(Collectors.toList());
-		}
-		if (matchType.toString().equals(BioMatchType.FACE_RAW_IMAGE.toString())) {
-			return Collections.emptyList();
 		}
 		if (matchType.toString().equals(BioMatchType.FACE.toString())) {
 			return List.of(BiometricType.FACE.value());
