@@ -20,9 +20,7 @@ on:
       - 1.*
       - develop
       - MOSIP*
-      - tf_nira_dev
-      - tf_nira_prod
-      - tf_nira_preprod
+      - tf_nira_jd
 
 jobs:
   build-maven-authentication:
