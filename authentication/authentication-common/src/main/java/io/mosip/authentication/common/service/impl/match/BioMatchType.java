@@ -121,7 +121,7 @@ public enum BioMatchType implements MatchType {
 
 	FACE(IdaIdMapping.FACE, setOf(FaceMatchingStrategy.PARTIAL), CbeffDocType.FACE, null, null),
 	
-	FACE_RAW_IMAGE(IdaIdMapping.FACE_RAW_IMAGE, setOf(FaceMatchingStrategy.PARTIAL), CbeffDocType.FACE, null, null),
+	FACE_RAW_IMAGE(IdaIdMapping.FACE_RAW_IMAGE, setOf(FaceMatchingStrategy.PARTIAL), CbeffDocType.FACE_RAW_IMAGE, null, null),
 	
 	MULTI_MODAL(IdaIdMapping.MULTI_MODAL_BIOMETRICS, CbeffDocType.values(), null, null, setOf(MultiModalBiometricsMatchingStrategy.PARTIAL));
 
