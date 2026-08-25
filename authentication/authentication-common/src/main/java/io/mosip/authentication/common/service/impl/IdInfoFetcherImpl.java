@@ -14,6 +14,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import io.mosip.authentication.common.service.helper.IdInfoHelper;
+import io.mosip.authentication.core.logger.IdaLogger;
+import io.mosip.kernel.core.logger.spi.Logger;
 import io.mosip.authentication.common.service.impl.match.KeyBindedTokenAuthType;
 import io.mosip.authentication.common.service.util.KeyBindedTokenMatcherUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -101,6 +104,8 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 
 	@Autowired(required = false)
 	private PasswordComparator passwordComparator;
+
+	private static Logger mosipLogger = IdaLogger.getLogger(IdInfoFetcherImpl.class);
 	
 	/**
 	 * Gets the demo normalizer.
@@ -274,7 +279,17 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 			CbeffDocType[] types, MatchType matchType) throws IdAuthenticationBusinessException {
 		Map<String, Entry<String, List<IdentityInfoDTO>>> cbeffValuesForTypes = new HashMap<>();
 		for (CbeffDocType type : types) {
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), "getCbeffValues",
+					"Method called with Type: {}, matchType: {}", type, matchType);
+			if (CbeffDocType.FACE_RAW_IMAGE.equals(type)) {
+				continue;
+			}
 			List<String> identityBioAttributes = getBioAttributeNames(type, matchType, idEntity);
+			mosipLogger.info(IdAuthCommonConstants.SESSION_ID,
+					this.getClass().getSimpleName(),
+					"getCbeffValues",
+					"identityBioAttributes resolved for type: {}, matchType: {}, attributes: {}",
+					type, matchType, identityBioAttributes);
 			for (String bioAttribute : identityBioAttributes) {
 				Optional<String> identityValue = getIdentityValue(bioAttribute, null, idEntity).findAny();
 				if (identityValue.isPresent()) {
