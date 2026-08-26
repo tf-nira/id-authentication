@@ -274,6 +274,9 @@ public class IdInfoFetcherImpl implements IdInfoFetcher {
 			CbeffDocType[] types, MatchType matchType) throws IdAuthenticationBusinessException {
 		Map<String, Entry<String, List<IdentityInfoDTO>>> cbeffValuesForTypes = new HashMap<>();
 		for (CbeffDocType type : types) {
+			if (CbeffDocType.FACE_RAW_IMAGE.equals(type)) {
+				continue;
+			}
 			List<String> identityBioAttributes = getBioAttributeNames(type, matchType, idEntity);
 			for (String bioAttribute : identityBioAttributes) {
 				Optional<String> identityValue = getIdentityValue(bioAttribute, null, idEntity).findAny();
