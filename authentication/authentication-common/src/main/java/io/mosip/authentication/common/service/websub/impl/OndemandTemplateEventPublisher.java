@@ -2,11 +2,8 @@ package io.mosip.authentication.common.service.websub.impl;
 
 import static io.mosip.authentication.core.constant.IdAuthConfigKeyConstants.ON_DEMAND_TEMPLATE_EXTRACTION_TOPIC;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
-import java.util.UUID;
-
+import java.util.*;
+import io.mosip.authentication.core.util.IdTypeUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
@@ -75,6 +72,9 @@ public class OndemandTemplateEventPublisher extends BaseWebSubEventsInitializer 
 	@Autowired
 	private PartnerDataRepository partnerDataRepo;
 
+	@Autowired
+	private IdTypeUtil idTypeUtil;
+
 	/**
 	 * Do subscribe.
 	 */
@@ -135,7 +135,14 @@ public class OndemandTemplateEventPublisher extends BaseWebSubEventsInitializer 
 			eventData.put(INDIVIDUAL_ID,
 					encryptIndividualId(baserequestdto.getIndividualId(), partnerDataCert.get().getCertificateData()));
 			eventData.put(AUTH_PARTNER_ID, partner.get().getPartnerId());
-			eventData.put(INDIVIDUAL_ID_TYPE, baserequestdto.getIndividualIdType());
+			String idType = "HANDLE";
+			try {
+				idType = Objects.nonNull(baserequestdto.getIndividualIdType()) ? baserequestdto.getIndividualIdType()
+						: idTypeUtil.getIdType(baserequestdto.getIndividualId()).getType();
+			} catch (IdAuthenticationBusinessException ex) {
+				logger.error("Unable to get ID_TYPE.");
+			}
+			eventData.put(INDIVIDUAL_ID_TYPE, idType);
 			eventData.put(ENTITY_NAME, partner.get().getPartnerName());
 			eventData.put(REQUEST_SIGNATURE, headerSignature);
 			EventModel eventModel = createEventModel(onDemadTemplateExtractionTopic, eventData);
