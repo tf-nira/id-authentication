@@ -76,7 +76,7 @@ public class IdentityCacheController {
 	 * @throws IdAuthenticationAppException if the NIN is invalid, not present in the
 	 *                                      cache, or the data could not be decrypted
 	 */
-	@PreAuthorize("hasAnyRole(@authorizedRoles.getGetcacheidentitynin())")
+	@PreAuthorize("hasAnyRole(@authorizedRoles.getPostverifyidentity())")
 	@GetMapping(path = "/cache/identity/{nin}", produces = MediaType.APPLICATION_JSON_VALUE)
 	@Operation(summary = "Retrieve Cached Identity", description = "Retrieves the decrypted demographic identity cached against the given NIN. No biometric data is required or returned.", tags = {
 			"identity-cache-controller" })
