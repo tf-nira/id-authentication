@@ -2,6 +2,7 @@ package io.mosip.authentication.internal.service.controller;
 
 import java.util.UUID;
 
+import io.mosip.authentication.core.exception.IDDataValidationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
@@ -87,7 +88,7 @@ public class IdentityCacheController {
 			@ApiResponse(responseCode = "500", description = "Unable to process the request", content = @Content(schema = @Schema(hidden = true))) })
 	public ResponseWrapper<IdentityCacheResponseDTO> getCachedIdentity(
 			@Parameter(description = "National Identification Number", required = true) @PathVariable(NIN) String nin)
-			throws IdAuthenticationAppException {
+            throws IdAuthenticationAppException, IDDataValidationException {
 
 		// Not storing the id hash in the audit entries, using a random reference
 		// instead, consistent with the other internal read APIs.
