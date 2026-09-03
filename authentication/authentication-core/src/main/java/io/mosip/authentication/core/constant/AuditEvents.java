@@ -51,6 +51,8 @@ public enum AuditEvents {
 	
 	PASSWORD_BASED_AUTH_REQUEST("IDA_018", "System", "Password Based Auth Request"),
 
+	RETRIEVE_IDENTITY_CACHE_REQUEST_RESPONSE("IDA_019", "System", "Retrieve Identity Cache Request Response"),
+
 	/**  Static_Pin_Storage_Request_Response. */
 	STATIC_PIN_STORAGE_REQUEST_RESPONSE("IDA-EVT-OLD-006","BUSINESS", ""),//not applicable for release v1
 	
