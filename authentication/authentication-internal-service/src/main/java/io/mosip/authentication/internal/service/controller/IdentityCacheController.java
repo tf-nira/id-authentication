@@ -81,14 +81,14 @@ public class IdentityCacheController {
 	@Operation(summary = "Retrieve Cached Identity", description = "Retrieves the decrypted demographic identity cached against the given NIN. No biometric data is required or returned.", tags = {
 			"identity-cache-controller" })
 	@ApiResponses(value = {
-			@ApiResponse(responseCode = "200", description = "Cached identity retrieved successfully"),
-			@ApiResponse(responseCode = "400", description = "Invalid NIN / Identity not available in cache", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
-			@ApiResponse(responseCode = "500", description = "Unable to process the request", content = @Content(schema = @Schema(hidden = true))) })
+				@ApiResponse(responseCode = "200", description = "Cached identity retrieved successfully"),
+				@ApiResponse(responseCode = "400", description = "Invalid NIN / Identity not available in cache", content = @Content(schema = @Schema(hidden = true))),
+				@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(schema = @Schema(hidden = true))),
+				@ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(schema = @Schema(hidden = true))),
+				@ApiResponse(responseCode = "500", description = "Unable to process the request", content = @Content(schema = @Schema(hidden = true))) })
 	public ResponseWrapper<IdentityCacheResponseDTO> getCachedIdentity(
-			@Parameter(description = "National Identification Number", required = true) @PathVariable(NIN) String nin)
-            throws IdAuthenticationAppException, IDDataValidationException {
+				@Parameter(description = "National Identification Number", required = true) @PathVariable(NIN) String nin)
+	            throws IdAuthenticationAppException, IDDataValidationException {
 
 		// Not storing the id hash in the audit entries, using a random reference
 		// instead, consistent with the other internal read APIs.
@@ -99,8 +99,11 @@ public class IdentityCacheController {
 
 			IdentityCacheResponseDTO identityCacheResponse = identityCacheService.getDecryptedIdentity(nin);
 
+			// Determine id type for audit (UIN or HANDLE)
+			IdType detectedIdType = idTypeUtil.getIdType(nin);
+
 			auditHelper.audit(AuditModules.IDENTITY_CACHE, AuditEvents.RETRIEVE_IDENTITY_CACHE_REQUEST_RESPONSE,
-					auditRefId, IdType.UIN, "identity cache retrieval status : true");
+					auditRefId, detectedIdType, "identity cache retrieval status : true");
 
 			ResponseWrapper<IdentityCacheResponseDTO> responseWrapper = new ResponseWrapper<>();
 			responseWrapper.setId(identityCacheApiId);
@@ -111,8 +114,15 @@ public class IdentityCacheController {
 			logger.error(IdAuthCommonConstants.SESSION_ID, this.getClass().getSimpleName(), GET_CACHED_IDENTITY,
 					e.getErrorCode() + " - " + e.getErrorText());
 
-			auditHelper.audit(AuditModules.IDENTITY_CACHE, AuditEvents.RETRIEVE_IDENTITY_CACHE_REQUEST_RESPONSE,
+			// Attempt to determine type for auditing; fallback to UIN if detection fails
+			try {
+				IdType detected = idTypeUtil.getIdType(nin);
+				auditHelper.audit(AuditModules.IDENTITY_CACHE, AuditEvents.RETRIEVE_IDENTITY_CACHE_REQUEST_RESPONSE,
+					auditRefId, detected, e);
+			} catch (Exception ex) {
+				auditHelper.audit(AuditModules.IDENTITY_CACHE, AuditEvents.RETRIEVE_IDENTITY_CACHE_REQUEST_RESPONSE,
 					auditRefId, IdType.UIN, e);
+			}
 
 			throw new IdAuthenticationAppException(e.getErrorCode(), e.getErrorText(), e);
 		}
@@ -131,7 +141,11 @@ public class IdentityCacheController {
 					String.format(IdAuthenticationErrorConstants.MISSING_INPUT_PARAMETER.getErrorMessage(), NIN));
 		}
 
-		if (!idTypeUtil.validateUin(nin)) {
+		// Accept UIN OR HANDLE
+		boolean isUin = idTypeUtil.validateUin(nin);
+		boolean isHandle = idTypeUtil.validateHandle(nin);
+
+		if (!isUin && !isHandle) {
 			throw new IdAuthenticationBusinessException(
 					IdAuthenticationErrorConstants.INVALID_INPUT_PARAMETER.getErrorCode(),
 					String.format(IdAuthenticationErrorConstants.INVALID_INPUT_PARAMETER.getErrorMessage(), NIN));
