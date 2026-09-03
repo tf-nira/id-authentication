@@ -11,6 +11,7 @@ import io.mosip.authentication.common.service.websub.impl.AuthTransactionStatusE
 import io.mosip.authentication.common.service.websub.impl.IdAuthFraudAnalysisEventPublisher;
 import io.mosip.authentication.common.service.websub.impl.MasterDataUpdateEventInitializer;
 import io.mosip.authentication.common.service.websub.impl.PartnerCACertEventInitializer;
+import io.mosip.authentication.common.service.websub.impl.OndemandTemplateEventPublisher;
 
 /**
  * Websub Initializer for External facing IDA services such as Auth, EKYC and
@@ -38,6 +39,9 @@ public final class IdAuthWebSubInitializer extends CacheUpdatingWebsubInitialize
 	@Autowired
 	private PartnerCACertEventInitializer partnerCACertEventInitializer;
 
+	@Autowired
+	private OndemandTemplateEventPublisher ondemandTemplateEventPublisher;
+
 	/**
 	 * Do init subscriptions.
 	 */
@@ -59,6 +63,7 @@ public final class IdAuthWebSubInitializer extends CacheUpdatingWebsubInitialize
 			webSubHelper.initRegistrar(fraudEventPublisher);
 		webSubHelper.initRegistrar(authTransactionStatusEventPublisher);
 		webSubHelper.initRegistrar(authAnonymousEventPublisher);
+		webSubHelper.initRegistrar(ondemandTemplateEventPublisher);
 		return HttpStatus.SC_OK;
 	}
 
