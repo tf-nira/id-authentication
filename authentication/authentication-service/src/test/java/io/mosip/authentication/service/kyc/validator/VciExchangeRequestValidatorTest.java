@@ -38,7 +38,6 @@ public class VciExchangeRequestValidatorTest {
 
     @Before
     public void before() {
-        EnvUtil.setDateTimePattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         ReflectionTestUtils.setField(vciExchangeRequestValidator, "supportedCredTypes",
                 Arrays.asList("VerifiableCredential","MOSIPVerifiableCredential"));
     }
