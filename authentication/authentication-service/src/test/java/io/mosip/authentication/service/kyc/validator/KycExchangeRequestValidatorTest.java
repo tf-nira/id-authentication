@@ -42,6 +42,7 @@ public class KycExchangeRequestValidatorTest {
     AuthRequestValidator authRequestValidator;
     @Before
     public void before() {
+        EnvUtil.setDateTimePattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
         ReflectionTestUtils.setField(kycExchangeRequestValidator, "idInfoHelper", idInfoHelper);
         ReflectionTestUtils.setField(authRequestValidator, "idInfoHelper", idInfoHelper);
     }
