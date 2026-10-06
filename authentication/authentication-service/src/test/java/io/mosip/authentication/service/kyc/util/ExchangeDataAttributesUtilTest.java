@@ -54,7 +54,6 @@ public class ExchangeDataAttributesUtilTest {
     @Before
 	public void before() {
 		//
-        EnvUtil.setDateTimePattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
 	}
 
 
