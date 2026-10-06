@@ -102,9 +102,6 @@ public class NotificationServiceImpl implements NotificationService {
 		String charCount = EnvUtil.getUinMaskingCharCount();
 		if (charCount != null && !charCount.isEmpty()) {
 			maskedUin = MaskUtil.generateMaskValue(idvid, Integer.parseInt(charCount));
-			if (maskedUin.endsWith("@nin")) {
-				maskedUin = maskedUin.substring(0, maskedUin.length() - "@nin".length());
-			}
 		}
 		values.put("idvid", maskedUin);
 		String idvidType = authRequestDTO.getIndividualIdType();
