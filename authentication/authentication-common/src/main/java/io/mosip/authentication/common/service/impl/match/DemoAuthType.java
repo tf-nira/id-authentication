@@ -30,7 +30,7 @@ public enum DemoAuthType implements AuthType {
 	/** The pi pri. */
 	PERSONAL_IDENTITY("personalIdentity",
 			AuthType.setOf(DemoMatchType.NAME, DemoMatchType.DOB, DemoMatchType.DOBTYPE, DemoMatchType.AGE,
-					DemoMatchType.EMAIL, DemoMatchType.PHONE, DemoMatchType.GENDER), "Personal Identity"),
+					DemoMatchType.EMAIL, DemoMatchType.PHONE, DemoMatchType.GENDER), "Demographic Authentication"),
 
 	/** The full address. */
 	FULL_ADDRESS("fullAddress", AuthType.setOf(DemoMatchType.ADDR), "Full Address"),

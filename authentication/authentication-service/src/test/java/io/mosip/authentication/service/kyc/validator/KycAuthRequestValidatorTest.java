@@ -22,6 +22,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestContext;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -51,6 +52,7 @@ import io.mosip.kernel.pinvalidator.impl.PinValidatorImpl;
 @WebMvcTest
 @ContextConfiguration(classes = { TestContext.class, WebApplicationContext.class })
 @Import(EnvUtil.class)
+@TestPropertySource(locations = "classpath:application.properties")
 public class KycAuthRequestValidatorTest {
 
 	@Mock
