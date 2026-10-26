@@ -137,7 +137,7 @@ public class IdentityWalletBindingController {
 				identityKeyBindingRequestDTO.setIndividualIdType(idType);
 				identityKeyBindingRequestValidator.validateIdvId(identityKeyBindingRequestDTO.getIndividualId(), idType, errors);
 				DataValidationUtil.validate(errors);
-				
+				partner.ifPresent(partnerDTO -> identityKeyBindingRequestDTO.setPartnerName(partnerDTO.getPartnerName()));
 				AuthResponseDTO authResponseDTO = keyIdentityFacade.authenticateIndividual(identityKeyBindingRequestDTO, partnerId, 
 										oidcClientId, requestWrapperWithMetadata);
 
