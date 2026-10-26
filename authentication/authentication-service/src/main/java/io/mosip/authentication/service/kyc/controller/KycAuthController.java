@@ -175,6 +175,7 @@ public class KycAuthController {
 				}
 				DataValidationUtil.validate(errors);
 				boolean externalAuthRequest = true;
+				partner.ifPresent(partnerDTO -> ekycAuthRequestDTO.setPartnerName(partnerDTO.getPartnerName()));
 				AuthResponseDTO authResponseDTO = kycFacade.authenticateIndividual(ekycAuthRequestDTO, externalAuthRequest, 
 														partnerId, partnerApiKey, requestWrapperWithMetadata);
 				EKycAuthResponseDTO kycAuthResponseDTO = new EKycAuthResponseDTO();
@@ -257,6 +258,7 @@ public class KycAuthController {
 				}
 				DataValidationUtil.validate(errors);
 				boolean externalAuthRequest = true;
+				partner.ifPresent(partnerDTO -> authRequestDTO.setPartnerName(partnerDTO.getPartnerName()));
 				AuthResponseDTO authResponseDTO = kycFacade.authenticateIndividual(authRequestDTO, externalAuthRequest, partnerId, 
 								oidcClientId, requestWrapperWithMetadata, IdAuthCommonConstants.KYC_AUTH_CONSUME_VID_DEFAULT);
 				KycAuthResponseDTO kycAuthResponseDTO = new KycAuthResponseDTO();
