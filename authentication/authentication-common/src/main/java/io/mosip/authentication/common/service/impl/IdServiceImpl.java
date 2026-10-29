@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
+import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import org.hibernate.exception.JDBCConnectionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -466,5 +467,19 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 					ExceptionUtils.getStackTrace(e));
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
 		}
+	}
+
+	public String getPartnerDisplayName(AuthRequestDTO authRequestDTO) {
+		String partnerName = authRequestDTO.getPartnerName();
+
+		return Optional.ofNullable(authRequestDTO.getMetadata())
+				.map(metadata -> metadata.get("partnerId"))
+				.filter(String.class::isInstance)
+				.map(String.class::cast)
+				.map(partnerId -> Optional.ofNullable(partnerCache.get(partnerId))
+						.map(PartnerData::getAlias)
+						.filter(alias -> alias != null && !alias.trim().isEmpty())
+						.orElse(partnerName))
+				.orElse(partnerName);
 	}
 }
