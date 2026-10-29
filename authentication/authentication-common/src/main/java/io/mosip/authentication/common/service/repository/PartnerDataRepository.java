@@ -20,6 +20,4 @@ public interface PartnerDataRepository extends JpaRepository<PartnerData, String
     @Query("select pd from PartnerData pd where pd.partnerId = :partnerId")
     Optional<PartnerData> findByPartnerIdFromDB(@Param("partnerId") String partnerId);
 
-    @Query("SELECT pd FROM PartnerData pd WHERE pd.partnerName = :partnerName")
-    Optional<PartnerData> findByPartnerName(@Param("partnerName") String partnerName);
 }
