@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.impl.IdServiceImpl;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -76,7 +77,7 @@ public class NotificationServiceImpl implements NotificationService {
 	private NotificationManager notificationManager;
 
 	@Autowired
-	private IdServiceImpl idServiceImpl;
+	private PartnerDataRepository partnerDataRepo;
 
 	@Autowired
 	@Qualifier("NotificationLangComparator")
@@ -106,7 +107,23 @@ public class NotificationServiceImpl implements NotificationService {
 		values.put("idvid", maskedUin);
 		String idvidType = authRequestDTO.getIndividualIdType();
 		values.put("idvidType", idvidType);
-		String partnerName = idServiceImpl.getPartnerDisplayName(authRequestDTO);
+
+		String partnerName = authRequestDTO.getPartnerName();
+		String partnerId = Optional.ofNullable(authRequestDTO.getMetadata())
+				.map(metadata -> metadata.get("partnerId"))
+				.filter(String.class::isInstance)
+				.map(String.class::cast)
+				.orElse(null);
+		if (partnerId != null) {
+			PartnerData partnerData = partnerDataRepo.findByPartnerId(partnerId)
+					.orElse(null);
+			if (partnerData != null) {
+				String alias = partnerData.getAlias();
+				if (alias != null && !alias.trim().isEmpty()) {
+					partnerName = alias;
+				}
+			}
+		}
 		values.put("partnerName", partnerName);
 
 		// TODO add for all auth types

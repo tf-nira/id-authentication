@@ -469,17 +469,5 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 		}
 	}
 
-	public String getPartnerDisplayName(AuthRequestDTO authRequestDTO) {
-		String partnerName = authRequestDTO.getPartnerName();
 
-		return Optional.ofNullable(authRequestDTO.getMetadata())
-				.map(metadata -> metadata.get("partnerId"))
-				.filter(String.class::isInstance)
-				.map(String.class::cast)
-				.map(partnerId -> Optional.ofNullable(partnerCache.get(partnerId))
-						.map(PartnerData::getAlias)
-						.filter(alias -> alias != null && !alias.trim().isEmpty())
-						.orElse(partnerName))
-				.orElse(partnerName);
-	}
 }

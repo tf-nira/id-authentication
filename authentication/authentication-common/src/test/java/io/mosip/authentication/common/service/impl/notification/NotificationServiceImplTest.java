@@ -123,10 +123,9 @@ public class NotificationServiceImplTest {
 		PartnerData partnerData = new PartnerData();
 		partnerData.setPartnerName("MOSIP Resident Partner");
 		partnerData.setAlias("Resident");
-		Mockito.when(partnerDataRepo.findByPartnerName(Mockito.anyString()))
-				.thenReturn(Optional.of(partnerData));
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
-
+		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
 				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")).toString());
 
@@ -178,8 +177,14 @@ public class NotificationServiceImplTest {
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
 		authRequestDTO.setPartnerName("MOSIP Resident Partner");
-		Mockito.when(partnerDataRepo.findByPartnerName(Mockito.anyString()))
-				.thenReturn(Optional.empty());
+		Map<String, Object> metadata = new HashMap<>();
+		metadata.put("partnerId", "resident-client");
+		authRequestDTO.setMetadata(metadata);
+		PartnerData partnerData = new PartnerData();
+		partnerData.setAlias("Resident Partner Alias");
+		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
+
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
