@@ -20,7 +20,6 @@ import java.util.stream.Stream;
 import io.mosip.authentication.common.service.entity.PartnerData;
 import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import io.mosip.authentication.common.service.websub.impl.AuthTransactionEventPublisher;
-import io.mosip.authentication.core.indauth.dto.AuthRequestDTO;
 import org.hibernate.exception.JDBCConnectionException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -468,6 +467,4 @@ public class IdServiceImpl implements IdService<AutnTxn> {
 			throw new IdAuthenticationBusinessException(IdAuthenticationErrorConstants.UNABLE_TO_PROCESS, e);
 		}
 	}
-
-
 }
