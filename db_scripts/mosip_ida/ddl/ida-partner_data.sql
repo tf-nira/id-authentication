@@ -27,6 +27,7 @@ CREATE TABLE ida.partner_data (
 	upd_dtimes timestamp,
 	is_deleted boolean DEFAULT false,
 	del_dtimes timestamp,
+	alias character varying(256),
 	CONSTRAINT partner_data_pk PRIMARY KEY (partner_id)
 
 );
