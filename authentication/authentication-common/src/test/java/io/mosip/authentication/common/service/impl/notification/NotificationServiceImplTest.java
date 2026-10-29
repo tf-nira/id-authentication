@@ -59,6 +59,9 @@ import io.mosip.authentication.core.spi.indauth.match.IdInfoFetcher;
 import io.mosip.idrepository.core.helper.RestHelper;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
+import java.util.Optional;
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest
@@ -91,6 +94,9 @@ public class NotificationServiceImplTest {
 	private IdInfoHelper demoHelper;
 
 	@Mock
+	private PartnerDataRepository partnerDataRepo;
+
+	@Mock
 	private NotificationManager notificationManager;
 	@Mock
 	private IdInfoFetcher idInfoFetcher;
@@ -113,7 +119,12 @@ public class NotificationServiceImplTest {
 	public void TestValidAuthSmsNotification()
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
-
+		authRequestDTO.setPartnerName("MOSIP Resident Partner");
+		PartnerData partnerData = new PartnerData();
+		partnerData.setPartnerName("MOSIP Resident Partner");
+		partnerData.setAlias("Resident");
+		Mockito.when(partnerDataRepo.findByPartnerName(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
@@ -166,6 +177,9 @@ public class NotificationServiceImplTest {
 	public void TestInValidAuthSmsNotification()
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
+		authRequestDTO.setPartnerName("MOSIP Resident Partner");
+		Mockito.when(partnerDataRepo.findByPartnerName(Mockito.anyString()))
+				.thenReturn(Optional.empty());
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
