@@ -76,6 +76,9 @@ public class PartnerData {
 
 	@Column(name = "del_dtimes")
 	private LocalDateTime delDTimes;
+
+	@Column(name = "alias")
+	private String alias;
 	
 	public String getCertificateData() {
 		return new String(CryptoUtil.decodeBase64Url(new String(this.certificateData)));
