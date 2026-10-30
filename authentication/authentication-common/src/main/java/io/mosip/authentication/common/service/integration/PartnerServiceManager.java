@@ -469,7 +469,10 @@ public class PartnerServiceManager {
 		} else {
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+			logger.info("Setting Alias******");
+			logger.info("PartnerName : " + partnerEventData.getPartnerName());
 			partnerEventData.setAlias(partnerEventData.getPartnerName());
+			logger.info("Alias : " + partnerEventData.getAlias());
 			partnerDataRepo.save(partnerEventData);
 		}
 	}
