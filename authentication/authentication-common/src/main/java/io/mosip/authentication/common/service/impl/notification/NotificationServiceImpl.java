@@ -5,16 +5,14 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.impl.IdServiceImpl;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
@@ -77,7 +75,10 @@ public class NotificationServiceImpl implements NotificationService {
 
 	@Autowired
 	private NotificationManager notificationManager;
-	
+
+	@Autowired
+	private PartnerDataRepository partnerDataRepo;
+
 	@Autowired
 	@Qualifier("NotificationLangComparator")
 	private LanguageComparator languageComparator;
@@ -106,8 +107,24 @@ public class NotificationServiceImpl implements NotificationService {
 		values.put("idvid", maskedUin);
 		String idvidType = authRequestDTO.getIndividualIdType();
 		values.put("idvidType", idvidType);
+
 		String partnerName = authRequestDTO.getPartnerName();
-		values.put("partnerName",partnerName);
+		String partnerId = Optional.ofNullable(authRequestDTO.getMetadata())
+				.map(metadata -> metadata.get("partnerId"))
+				.filter(String.class::isInstance)
+				.map(String.class::cast)
+				.orElse(null);
+		if (partnerId != null) {
+			PartnerData partnerData = partnerDataRepo.findByPartnerId(partnerId)
+					.orElse(null);
+			if (partnerData != null) {
+				String alias = partnerData.getAlias();
+				if (alias != null && !alias.trim().isEmpty()) {
+					partnerName = alias;
+				}
+			}
+		}
+		values.put("partnerName", partnerName);
 
 		// TODO add for all auth types
 		String authTypeStr = Stream

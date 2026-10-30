@@ -469,6 +469,7 @@ public class PartnerServiceManager {
 		} else {
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+			partnerEventData.setAlias(partnerEventData.getPartnerName());
 			partnerDataRepo.save(partnerEventData);
 		}
 	}

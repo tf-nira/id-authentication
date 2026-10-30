@@ -59,6 +59,9 @@ import io.mosip.authentication.core.spi.indauth.match.IdInfoFetcher;
 import io.mosip.idrepository.core.helper.RestHelper;
 import io.mosip.kernel.core.util.DateUtils;
 import io.mosip.kernel.templatemanager.velocity.builder.TemplateManagerBuilderImpl;
+import java.util.Optional;
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
 
 @RunWith(SpringRunner.class)
 @WebMvcTest
@@ -91,6 +94,9 @@ public class NotificationServiceImplTest {
 	private IdInfoHelper demoHelper;
 
 	@Mock
+	private PartnerDataRepository partnerDataRepo;
+
+	@Mock
 	private NotificationManager notificationManager;
 	@Mock
 	private IdInfoFetcher idInfoFetcher;
@@ -113,9 +119,13 @@ public class NotificationServiceImplTest {
 	public void TestValidAuthSmsNotification()
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
-
+		authRequestDTO.setPartnerName("MOSIP Resident Partner");
+		PartnerData partnerData = new PartnerData();
+		partnerData.setPartnerName("MOSIP Resident Partner");
+		partnerData.setAlias("Resident");
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
-
+		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
 				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")).toString());
 
@@ -166,6 +176,15 @@ public class NotificationServiceImplTest {
 	public void TestInValidAuthSmsNotification()
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
+		authRequestDTO.setPartnerName("MOSIP Resident Partner");
+		Map<String, Object> metadata = new HashMap<>();
+		metadata.put("partnerId", "resident-client");
+		authRequestDTO.setMetadata(metadata);
+		PartnerData partnerData = new PartnerData();
+		partnerData.setAlias("Resident Partner Alias");
+		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
+
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
