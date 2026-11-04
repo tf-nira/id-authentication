@@ -368,6 +368,7 @@ public class PartnerServiceManager {
 		mapping.setPartnerId(partnerEventData.getPartnerId());
 		partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 		partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+		partnerEventData.setAlias(partnerEventData.getPartnerName());
 		ApiKeyData apiKeyEventData = mapper.convertValue(eventModel.getEvent().getData().get(API_KEY_DATA),
 				ApiKeyData.class);
 		mapping.setApiKeyId(apiKeyEventData.getApiKeyId());
@@ -465,6 +466,7 @@ public class PartnerServiceManager {
 		} else {
 			partnerEventData.setCreatedBy(getCreatedBy(eventModel));
 			partnerEventData.setCrDTimes(DateUtils.getUTCCurrentDateTime());
+			partnerEventData.setAlias(partnerEventData.getPartnerName());
 			partnerDataRepo.save(partnerEventData);
 		}
 	}

@@ -17,6 +17,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+import java.util.Optional;
+import io.mosip.authentication.common.service.entity.PartnerData;
+import io.mosip.authentication.common.service.repository.PartnerDataRepository;
+
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -82,6 +86,9 @@ public class NotificationServiceImplTest {
 	private NotificationServiceImpl notificationService;
 
 	@Mock
+	private PartnerDataRepository partnerDataRepo;
+
+	@Mock
 	private IdTemplateManager idTemplateManager;
 
 	@Mock
@@ -113,7 +120,13 @@ public class NotificationServiceImplTest {
 	public void TestValidAuthSmsNotification()
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
-
+		authRequestDTO.setPartnerName("MOSIP Resident Partner");
+		PartnerData partnerData = new PartnerData();
+		partnerData.setPartnerName("MOSIP Resident Partner");
+		partnerData.setAlias("Resident");
+		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
+		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
@@ -166,6 +179,14 @@ public class NotificationServiceImplTest {
 	public void TestInValidAuthSmsNotification()
 			throws IdAuthenticationBusinessException, IdAuthenticationDaoException, IOException {
 		AuthRequestDTO authRequestDTO = new AuthRequestDTO();
+		authRequestDTO.setPartnerName("MOSIP Resident Partner");
+		Map<String, Object> metadata = new HashMap<>();
+		metadata.put("partnerId", "resident-client");
+		authRequestDTO.setMetadata(metadata);
+		PartnerData partnerData = new PartnerData();
+		partnerData.setAlias("Resident Partner Alias");
+		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
+				.thenReturn(Optional.of(partnerData));
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
