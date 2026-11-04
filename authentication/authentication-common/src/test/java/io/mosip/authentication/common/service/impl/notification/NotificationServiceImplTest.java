@@ -127,7 +127,6 @@ public class NotificationServiceImplTest {
 		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 		Mockito.when(partnerDataRepo.findByPartnerId(Mockito.anyString()))
 				.thenReturn(Optional.of(partnerData));
-		AuthResponseDTO authResponseDTO = new AuthResponseDTO();
 
 		authRequestDTO.setRequestTime(Instant.now().atOffset(ZoneOffset.of("+0530"))
 				.format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")).toString());
