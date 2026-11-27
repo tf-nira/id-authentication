@@ -67,6 +67,7 @@ public class DecryptedPayloadLogService {
 	private final boolean enabled;
 	private final DecryptedPayloadLogRepository repository;
 	private final PayloadMasker masker;
+	private final ObjectMapper mapper;
 	private final Executor executor;
 	private final ThreadPoolTaskExecutor ownedExecutor;
 
@@ -88,6 +89,7 @@ public class DecryptedPayloadLogService {
 	public DecryptedPayloadLogService(DecryptedPayloadLogRepository repository, ObjectMapper mapper, boolean enabled,
 			String maskedFields, String partiallyMaskedFields, Executor executor) {
 		this.repository = repository;
+		this.mapper = mapper;
 		this.enabled = enabled;
 		this.masker = new PayloadMasker(mapper, toSet(maskedFields), toSet(partiallyMaskedFields));
 		this.executor = executor;
@@ -197,7 +199,8 @@ public class DecryptedPayloadLogService {
 			entity.setDecryptedRequest(masker.mask(request));
 			entity.setDecryptedResponse(masker.mask(response));
 			entity.setResponseStatus(status);
-			entity.setErrorMessage(error);
+			// Business failures (HTTP 200 with an errors array) carry no exception message.
+			entity.setErrorMessage(error != null ? error : truncate(extractResponseErrors(response), MAX_ERROR_LENGTH));
 			entity.setRequestTimestamp(ctx.getRequestTimestamp());
 			entity.setResponseTimestamp(responseTime);
 			entity.setProcessingTimeMs(processingMs);
@@ -208,6 +211,32 @@ public class DecryptedPayloadLogService {
 			logger.error(IdAuthCommonConstants.SESSION_ID, CLASS_NAME, "persist",
 					"Failed to persist payload log record " + ctx.getId() + "\n"
 							+ ExceptionUtils.getStackTrace(e));
+		}
+	}
+
+	/**
+	 * Builds "code: message; code: message" from the response's errors array, or
+	 * returns null when the response has none.
+	 */
+	String extractResponseErrors(String response) {
+		if (response == null) {
+			return null;
+		}
+		try {
+			com.fasterxml.jackson.databind.JsonNode errors = mapper.readTree(response).path("errors");
+			if (!errors.isArray() || errors.size() == 0) {
+				return null;
+			}
+			StringBuilder sb = new StringBuilder();
+			for (com.fasterxml.jackson.databind.JsonNode e : errors) {
+				if (sb.length() > 0) {
+					sb.append("; ");
+				}
+				sb.append(e.path("errorCode").asText("")).append(": ").append(e.path("errorMessage").asText(""));
+			}
+			return sb.toString();
+		} catch (java.io.IOException | RuntimeException e) {
+			return null;
 		}
 	}
 

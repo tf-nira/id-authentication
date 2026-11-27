@@ -115,6 +115,27 @@ public class DecryptedPayloadLogServiceTest {
 		assertNull("no decrypted request when decryption did not happen", e.getDecryptedRequest());
 	}
 
+	// business failure: errors array in the response fills error_message
+	@Test
+	public void errorMessageIsTakenFromResponseErrorsArray() {
+		DecryptedPayloadLogService svc = service(true, Runnable::run);
+		DecryptedPayloadLogContext ctx = svc.begin(post("/auth"));
+		svc.complete(ctx, "{\"errors\":[{\"errorCode\":\"IDA-DEA-001\",\"errorMessage\":\"Demographic data name in eng did not match\","
+				+ "\"actionMessage\":\"Please re-enter your name in eng\"}],\"response\":{\"authStatus\":false}}", 200,
+				DecryptedPayloadLogService.OUTCOME_FAILED, null);
+		assertEquals("IDA-DEA-001: Demographic data name in eng did not match", saved.get(0).getErrorMessage());
+		assertEquals("200/FAILED", saved.get(0).getResponseStatus());
+	}
+
+	@Test
+	public void errorMessageStaysEmptyWhenResponseHasNoErrors() {
+		DecryptedPayloadLogService svc = service(true, Runnable::run);
+		DecryptedPayloadLogContext ctx = svc.begin(post("/auth"));
+		svc.complete(ctx, "{\"errors\":null,\"response\":{\"authStatus\":true}}", 200,
+				DecryptedPayloadLogService.OUTCOME_SUCCESS, null);
+		assertNull(saved.get(0).getErrorMessage());
+	}
+
 	// 7. persistence failure must not propagate
 	@Test
 	public void databaseFailureIsSwallowed() {
