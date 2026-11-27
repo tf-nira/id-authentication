@@ -124,6 +124,11 @@ public class InternalOTPController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(otpRequestDto, !isPartnerReq, partner);
 			
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(otpRequestDto.getIndividualId())) {
+					otpRequestDto.setIndividualId(otpRequestDto.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(otpRequestDto.getIndividualIdType()) ? otpRequestDto.getIndividualIdType()
 						: idTypeUtil.getIdType(otpRequestDto.getIndividualId()).getType();
 				otpRequestDto.setIndividualIdType(idType);

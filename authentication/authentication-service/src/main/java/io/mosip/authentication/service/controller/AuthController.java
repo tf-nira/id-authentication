@@ -138,6 +138,11 @@ public class AuthController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(authrequestdto, !isAuth, partner);
 			
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(authrequestdto.getIndividualId())) {
+					authrequestdto.setIndividualId(authrequestdto.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(authrequestdto.getIndividualIdType()) ? authrequestdto.getIndividualIdType()
 						: idTypeUtil.getIdType(authrequestdto.getIndividualId()).getType();
 				authrequestdto.setIndividualIdType(idType);

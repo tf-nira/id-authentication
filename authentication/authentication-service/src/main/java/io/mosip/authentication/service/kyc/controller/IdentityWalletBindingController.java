@@ -131,7 +131,11 @@ public class IdentityWalletBindingController {
 			AuthTransactionBuilder authTxnBuilder = authTransactionHelper
 					.createAndSetAuthTxnBuilderMetadataToRequest(identityKeyBindingRequestDTO, false, partner);
  			try {
-				
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(identityKeyBindingRequestDTO.getIndividualId())) {
+					identityKeyBindingRequestDTO.setIndividualId(identityKeyBindingRequestDTO.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(identityKeyBindingRequestDTO.getIndividualIdType()) ? identityKeyBindingRequestDTO.getIndividualIdType()
 						: idTypeUtil.getIdType(identityKeyBindingRequestDTO.getIndividualId()).getType();
 				identityKeyBindingRequestDTO.setIndividualIdType(idType);

@@ -136,6 +136,11 @@ public class OTPController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(otpRequestDto, !isPartnerReq, partner);
 			
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(otpRequestDto.getIndividualId())) {
+					otpRequestDto.setIndividualId(otpRequestDto.getIndividualId().trim().toLowerCase());
+				}
+
 				String idvidHash = securityManager.hash(otpRequestDto.getIndividualId());
 				String idType = Objects.nonNull(otpRequestDto.getIndividualIdType()) ? otpRequestDto.getIndividualIdType()
 						: idTypeUtil.getIdType(otpRequestDto.getIndividualId()).getType();

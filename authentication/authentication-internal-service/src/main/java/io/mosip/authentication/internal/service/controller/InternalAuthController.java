@@ -136,6 +136,11 @@ public class InternalAuthController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(authRequestDTO, !isAuth, partner);
 	
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(authRequestDTO.getIndividualId())) {
+					authRequestDTO.setIndividualId(authRequestDTO.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(authRequestDTO.getIndividualIdType()) ? authRequestDTO.getIndividualIdType()
 						: idTypeUtil.getIdType(authRequestDTO.getIndividualId()).getType();
 				authRequestDTO.setIndividualIdType(idType);
@@ -214,6 +219,11 @@ public class InternalAuthController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(authRequestDTO, !isAuth, partner);
 	
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(authRequestDTO.getIndividualId())) {
+					authRequestDTO.setIndividualId(authRequestDTO.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(authRequestDTO.getIndividualIdType()) ? authRequestDTO.getIndividualIdType()
 						: idTypeUtil.getIdType(authRequestDTO.getIndividualId()).getType();
 				authRequestDTO.setIndividualIdType(idType);

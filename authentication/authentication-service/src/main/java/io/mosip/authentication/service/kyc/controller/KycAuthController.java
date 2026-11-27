@@ -166,6 +166,11 @@ public class KycAuthController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(ekycAuthRequestDTO, !isAuth, partner);
 			
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(ekycAuthRequestDTO.getIndividualId())) {
+					ekycAuthRequestDTO.setIndividualId(ekycAuthRequestDTO.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(ekycAuthRequestDTO.getIndividualIdType()) ? ekycAuthRequestDTO.getIndividualIdType()
 						: idTypeUtil.getIdType(ekycAuthRequestDTO.getIndividualId()).getType();
 						ekycAuthRequestDTO.setIndividualIdType(idType);
@@ -248,6 +253,11 @@ public class KycAuthController {
 					.createAndSetAuthTxnBuilderMetadataToRequest(authRequestDTO, !isAuth, partner);
 			
 			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(authRequestDTO.getIndividualId())) {
+					authRequestDTO.setIndividualId(authRequestDTO.getIndividualId().trim().toLowerCase());
+				}
+
 				String idType = Objects.nonNull(authRequestDTO.getIndividualIdType()) ? authRequestDTO.getIndividualIdType()
 						: idTypeUtil.getIdType(authRequestDTO.getIndividualId()).getType();
 						authRequestDTO.setIndividualIdType(idType);
@@ -327,6 +337,10 @@ public class KycAuthController {
 			AuthTransactionBuilder authTxnBuilder = authTransactionHelper
 					.createAndSetAuthTxnBuilderMetadataToRequest(kycExchangeRequestDTO, false, partner);
  			try {
+				// Normalise individualId (e.g. CSD1234567890@NIN -> csd1234567890@nin)
+				if (Objects.nonNull(kycExchangeRequestDTO.getIndividualId())) {
+					kycExchangeRequestDTO.setIndividualId(kycExchangeRequestDTO.getIndividualId().trim().toLowerCase());
+				}
 				
 				String idType = Objects.nonNull(kycExchangeRequestDTO.getIndividualIdType()) ? kycExchangeRequestDTO.getIndividualIdType()
 						: idTypeUtil.getIdType(kycExchangeRequestDTO.getIndividualId()).getType();

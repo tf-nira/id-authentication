@@ -24,7 +24,7 @@ on:
       - tf_nira*
       - updatevid
       - impl/face_raw_image
-      - Satyam
+      - tf_nira_dev_satyam1
 
 jobs:
   build-maven-authentication:
